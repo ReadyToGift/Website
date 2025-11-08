@@ -3,6 +3,8 @@ import getBestImage from "./modules/get-best-image.js";
 import { getLinkPreview } from "./link-preview-js.js";
 import getSite from "./get-site.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
+import { InputFile } from "node-appwrite/file";
+import mime from "mime-types";
 import { Polar } from "@polar-sh/sdk";
 import { TidyURL } from "tidy-url";
 
@@ -154,7 +156,19 @@ const getPreview = async ({ url, requestMethods, site, itemID, executionID, data
 
                 totalBandwidth += bestImageResult.fetchedSize || 0;
 
-                if (bestImageResult.image) {
+                await polar.events.ingest({
+                    events: [{
+                        name: "autofill",
+                        externalCustomerId: itemID,
+                        metadata: {
+                            itemID,
+                            imageFound: bestImage.image ? true : false,
+                            fetchedSize: bestImage.fetchedSize || 0
+                        }
+                    }]
+                });
+
+                if (bestImageResult.image.image) {
                     const bestImage = bestImageResult.image;
                     log("Best image found:", JSON.stringify(bestImage.image, null, 2));
 

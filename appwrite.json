@@ -58,7 +58,7 @@
         {
             "$id": "690f7bea000456345084",
             "execute": [],
-            "name": "list-events",
+            "name": "polar-list-events",
             "enabled": true,
             "logging": true,
             "runtime": "node-20.0",
@@ -67,14 +67,7 @@
                 "databases.read",
                 "columns.read",
                 "attributes.read",
-                "documents.read",
-                "tables.read",
-                "collections.read",
-                "collections.write",
-                "rows.write",
-                "documents.write",
-                "files.read",
-                "files.write"
+                "documents.read"
             ],
             "events": ["databases.wishlist.tables.6679a593003489f76668.rows.*"],
             "schedule": "",
@@ -82,7 +75,7 @@
             "entrypoint": "src/main.js",
             "commands": "npm install",
             "specification": "s-1vcpu-512mb",
-            "path": "functions/list-events"
+            "path": "functions/polar-list-events"
         },
         {
             "$id": "690f81f1000991425e22",

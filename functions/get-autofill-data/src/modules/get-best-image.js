@@ -123,6 +123,8 @@ export default async ({ images, fetchOptions, log }) => {
                     contentType,
                     data: buffer,
                     fetchedSize
+                    data: buffer,
+                    fetchedSize
                 };
                 continue;
             }
