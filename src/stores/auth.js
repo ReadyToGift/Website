@@ -1,8 +1,9 @@
-import { account, avatars } from "@/appwrite";
+import { account, avatars, functions } from "@/appwrite";
 import { atom } from "nanostores";
 import { createTOTPChallengeDialog } from "./mfa";
 import { loadPrefs } from "./prefs";
 import { persistentAtom } from "@nanostores/persistent";
+import { usePolarStore } from "./polar";
 
 export const user = atom(null);
 export const mfaFactors = atom([]);

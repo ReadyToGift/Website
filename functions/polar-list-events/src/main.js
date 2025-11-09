@@ -20,7 +20,7 @@ export default async ({ req, res, log, error }) => {
     const trigger = req.headers["x-appwrite-trigger"];
     const eventType = event.split(".").pop();
 
-    if (trigger === "event") {
+    if (trigger === "event" && (eventType === "create" || eventType === "delete")) {
         try {
             await polar.events.ingest({
                 events: [
@@ -54,10 +54,6 @@ export default async ({ req, res, log, error }) => {
             const userListDeltas = await polar.events.list({
                 externalCustomerId: user.$id,
                 name: "listDelta"
-            });
-            
-            const polarCustomer = await polar.customers.getExternal({
-                externalId: user.$id
             });
 
             const userLists = lists.documents.filter((list) => list.author === user.$id);

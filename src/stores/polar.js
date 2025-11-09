@@ -3,7 +3,11 @@ import { functions } from "@/appwrite";
 import { Polar } from "@polar-sh/sdk";
 import { useUserLists } from "./userLists";
 
-import { ENABLE_POLAR, FREE_TIER_ENABLE_AUTOFILL, FREE_TIER_PUBLIC_LIST_LIMIT } from "astro:env/client";
+import {
+    ENABLE_POLAR,
+    FREE_TIER_ENABLE_AUTOFILL,
+    FREE_TIER_PUBLIC_LIST_LIMIT
+} from "astro:env/client";
 
 const polar = new Polar();
 
@@ -32,11 +36,14 @@ export const usePolarStore = defineStore("polar", {
                 const responseData = JSON.parse(polarSession.responseBody);
                 this.session = responseData.customerSession;
 
-                const benefits = await polar.customerPortal.benefitGrants.list({
-                    customerSession: this.session.token
-                }, {});
+                const benefits = await polar.customerPortal.benefitGrants.list(
+                    {
+                        customerSession: this.session.token
+                    },
+                    {}
+                );
 
-                const benefitNames = benefits.result.items.map(b => b.benefit.description);
+                const benefitNames = benefits.result.items.map((b) => b.benefit.description);
 
                 if (benefitNames.includes("Autofill")) {
                     this.enableAutofill = true;
@@ -60,10 +67,10 @@ export const usePolarStore = defineStore("polar", {
                 console.log("Polar Pro checkout URL:", checkout.responseBody);
                 return JSON.parse(checkout.responseBody).checkoutUrl;
             }
-            
+
             throw new Error("Failed to retrieve Polar Pro checkout URL");
         },
-        async getProPricing () {
+        async getProPricing() {
             const response = await fetch("/api/checkout/pro/price");
             const data = await response.json();
 
@@ -74,9 +81,12 @@ export const usePolarStore = defineStore("polar", {
             }
         },
         async getSubscriptions() {
-            const subscriptions = await polar.customerPortal.subscriptions.list({
-                customerSession: this.session.token
-            }, {});
+            const subscriptions = await polar.customerPortal.subscriptions.list(
+                {
+                    customerSession: this.session.token
+                },
+                {}
+            );
 
             if (subscriptions.result.pagination.totalCount === 0) {
                 this.subscriptions = [];
