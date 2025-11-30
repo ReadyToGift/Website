@@ -52,7 +52,18 @@ export default defineConfig({
                 access: "public",
                 optional: true
             }),
-            APPWRITE_KEY: envField.string({ context: "server", access: "secret" })
+            APPWRITE_KEY: envField.string({ context: "server", access: "secret" }),
+            FREE_TIER_PUBLIC_LIST_LIMIT: envField.number({
+                context: "client",
+                access: "public",
+                default: -1
+            }),
+            FREE_TIER_ENABLE_AUTOFILL: envField.boolean({
+                context: "client",
+                access: "public",
+                default: true
+            }),
+            ENABLE_POLAR: envField.boolean({ context: "client", access: "public", default: false })
         }
     },
 

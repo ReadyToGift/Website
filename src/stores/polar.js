@@ -22,6 +22,11 @@ export const usePolarStore = defineStore("polar", {
     actions: {
         async init() {
             this.sessionLoading = true;
+            if (!ENABLE_POLAR) {
+                this.sessionLoading = false;
+                return;
+            }
+
             const polarSession = await functions.createExecution({
                 functionId: "690fc8f4002cff45eddc",
                 async: false

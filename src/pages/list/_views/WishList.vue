@@ -588,8 +588,8 @@ export default {
             const privateLists = lists.documents.filter((list) => list.private);
 
             this.userLists.setCount({
-                public: publicLists.length,
-                private: privateLists.length
+                private: privateLists.length,
+                public: publicLists.length
             });
         }
 >>>>>>> 0ec2358 (Add private list limits)
