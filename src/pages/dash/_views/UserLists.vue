@@ -169,10 +169,14 @@
                         variant="tonal"
                         class="ml-4"
                     >
+<<<<<<< HEAD
                         {{ userLists.listCount.public }}
                         <template v-if="polar.publicListLimit">
                             / {{ polar.publicListLimit }}
                         </template>
+=======
+                        {{ publicLists.length }} / 2
+>>>>>>> f193702 (Add counts to lists)
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -185,7 +189,11 @@
                         variant="tonal"
                         class="ml-4"
                     >
+<<<<<<< HEAD
                         {{ userLists.listCount.private }}
+=======
+                        {{ privateLists.length }}
+>>>>>>> f193702 (Add counts to lists)
                     </v-chip>
                 </v-tab>
                 <v-tab
