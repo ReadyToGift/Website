@@ -41,6 +41,29 @@ export default async ({ req, res, log, error }) => {
                 });
             }
 
+            let publicListLimit =
+                process.env.FREE_TIER_PUBLIC_LIST_LIMIT !== undefined
+                    ? parseInt(process.env.FREE_TIER_PUBLIC_LIST_LIMIT)
+                    : -1;
+
+            const customer = await polar.customers.getExternal({
+                externalId: list.author
+            });
+
+            if (customer.id) {
+                console.log(`Fetching benefits for customer ID: ${customer.id}`);
+                const benefits = await polar.benefitGrants.list({
+                    customerId: customer.id,
+                    isGranted: true
+                });
+
+                const benefitNames = benefits.result.items.map((b) => b.benefit.description);
+
+                if (benefitNames.includes("Unlimited Public Lists")) {
+                    publicListLimit = -1;
+                }
+            }
+
             const userPrivateLists = await tables.listRows({
                 databaseId: process.env.APPWRITE_DATABASE,
                 tableId: process.env.APPWRITE_LIST_COLLECTION,
@@ -61,32 +84,34 @@ export default async ({ req, res, log, error }) => {
                 ]
             });
 
-            let publicListLimit = process.env.FREE_TIER_PUBLIC_LIST_LIMIT !== undefined ? parseInt(process.env.FREE_TIER_PUBLIC_LIST_LIMIT) : -1;
-
             // Only check benefits if user is over the free tier limit
             // This is blocked in the UI, but this is to handle cases where users may have bypassed the UI limits
             if (publicListLimit !== -1 && userPublicLists.total > publicListLimit) {
-                console.log(`User ${list.author} is over the free tier public list limit of ${publicListLimit} with ${userPublicLists.total} public lists. Checking Polar benefits...`);
+                console.log(
+                    `User ${list.author} is over the free tier public list limit of ${publicListLimit} with ${userPublicLists.total} public lists. Checking Polar benefits...`
+                );
                 const customer = await polar.customers.getExternal({
                     externalId: list.author
                 });
-    
+
                 if (customer.id) {
                     console.log(`Fetching benefits for customer ID: ${customer.id}`);
                     const benefits = await polar.benefitGrants.list({
                         customerId: customer.id,
                         isGranted: true
                     });
-    
-                    const benefitNames = benefits.result.items.map(b => b.benefit.description);
-    
+
+                    const benefitNames = benefits.result.items.map((b) => b.benefit.description);
+
                     if (benefitNames.includes("Unlimited Public Lists")) {
                         publicListLimit = -1;
                     }
                 }
             }
 
-            log(`User ${list.author} has ${userPrivateLists.total} private lists and ${userPublicLists.total}/${publicListLimit} public lists.`);
+            log(
+                `User ${list.author} has ${userPrivateLists.total} private lists and ${userPublicLists.total}/${publicListLimit}/${publicListLimit} public lists.`
+            );
 
             console.log(`Processing list ID: ${list.$id}, private: ${list.private}`);
 
@@ -97,7 +122,35 @@ export default async ({ req, res, log, error }) => {
                 });
                 if (publicListLimit !== -1 && userPublicLists.total > publicListLimit) {
                     // Update the list to be private, as the user has exceeded their public list limit
-                    log(`User ${list.author} has exceeded their public list limit of ${publicListLimit}. Making list ${list.$id} private.`);
+                    log(
+                        `User ${list.author} has exceeded their public list limit of ${publicListLimit}. Making list ${list.$id} private.`
+                    );
+                    await tables.updateRow({
+                        databaseId: process.env.APPWRITE_DATABASE,
+                        tableId: process.env.APPWRITE_LIST_COLLECTION,
+                        rowId: list.$id,
+                        data: { private: true }
+                    });
+                    // Event will re-trigger and fix permissions
+                    return res.json({
+                        success: true,
+                        message: `List ${list.$id} set to private due to public list limit exceeded.`
+                    });
+                }
+            }
+
+            console.log(`Processing list ID: ${list.$id}, private: ${list.private}`);
+
+            if (!list.private) {
+                console.log({
+                    publicListLimit,
+                    userPublicListsTotal: userPublicLists.total
+                });
+                if (publicListLimit !== -1 && userPublicLists.total > publicListLimit) {
+                    // Update the list to be private, as the user has exceeded their public list limit
+                    log(
+                        `User ${list.author} has exceeded their public list limit of ${publicListLimit}. Making list ${list.$id} private.`
+                    );
                     await tables.updateRow({
                         databaseId: process.env.APPWRITE_DATABASE,
                         tableId: process.env.APPWRITE_LIST_COLLECTION,
@@ -121,7 +174,9 @@ export default async ({ req, res, log, error }) => {
 
                 const existingPermissions = list.$permissions || [];
 
-                const combinedPermissions = [...new Set([...ownerPermissions, ...existingPermissions])];
+                const combinedPermissions = [
+                    ...new Set([...ownerPermissions, ...existingPermissions])
+                ];
 
                 if (combinedPermissions.length !== existingPermissions.length) {
                     await tables.updateRow({
@@ -138,16 +193,15 @@ export default async ({ req, res, log, error }) => {
                 const items = await tables.listRows({
                     databaseId: process.env.APPWRITE_DATABASE,
                     tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                    queries: [
-                        Query.equal("list", list.$id),
-                        Query.limit(500000)
-                    ]
+                    queries: [Query.equal("list", list.$id), Query.limit(500000)]
                 });
 
                 for (const item of items.rows) {
                     const existingItemPermissions = item.$permissions || [];
 
-                    const combinedItemPermissions = [...new Set([...ownerPermissions, ...existingItemPermissions])];
+                    const combinedItemPermissions = [
+                        ...new Set([...ownerPermissions, ...existingItemPermissions])
+                    ];
 
                     if (combinedItemPermissions.length !== existingItemPermissions.length) {
                         await tables.updateRow({
@@ -169,19 +223,27 @@ export default async ({ req, res, log, error }) => {
                             });
 
                             const existingImagePermissions = image.$permissions || [];
-                            
-                            const combinedImagePermissions = [...new Set([...ownerPermissions, ...existingImagePermissions])];
 
-                            if (combinedImagePermissions.length !== existingImagePermissions.length) {
+                            const combinedImagePermissions = [
+                                ...new Set([...ownerPermissions, ...existingImagePermissions])
+                            ];
+
+                            if (
+                                combinedImagePermissions.length !== existingImagePermissions.length
+                            ) {
                                 await storage.updateFile({
                                     bucketId: process.env.APPWRITE_IMAGE_BUCKET,
                                     fileId: item.imageID,
                                     permissions: ownerPermissions
                                 });
-                                log(`Updated permissions for private item image: ${item.imageID} (item: ${item.$id})`);
+                                log(
+                                    `Updated permissions for private item image: ${item.imageID} (item: ${item.$id})`
+                                );
                             }
                         } catch (err) {
-                            error(`Error updating image permissions for private item ${item.$id}: ${err.message}`);
+                            error(
+                                `Error updating image permissions for private item ${item.$id}: ${err.message}`
+                            );
                         }
                     }
                 }
@@ -189,10 +251,7 @@ export default async ({ req, res, log, error }) => {
                 const communityItems = await tables.listRows({
                     databaseId: process.env.APPWRITE_DATABASE,
                     tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                    queries: [
-                        Query.equal("communityList", list.$id),
-                        Query.limit(500000)
-                    ]
+                    queries: [Query.equal("communityList", list.$id), Query.limit(500000)]
                 });
 
                 for (const item of communityItems.rows) {
@@ -204,7 +263,9 @@ export default async ({ req, res, log, error }) => {
                                 fileId: item.imageID
                             });
                         } catch (err) {
-                            error(`Error deleting image ${item.imageID} for community item ${item.$id}: ${err.message}`);
+                            error(
+                                `Error deleting image ${item.imageID} for community item ${item.$id}: ${err.message}`
+                            );
                         }
                     }
                     await tables.deleteRow({
@@ -224,7 +285,9 @@ export default async ({ req, res, log, error }) => {
 
                 const existingPermissions = list.$permissions || [];
 
-                const combinedPermissions = [...new Set([...publicPermissions, ...existingPermissions])];
+                const combinedPermissions = [
+                    ...new Set([...publicPermissions, ...existingPermissions])
+                ];
 
                 if (combinedPermissions.length !== existingPermissions.length) {
                     await tables.updateRow({
@@ -241,16 +304,15 @@ export default async ({ req, res, log, error }) => {
                 const items = await tables.listRows({
                     databaseId: process.env.APPWRITE_DATABASE,
                     tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                    queries: [
-                        Query.equal("list", list.$id),
-                        Query.limit(500000)
-                    ]
+                    queries: [Query.equal("list", list.$id), Query.limit(500000)]
                 });
 
                 for (const item of items.rows) {
                     const existingItemPermissions = item.$permissions || [];
 
-                    const combinedItemPermissions = [...new Set([...publicPermissions, ...existingItemPermissions])];
+                    const combinedItemPermissions = [
+                        ...new Set([...publicPermissions, ...existingItemPermissions])
+                    ];
 
                     if (combinedItemPermissions.length !== existingItemPermissions.length) {
                         await tables.updateRow({
@@ -272,24 +334,32 @@ export default async ({ req, res, log, error }) => {
                             });
 
                             const existingImagePermissions = image.$permissions || [];
-                        
-                            const combinedImagePermissions = [...new Set([...publicPermissions, ...existingImagePermissions])];
 
-                            if (combinedImagePermissions.length !== existingImagePermissions.length) {
+                            const combinedImagePermissions = [
+                                ...new Set([...publicPermissions, ...existingImagePermissions])
+                            ];
+
+                            if (
+                                combinedImagePermissions.length !== existingImagePermissions.length
+                            ) {
                                 await storage.updateFile({
                                     bucketId: process.env.APPWRITE_IMAGE_BUCKET,
                                     fileId: item.imageID,
                                     permissions: publicPermissions
                                 });
-                                log(`Updated permissions for public item image: ${item.imageID} (item: ${item.$id})`);
+                                log(
+                                    `Updated permissions for public item image: ${item.imageID} (item: ${item.$id})`
+                                );
                             }
                         } catch (err) {
-                            error(`Error updating image permissions for public item ${item.$id}: ${err.message}`);
+                            error(
+                                `Error updating image permissions for public item ${item.$id}: ${err.message}`
+                            );
                         }
                     }
                 }
             }
-        } catch (err)      {
+        } catch (err) {
             error(`Failed to process event: ${err.message}`);
             return res.json({
                 error: `Failed to process event: ${err.message}`
@@ -310,14 +380,15 @@ export default async ({ req, res, log, error }) => {
                     }
                 ]
             });
-            log(`Successfully ingested event to Polar for user: ${user}`);   
+            log(`Successfully ingested event to Polar for user: ${user}`);
         } catch (err) {
             error(`Failed to ingest event to Polar: ${err.message}`);
             return res.json({
                 error: `Failed to ingest event to Polar: ${err.message}`
             });
         }
-    } else if (trigger === "http") { // Manual reconciliation
+    } else if (trigger === "http") {
+        // Manual reconciliation
         const lists = await tables.listRows({
             databaseId: process.env.APPWRITE_DATABASE,
             tableId: process.env.APPWRITE_LIST_COLLECTION
@@ -333,16 +404,21 @@ export default async ({ req, res, log, error }) => {
 
                 const existingPermissions = list.$permissions || [];
 
-                const combinedPermissions = [...new Set([...ownerPermissions, ...existingPermissions])];
+                const combinedPermissions = [
+                    ...new Set([...ownerPermissions, ...existingPermissions])
+                ];
 
                 if (combinedPermissions.length !== existingPermissions.length) {
-                    if (!dryRun) await tables.updateRow({
-                        databaseId: process.env.APPWRITE_DATABASE,
-                        tableId: process.env.APPWRITE_LIST_COLLECTION,
-                        rowId: list.$id,
-                        permissions: ownerPermissions
-                    });
-                    log(`Updated permissions for private list: ${list.$id}${dryRun ? " (dry run)" : ""}`);
+                    if (!dryRun)
+                        await tables.updateRow({
+                            databaseId: process.env.APPWRITE_DATABASE,
+                            tableId: process.env.APPWRITE_LIST_COLLECTION,
+                            rowId: list.$id,
+                            permissions: ownerPermissions
+                        });
+                    log(
+                        `Updated permissions for private list: ${list.$id}${dryRun ? " (dry run)" : ""}`
+                    );
                 }
             } else {
                 const publicPermissions = [
@@ -353,16 +429,21 @@ export default async ({ req, res, log, error }) => {
 
                 const existingPermissions = list.$permissions || [];
 
-                const combinedPermissions = [...new Set([...publicPermissions, ...existingPermissions])];
+                const combinedPermissions = [
+                    ...new Set([...publicPermissions, ...existingPermissions])
+                ];
 
                 if (combinedPermissions.length !== existingPermissions.length) {
-                    if (!dryRun) await tables.updateRow({
-                        databaseId: process.env.APPWRITE_DATABASE,
-                        tableId: process.env.APPWRITE_LIST_COLLECTION,
-                        rowId: list.$id,
-                        permissions: publicPermissions
-                    });
-                    log(`Updated permissions for public list: ${list.$id}${dryRun ? " (dry run)" : ""}`);
+                    if (!dryRun)
+                        await tables.updateRow({
+                            databaseId: process.env.APPWRITE_DATABASE,
+                            tableId: process.env.APPWRITE_LIST_COLLECTION,
+                            rowId: list.$id,
+                            permissions: publicPermissions
+                        });
+                    log(
+                        `Updated permissions for public list: ${list.$id}${dryRun ? " (dry run)" : ""}`
+                    );
                 }
             }
         }
@@ -370,10 +451,7 @@ export default async ({ req, res, log, error }) => {
         const items = await tables.listRows({
             databaseId: process.env.APPWRITE_DATABASE,
             tableId: process.env.APPWRITE_ITEM_COLLECTION,
-            queries: [
-                Query.limit(500000),
-                Query.select(["*", "list.*"])
-            ]
+            queries: [Query.limit(500000), Query.select(["*", "list.*"])]
         });
 
         for (const item of items.rows) {
@@ -386,16 +464,21 @@ export default async ({ req, res, log, error }) => {
 
                 const existingPermissions = item.$permissions || [];
 
-                const combinedPermissions = [...new Set([...communityPermissions, ...existingPermissions])];
+                const combinedPermissions = [
+                    ...new Set([...communityPermissions, ...existingPermissions])
+                ];
 
                 if (combinedPermissions.length !== existingPermissions.length) {
-                    if (!dryRun) await tables.updateRow({
-                        databaseId: process.env.APPWRITE_DATABASE,
-                        tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                        rowId: item.$id,
-                        permissions: communityPermissions
-                    });
-                    log(`Updated permissions for community item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                    if (!dryRun)
+                        await tables.updateRow({
+                            databaseId: process.env.APPWRITE_DATABASE,
+                            tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                            rowId: item.$id,
+                            permissions: communityPermissions
+                        });
+                    log(
+                        `Updated permissions for community item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                    );
                 }
 
                 if (item.imageID) {
@@ -406,26 +489,36 @@ export default async ({ req, res, log, error }) => {
                         });
 
                         const existingImagePermissions = image.$permissions || [];
-                    
-                        const combinedImagePermissions = [...new Set([...communityPermissions, ...existingImagePermissions])];
+
+                        const combinedImagePermissions = [
+                            ...new Set([...communityPermissions, ...existingImagePermissions])
+                        ];
 
                         if (combinedImagePermissions.length !== existingImagePermissions.length) {
-                            if (!dryRun) await storage.updateFile({
-                                bucketId: process.env.APPWRITE_IMAGE_BUCKET,
-                                fileId: item.imageID,
-                                permissions: communityPermissions
-                            });
-                            log(`Updated permissions for community item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`);
+                            if (!dryRun)
+                                await storage.updateFile({
+                                    bucketId: process.env.APPWRITE_IMAGE_BUCKET,
+                                    fileId: item.imageID,
+                                    permissions: communityPermissions
+                                });
+                            log(
+                                `Updated permissions for community item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`
+                            );
                         }
                     } catch (err) {
-                        error(`Error fetching image for community item ${item.$id}: ${err.message}`);
-                        if (!dryRun) await tables.updateRow({
-                            databaseId: process.env.APPWRITE_DATABASE,
-                            tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                            rowId: item.$id,
-                            data: { imageID: null }
-                        });
-                        log(`Cleared missing imageID for community item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                        error(
+                            `Error fetching image for community item ${item.$id}: ${err.message}`
+                        );
+                        if (!dryRun)
+                            await tables.updateRow({
+                                databaseId: process.env.APPWRITE_DATABASE,
+                                tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                                rowId: item.$id,
+                                data: { imageID: null }
+                            });
+                        log(
+                            `Cleared missing imageID for community item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                        );
                     }
                 }
             } else {
@@ -442,16 +535,21 @@ export default async ({ req, res, log, error }) => {
 
                     const existingPermissions = item.$permissions || [];
 
-                    const combinedPermissions = [...new Set([...ownerPermissions, ...existingPermissions])];
+                    const combinedPermissions = [
+                        ...new Set([...ownerPermissions, ...existingPermissions])
+                    ];
 
                     if (combinedPermissions.length !== existingPermissions.length) {
-                        if (!dryRun) await tables.updateRow({
-                            databaseId: process.env.APPWRITE_DATABASE,
-                            tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                            rowId: item.$id,
-                            permissions: ownerPermissions
-                        });
-                        log(`Updated permissions for private item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                        if (!dryRun)
+                            await tables.updateRow({
+                                databaseId: process.env.APPWRITE_DATABASE,
+                                tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                                rowId: item.$id,
+                                permissions: ownerPermissions
+                            });
+                        log(
+                            `Updated permissions for private item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                        );
                     }
 
                     if (item.imageID) {
@@ -462,26 +560,38 @@ export default async ({ req, res, log, error }) => {
                             });
 
                             const existingImagePermissions = image.$permissions || [];
-                            
-                            const combinedImagePermissions = [...new Set([...ownerPermissions, ...existingImagePermissions])];
 
-                            if (combinedImagePermissions.length !== existingImagePermissions.length) {
-                                if (!dryRun) await storage.updateFile({
-                                    bucketId: process.env.APPWRITE_IMAGE_BUCKET,
-                                    fileId: item.imageID,
-                                    permissions: ownerPermissions
-                                });
-                                log(`Updated permissions for private item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`);
+                            const combinedImagePermissions = [
+                                ...new Set([...ownerPermissions, ...existingImagePermissions])
+                            ];
+
+                            if (
+                                combinedImagePermissions.length !== existingImagePermissions.length
+                            ) {
+                                if (!dryRun)
+                                    await storage.updateFile({
+                                        bucketId: process.env.APPWRITE_IMAGE_BUCKET,
+                                        fileId: item.imageID,
+                                        permissions: ownerPermissions
+                                    });
+                                log(
+                                    `Updated permissions for private item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`
+                                );
                             }
                         } catch (error) {
-                            error(`Error fetching image for private item ${item.$id}: ${error.message}`);
-                            if (!dryRun) await tables.updateRow({
-                                databaseId: process.env.APPWRITE_DATABASE,
-                                tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                                rowId: item.$id,
-                                data: { imageID: null }
-                            });
-                            log(`Cleared missing imageID for private item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                            error(
+                                `Error fetching image for private item ${item.$id}: ${error.message}`
+                            );
+                            if (!dryRun)
+                                await tables.updateRow({
+                                    databaseId: process.env.APPWRITE_DATABASE,
+                                    tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                                    rowId: item.$id,
+                                    data: { imageID: null }
+                                });
+                            log(
+                                `Cleared missing imageID for private item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                            );
                         }
                     }
                 } else {
@@ -493,16 +603,21 @@ export default async ({ req, res, log, error }) => {
 
                     const existingPermissions = item.$permissions || [];
 
-                    const combinedPermissions = [...new Set([...publicPermissions, ...existingPermissions])];
+                    const combinedPermissions = [
+                        ...new Set([...publicPermissions, ...existingPermissions])
+                    ];
 
                     if (combinedPermissions.length !== existingPermissions.length) {
-                        if (!dryRun) await tables.updateRow({
-                            databaseId: process.env.APPWRITE_DATABASE,
-                            tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                            rowId: item.$id,
-                            permissions: publicPermissions
-                        });
-                        log(`Updated permissions for public item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                        if (!dryRun)
+                            await tables.updateRow({
+                                databaseId: process.env.APPWRITE_DATABASE,
+                                tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                                rowId: item.$id,
+                                permissions: publicPermissions
+                            });
+                        log(
+                            `Updated permissions for public item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                        );
                     }
 
                     if (item.imageID) {
@@ -513,26 +628,38 @@ export default async ({ req, res, log, error }) => {
                             });
 
                             const existingImagePermissions = image.$permissions || [];
-                        
-                            const combinedImagePermissions = [...new Set([...publicPermissions, ...existingImagePermissions])];
-    
-                            if (combinedImagePermissions.length !== existingImagePermissions.length) {
-                                if (!dryRun) await storage.updateFile({
-                                    bucketId: process.env.APPWRITE_IMAGE_BUCKET,
-                                    fileId: item.imageID,
-                                    permissions: publicPermissions
-                                });
-                                log(`Updated permissions for public item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`);
+
+                            const combinedImagePermissions = [
+                                ...new Set([...publicPermissions, ...existingImagePermissions])
+                            ];
+
+                            if (
+                                combinedImagePermissions.length !== existingImagePermissions.length
+                            ) {
+                                if (!dryRun)
+                                    await storage.updateFile({
+                                        bucketId: process.env.APPWRITE_IMAGE_BUCKET,
+                                        fileId: item.imageID,
+                                        permissions: publicPermissions
+                                    });
+                                log(
+                                    `Updated permissions for public item image: ${item.imageID} (item: ${item.$id})${dryRun ? " (dry run)" : ""}`
+                                );
                             }
                         } catch (err) {
-                            error(`Error fetching image for public item ${item.$id}: ${err.message}`);
-                            if (!dryRun) await tables.updateRow({
-                                databaseId: process.env.APPWRITE_DATABASE,
-                                tableId: process.env.APPWRITE_ITEM_COLLECTION,
-                                rowId: item.$id,
-                                data: { imageID: null }
-                            });
-                            log(`Cleared missing imageID for public item: ${item.$id}${dryRun ? " (dry run)" : ""}`);
+                            error(
+                                `Error fetching image for public item ${item.$id}: ${err.message}`
+                            );
+                            if (!dryRun)
+                                await tables.updateRow({
+                                    databaseId: process.env.APPWRITE_DATABASE,
+                                    tableId: process.env.APPWRITE_ITEM_COLLECTION,
+                                    rowId: item.$id,
+                                    data: { imageID: null }
+                                });
+                            log(
+                                `Cleared missing imageID for public item: ${item.$id}${dryRun ? " (dry run)" : ""}`
+                            );
                         }
                     }
                 }

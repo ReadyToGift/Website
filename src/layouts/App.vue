@@ -49,6 +49,7 @@ import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
 import { useStore } from "@nanostores/vue";
+import { usePolarStore } from "@/stores/polar";
 
 import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
@@ -57,6 +58,11 @@ import { useRouter } from "vue-router";
 import { init as initAuth, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
 import { init as initCurrencies } from "@/stores/currency";
+import { useAuthStore } from "@/stores/auth";
+import { useCurrencyStore } from "@/stores/currency";
+import { usePolarStore } from "@/stores/polar";
+import { usePWA } from "@/stores/pwa";
+import { useTheme } from "vuetify";
 
 const loading = ref(true);
 
@@ -68,7 +74,7 @@ const routeRequiresAuth = computed(() => {
     const currentRoute = router.currentRoute.value;
     return currentRoute?.meta?.requiresAuth === true;
 });
-
+const polarStore = usePolarStore();
 const vuetifyTheme = useTheme();
 
 await initCurrencies();
@@ -110,6 +116,23 @@ window.addEventListener("appinstalled", () => {
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
     await initAuth({ router });
+    if (UMAMI_URL && UMAMI_ID) {
+        const script = document.createElement("script");
+        script.src = `${UMAMI_URL}`;
+        script.setAttribute("data-website-id", UMAMI_ID);
+        if (UMAMI_DOMAINS) {
+            script.setAttribute("data-domains", UMAMI_DOMAINS);
+        }
+        document.head.appendChild(script);
+    }
+
+    await currencyStore.init();
+    console.log("Initializing polar store from App.vue");
+    if (auth.isLoggedIn) {
+        console.log("User is logged in, initializing polar store");
+        await polarStore.init();
+    }
+
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });

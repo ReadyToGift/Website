@@ -22,11 +22,6 @@ export const usePolarStore = defineStore("polar", {
     actions: {
         async init() {
             this.sessionLoading = true;
-            if (!ENABLE_POLAR) {
-                this.sessionLoading = false;
-                return;
-            }
-
             const polarSession = await functions.createExecution({
                 functionId: "690fc8f4002cff45eddc",
                 async: false
@@ -79,6 +74,31 @@ export const usePolarStore = defineStore("polar", {
             } else {
                 throw new Error(data.error || "Failed to fetch Pro pricing");
             }
+        },
+        async getSubscriptions() {
+            const subscriptions = await polar.customerPortal.subscriptions.list(
+                {
+                    customerSession: this.session.token
+                },
+                {}
+            );
+
+            if (subscriptions.result.pagination.totalCount === 0) {
+                this.subscriptions = [];
+                this.sessionLoading = false;
+                return;
+            }
+
+            this.subscriptions = subscriptions.result.items;
+        }
+    },
+    getters: {
+        publicListLimitReached() {
+            const userLists = useUserLists();
+            if (this.publicListLimit === -1) {
+                return false;
+            }
+            return this.publicListLimit <= userLists.listCount.public;
         },
         async getSubscriptions() {
             const subscriptions = await polar.customerPortal.subscriptions.list(

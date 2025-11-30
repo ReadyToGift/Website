@@ -170,11 +170,14 @@ export default {
 <<<<<<< HEAD
             notFound: false,
             userLists: useUserLists(),
+<<<<<<< HEAD
 =======
 >>>>>>> dcca215 (Update 404 page redirection)
 =======
             notFound: false,
 >>>>>>> 5277936 (Load list on server)
+=======
+>>>>>>> 0ec2358 (Add private list limits)
             priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
@@ -569,7 +572,27 @@ export default {
 =======
     mounted() {
         this.loadList();
+<<<<<<< HEAD
 >>>>>>> 9b89229 (Move to Vue SPA for interactive routes):src/pages/list/_views/WishList.vue
+=======
+        if (this.auth.isLoggedIn) {
+            const lists = await databases.listDocuments(
+                APPWRITE_DB,
+                APPWRITE_LIST_COLLECTION,
+                [
+                    Query.equal("author", this.auth.user.$id)
+                ]
+            );
+
+            const publicLists = lists.documents.filter((list) => !list.private);
+            const privateLists = lists.documents.filter((list) => list.private);
+
+            this.userLists.setCount({
+                public: publicLists.length,
+                private: privateLists.length
+            });
+        }
+>>>>>>> 0ec2358 (Add private list limits)
     }
 };
 </script>

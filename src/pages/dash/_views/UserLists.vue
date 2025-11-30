@@ -170,13 +170,19 @@
                         class="ml-4"
                     >
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 0ec2358 (Add private list limits)
                         {{ userLists.listCount.public }}
                         <template v-if="polar.publicListLimit">
                             / {{ polar.publicListLimit }}
                         </template>
+<<<<<<< HEAD
 =======
                         {{ publicLists.length }} / 2
 >>>>>>> f193702 (Add counts to lists)
+=======
+>>>>>>> 0ec2358 (Add private list limits)
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -190,10 +196,14 @@
                         class="ml-4"
                     >
 <<<<<<< HEAD
+<<<<<<< HEAD
                         {{ userLists.listCount.private }}
 =======
                         {{ privateLists.length }}
 >>>>>>> f193702 (Add counts to lists)
+=======
+                        {{ userLists.listCount.private }}
+>>>>>>> 0ec2358 (Add private list limits)
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -303,13 +313,21 @@ import { usePolarStore } from "@/stores/polar";
 import { useUserLists } from "@/stores/userLists";
 =======
 import PWAPrompt from "@/components/PWAPrompt.vue";
+<<<<<<< HEAD
 >>>>>>> 8c3063c (Add in PWA prompt)
 import validation from "@/utils/validation";
+=======
+import { useUserLists } from "@/stores/userLists";
+>>>>>>> 0ec2358 (Add private list limits)
 
 const router = useRouter();
 const prefs = useStore($prefs);
 const user = useStore(auth.user);
+<<<<<<< HEAD
 const polar = usePolarStore();
+=======
+const userLists = useUserLists();
+>>>>>>> 0ec2358 (Add private list limits)
 
 const props = defineProps({
     title: {

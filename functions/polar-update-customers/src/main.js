@@ -7,7 +7,6 @@ const polar = new Polar({
 
 const organizationId = process.env["POLAR_ORG_ID"] ?? "";
 
-
 // This Appwrite function will be executed every time your function is triggered
 export default async ({ req, res, log, error }) => {
     // You can use the Appwrite SDK to interact with other services
@@ -17,7 +16,7 @@ export default async ({ req, res, log, error }) => {
             .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
             .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
             .setKey(req.headers["x-appwrite-key"] ?? "");
-        
+
         const appwriteUsers = new Users(client);
 
         const trigger = req.headers["x-appwrite-trigger"];
@@ -36,7 +35,9 @@ export default async ({ req, res, log, error }) => {
             log(`Total customers in Polar: ${polarCustomers.result.items.length}`);
 
             for (const appwriteUser of allUsers.users) {
-                const existingCustomer = polarCustomers.result.items.find(c => c.externalId === appwriteUser.$id);
+                const existingCustomer = polarCustomers.result.items.find(
+                    (c) => c.externalId === appwriteUser.$id
+                );
                 if (existingCustomer) {
                     if (
                         existingCustomer.email !== appwriteUser.email ||
@@ -52,7 +53,9 @@ export default async ({ req, res, log, error }) => {
                             });
                             log(`Updated Polar customer for Appwrite user ${appwriteUser.$id}`);
                         } catch (err) {
-                            log(`Failed to update Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
+                            log(
+                                `Failed to update Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                            );
                         }
                     } else {
                         log(`No update needed for Appwrite user ${appwriteUser.$id}`);
@@ -66,13 +69,15 @@ export default async ({ req, res, log, error }) => {
                         });
                         log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
                     } catch (err) {
-                        log(`Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
+                        log(
+                            `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                        );
                     }
                 }
             }
 
-            const unmatchedPolarCustomers = polarCustomers.result.items.filter(c => {
-                return !allUsers.users.find(u => u.$id === c.externalId);
+            const unmatchedPolarCustomers = polarCustomers.result.items.filter((c) => {
+                return !allUsers.users.find((u) => u.$id === c.externalId);
             });
 
             log(`Total unmatched Polar customers: ${unmatchedPolarCustomers.length}`);
@@ -84,12 +89,14 @@ export default async ({ req, res, log, error }) => {
                     });
                     log(`Deleted unmatched Polar customer ${polarCustomer.id}`);
                 } catch (err) {
-                    log(`Failed to delete unmatched Polar customer ${polarCustomer.id}: ${err.message}`);
+                    log(
+                        `Failed to delete unmatched Polar customer ${polarCustomer.id}: ${err.message}`
+                    );
                 }
             }
         } else if (trigger === "event") {
             const eventType = event.split(".").pop();
-            
+
             log(`Processing event type: ${eventType} for user: ${user}`);
 
             if (eventType === "update") {
@@ -110,7 +117,9 @@ export default async ({ req, res, log, error }) => {
                     });
                     log(`Deleted Polar customer for Appwrite user ${user}`);
                 } catch (err) {
-                    log(`Failed to delete Polar customer for Appwrite user ${user}: ${err.message}`);
+                    log(
+                        `Failed to delete Polar customer for Appwrite user ${user}: ${err.message}`
+                    );
                 }
             } else if (eventType === "create") {
                 const appwriteUser = req.body;
@@ -122,177 +131,10 @@ export default async ({ req, res, log, error }) => {
                     });
                     log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
                 } catch (err) {
-                    log(`Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
+                    log(
+                        `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                    );
                 }
-
-            } else {
-                log(`Unhandled event type: ${eventType}`);
-            }
-        }
-        return res.json({
-            success: true
-        });
-    } catch (err) {
-        error(`Function failed: ${err.message}`);
-        return res.json({
-            error: "Function failed"
-        });
-    }
-};
-import { Client, Users } from "node-appwrite";
-import { Polar } from "@polar-sh/sdk";
-
-const polar = new Polar({
-    accessToken: process.env["POLAR_ACCESS_TOKEN"] ?? ""
-});
-
-const organizationId = process.env["POLAR_ORG_ID"] ?? "";
-
-
-// This Appwrite function will be executed every time your function is triggered
-export default async ({ req, res, log, error }) => {
-    // You can use the Appwrite SDK to interact with other services
-    // For this example, we're using the Users service
-    try {
-        const client = new Client()
-            .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
-            .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
-            .setKey(req.headers["x-appwrite-key"] ?? "");
-        
-        const appwriteUsers = new Users(client);
-
-        const trigger = req.headers["x-appwrite-trigger"];
-        const event = req.headers["x-appwrite-event"];
-        const user = req.headers["x-appwrite-user-id"];
-
-        // manually triggered in dashboard
-        if (trigger === "http") {
-            const allUsers = await appwriteUsers.list();
-            log(`Total users in Appwrite: ${allUsers.total}`);
-
-            const polarCustomers = await polar.customers.list({
-                organizationId
-            });
-
-            log(`Total customers in Polar: ${polarCustomers.result.items.length}`);
-
-            for (const appwriteUser of allUsers.users) {
-                const existingCustomer = polarCustomers.result.items.find(c => c.externalId === appwriteUser.$id);
-                if (existingCustomer) {
-                    if (
-                        existingCustomer.email !== appwriteUser.email ||
-                        existingCustomer.name !== appwriteUser.name
-                    ) {
-                        try {
-                            await polar.customers.updateExternal({
-                                externalId: appwriteUser.$id,
-                                customerUpdateExternalID: {
-                                    email: appwriteUser.email,
-                                    name: appwriteUser.name
-                                }
-                            });
-                            log(`Updated Polar customer for Appwrite user ${appwriteUser.$id}`);
-                        } catch (err) {
-                            log(`Failed to update Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
-                        }
-                    } else {
-                        log(`No update needed for Appwrite user ${appwriteUser.$id}`);
-                    }
-                } else {
-                    try {
-                        await polar.customers.create({
-                            externalId: appwriteUser.$id,
-                            email: appwriteUser.email,
-                            name: appwriteUser.name
-                        });
-                        log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
-                    } catch (err) {
-                        log(`Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
-                    }
-                }
-
-                const subscriptions = await polar.subscriptions.list({
-                    externalCustomerId: appwriteUser.$id
-                });
-
-                const hasFreeSubscription = subscriptions.result.items.find((sub) => sub.productId === process.env.POLAR_FREE_PRODUCT_ID);
-                
-                if (!hasFreeSubscription) {
-                    try {
-                        await polar.subscriptions.create({
-                            externalCustomerId: appwriteUser.$id,
-                            productId: process.env.POLAR_FREE_PRODUCT_ID
-                        });
-                        log(`Created free subscription for Appwrite user ${appwriteUser.$id}`);
-                    } catch (err) {
-                        log(`Failed to create free subscription for Appwrite user ${appwriteUser.$id}: ${err.message}`);
-                    }
-                }
-            }
-
-            const unmatchedPolarCustomers = polarCustomers.result.items.filter(c => {
-                return !allUsers.users.find(u => u.$id === c.externalId);
-            });
-
-            log(`Total unmatched Polar customers: ${unmatchedPolarCustomers.length}`);
-
-            for (const polarCustomer of unmatchedPolarCustomers) {
-                try {
-                    await polar.customers.delete({
-                        id: polarCustomer.id
-                    });
-                    log(`Deleted unmatched Polar customer ${polarCustomer.id}`);
-                } catch (err) {
-                    log(`Failed to delete unmatched Polar customer ${polarCustomer.id}: ${err.message}`);
-                }
-            }
-        } else if (trigger === "event") {
-            const eventType = event.split(".").pop();
-            
-            log(`Processing event type: ${eventType} for user: ${user}`);
-
-            if (eventType === "update") {
-                const appwriteUser = req.body;
-                await polar.customers.updateExternal({
-                    externalId: appwriteUser.$id,
-                    customerUpdateExternalID: {
-                        email: appwriteUser.email,
-                        name: appwriteUser.name
-                    }
-                });
-                log(`Updated Polar customer for Appwrite user ${appwriteUser.$id}`);
-            } else if (eventType === "delete") {
-                try {
-                    const appwriteUser = req.body;
-                    await polar.customers.deleteExternal({
-                        externalId: appwriteUser.$id
-                    });
-                    log(`Deleted Polar customer for Appwrite user ${user}`);
-                } catch (err) {
-                    log(`Failed to delete Polar customer for Appwrite user ${user}: ${err.message}`);
-                }
-            } else if (eventType === "create") {
-                const appwriteUser = req.body;
-                try {
-                    await polar.customers.create({
-                        externalId: appwriteUser.$id,
-                        email: appwriteUser.email,
-                        name: appwriteUser.name
-                    });
-                    log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
-                    try {
-                        await polar.subscriptions.create({
-                            externalCustomerId: appwriteUser.$id,
-                            productId: process.env.POLAR_FREE_PRODUCT_ID
-                        });
-                        log(`Created free subscription for Appwrite user ${appwriteUser.$id}`);
-                    } catch (err) {
-                        log(`Failed to create free subscription for Appwrite user ${appwriteUser.$id}: ${err.message}`);
-                    }
-                } catch (err) {
-                    log(`Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`);
-                }
-
             } else {
                 log(`Unhandled event type: ${eventType}`);
             }

@@ -93,6 +93,8 @@ import { usePolarStore } from "@/stores/polar";
 import { useUserLists } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+import { usePolarStore } from "@/stores/polar";
+import { useUserLists } from "@/stores/userLists";
 
 export default {
     title: "ListDialog",

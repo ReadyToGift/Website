@@ -93,8 +93,11 @@ import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+import { useUserLists } from "@/stores/userLists";
+import { usePolarStore } from "@/stores/polar";
 
 const user = useStore(userStore);
+
 
 export default {
     title: "ListDialog",
