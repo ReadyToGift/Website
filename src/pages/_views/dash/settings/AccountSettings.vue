@@ -15,8 +15,41 @@
             Personal Information
         </v-card-title>
 
+<<<<<<< HEAD
         <v-list
             class="mt-0"
+=======
+<<<<<<<< HEAD:src/pages/dash/_views/AccountSettings.vue
+            <v-list
+                class="mt-0"
+            >
+                <UpdateAccountField
+                    name="Full Name"
+                    :icon="mdiAccount"
+                    v-model="personalInfo.fullName"
+                    :save="saveName"
+                    autocomplete="name"
+                    :requires-password="false"
+                />
+                <UpdateAccountField
+                    name="Email"
+                    :icon="mdiEmail"
+                    v-model="personalInfo.email"
+                    :save="saveEmail"
+                    autocomplete="email"
+                />
+            </v-list>
+        </v-card>
+
+        <v-card
+            class="mt-4"
+            variant="tonal"
+            color="secondary"
+========
+        <v-list
+            class="mt-0"
+>>>>>>>> 0e96756 (WIP add billing to settings page):src/pages/_views/dash/settings/AccountSettings.vue
+>>>>>>> 74dfe1b (WIP add billing to settings page)
         >
             <UpdateAccountField
                 name="Full Name"
@@ -59,28 +92,51 @@
 </template>
 
 <script setup>
+<<<<<<< HEAD
 import { reactive } from "vue";
 
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { AppwriteException } from "appwrite";
 import { useAuthStore } from "@/stores/auth";
 import { useDialogs } from "@/stores/dialogs";
+=======
+import { reactive, watch } from "vue";
+import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
+
+import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
+import { AppwriteException } from "appwrite";
+
+import { setUser, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { useStore } from "@nanostores/vue";
+>>>>>>> 74dfe1b (WIP add billing to settings page)
 
 import { account } from "@/appwrite";
 
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
 
+<<<<<<< HEAD
 const auth = useAuthStore();
 const dialogs = useDialogs();
+=======
+const user = useStore(userStore);
+>>>>>>> 74dfe1b (WIP add billing to settings page)
 
 const personalInfo = reactive({
     email: {
         passwordConfirmation: "",
+<<<<<<< HEAD
         value: auth.user?.email || ""
     },
     fullName: {
         value: auth.user?.name || ""
+=======
+        value: user.value?.email || ""
+    },
+    fullName: {
+        value: user.value?.name || ""
+>>>>>>> 74dfe1b (WIP add billing to settings page)
     },
     password: {
         passwordConfirmation: "",
@@ -88,6 +144,7 @@ const personalInfo = reactive({
     }
 });
 
+<<<<<<< HEAD
 auth.$subscribe((mutation) => {
     if (!mutation?.events) return;
     if (mutation.events.key !== "user") return;
@@ -106,6 +163,26 @@ const saveName = async () => {
         return true;
     } else {
         dialogs.create({
+=======
+watch(
+    () => user.value,
+    (newUser) => {
+        if (newUser) {
+            personalInfo.email.value = newUser.email || "";
+            personalInfo.fullName.value = newUser.name || "";
+        }
+    },
+    { immediate: true }
+);
+
+const saveName = async (newValue) => {
+    const result = await account.updateName(newValue.value);
+    if (result.$id) {
+        setUser({ user: result });
+        return true;
+    } else {
+        createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
             text: `There was an error updating your name: ${result.message}`,
             title: "Error Updating Name",
             type: "error"
@@ -114,6 +191,7 @@ const saveName = async () => {
     }
 };
 
+<<<<<<< HEAD
 const saveEmail = async () => {
     try {
         const result = await account.updateEmail(personalInfo.email.value, personalInfo.email.passwordConfirmation);
@@ -137,6 +215,47 @@ const saveEmail = async () => {
     } catch (error) {
         if (error instanceof AppwriteException) {
             dialogs.create({
+=======
+const saveEmail = async (newValue) => {
+    try {
+        const result = await account.updateEmail(newValue.value, newValue.passwordConfirmation);
+        console.log({ result });
+        if (result.$id) {
+            setUser({ user: result });
+            await account.createEmailVerification({ url: "https://readyto.gift/dash/verify" });
+            createDialog({
+                actions: [
+                    {
+                        action: "close",
+                        color: "primary",
+                        text: "OK"
+                    }
+                ],
+                text: "A verification email has been sent to your new email address.",
+                title: "Verification Email Sent",
+                type: "info"
+            });
+            return true;
+        } else {
+            createDialog({
+                actions: [
+                    {
+                        action: "close",
+                        color: "primary",
+                        text: "OK"
+                    }
+                ],
+                text: `There was an error updating your email: ${result.message}`,
+                title: "Error Updating Email",
+                type: "error"
+            });
+            return false;
+        }
+
+    } catch (error) {
+        if (error instanceof AppwriteException) {
+            createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
                 actions: [
                     {
                         action: "close",
@@ -150,7 +269,11 @@ const saveEmail = async () => {
             });
             return;
         }
+<<<<<<< HEAD
         dialogs.create({
+=======
+        createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
             actions: [
                 {
                     action: "close",
@@ -166,6 +289,7 @@ const saveEmail = async () => {
     }
 };
 
+<<<<<<< HEAD
 const savePassword = async () => {
     try {
         await account.updatePassword({
@@ -175,6 +299,15 @@ const savePassword = async () => {
         personalInfo.password.value = "";
         personalInfo.password.passwordConfirmation = "";
         dialogs.create({
+=======
+const savePassword = async (newValue) => {
+    try {
+        await account.updatePassword({
+            oldPassword: newValue.passwordConfirmation,
+            password: newValue.value
+        });
+        createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
             actions: [
                 {
                     action: "close",
@@ -189,7 +322,11 @@ const savePassword = async () => {
         return true;
     } catch (error) {
         if (error instanceof AppwriteException) {
+<<<<<<< HEAD
             dialogs.create({
+=======
+            createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
                 actions: [
                     {
                         action: "close",
@@ -203,7 +340,11 @@ const savePassword = async () => {
             });
             return false;
         }
+<<<<<<< HEAD
         dialogs.create({
+=======
+        createDialog({
+>>>>>>> 74dfe1b (WIP add billing to settings page)
             actions: [
                 {
                     action: "close",

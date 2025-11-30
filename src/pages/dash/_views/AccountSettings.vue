@@ -1,72 +1,61 @@
 <template>
-    <div class="page-content">
-        <v-card
-            variant="tonal"
-            color="secondary"
-        >
-            <v-card-title>
-                Account Settings
-            </v-card-title>
-            <v-card-text>
-                <p>This is a placeholder for the Account Settings page.</p>
-                <p>Here you will be able to manage your account details, change your password, and configure other
-                    settings related to your profile.</p>
-            </v-card-text>
-        </v-card>
+    <v-card
+        variant="flat"
+    >
+        <v-card-subtitle>
+            Here you can manage your account details, change your password, and configure other settings related to your profile.
+        </v-card-subtitle>
+    </v-card>
 
-        <v-card
-            class="mt-4"
-            variant="tonal"
-            color="secondary"
-        >
-            <v-card-title>
-                Personal Information
-            </v-card-title>
+    <v-card
+        class="mt-4"
+        variant="tonal"
+    >
+        <v-card-title>
+            Personal Information
+        </v-card-title>
 
-            <v-list
-                class="mt-0"
-            >
-                <UpdateAccountField
-                    name="Full Name"
-                    :icon="mdiAccount"
-                    v-model="personalInfo.fullName"
-                    :save="saveName"
-                    autocomplete="name"
-                    :requires-password="false"
-                />
-                <UpdateAccountField
-                    name="Email"
-                    :icon="mdiEmail"
-                    v-model="personalInfo.email"
-                    :save="saveEmail"
-                    autocomplete="email"
-                />
-            </v-list>
-        </v-card>
-
-        <v-card
-            class="mt-4"
-            variant="tonal"
-            color="secondary"
+        <v-list
+            class="mt-0"
         >
-            <v-card-title>
-                Security Settings
-            </v-card-title>
-            <v-card-text>
-                <p>Manage your security settings here, including changing your password.</p>
-            </v-card-text>
-            <v-list>
-                <UpdateAccountField
-                    name="Password"
-                    :icon="mdiFormTextboxPassword"
-                    v-model="personalInfo.password"
-                    :save="savePassword"
-                    autocomplete="new-password"
-                />
-                <MFA />
-            </v-list>
-        </v-card>
-    </div>
+            <UpdateAccountField
+                name="Full Name"
+                :icon="mdiAccount"
+                v-model="personalInfo.fullName"
+                :save="saveName"
+                autocomplete="name"
+                :requires-password="false"
+            />
+            <UpdateAccountField
+                name="Email"
+                :icon="mdiEmail"
+                v-model="personalInfo.email"
+                :save="saveEmail"
+                autocomplete="email"
+            />
+        </v-list>
+    </v-card>
+    <v-card
+        class="mt-4"
+        variant="tonal"
+    >
+        <v-card-title>
+            Security Settings
+        </v-card-title>
+        <v-card-text>
+            <p>Manage your security settings here, including changing your password.</p>
+        </v-card-text>
+        <v-list>
+            <UpdateAccountField
+                name="Password"
+                :icon="mdiFormTextboxPassword"
+                v-model="personalInfo.password"
+                :save="savePassword"
+                autocomplete="new-password"
+            />
+            <MFA />
+        </v-list>
+    </v-card>
 </template>
 
 <script setup>
