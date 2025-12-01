@@ -4,6 +4,34 @@
         <v-main>
             <router-view />
             <div class="loading-placeholder"></div>
+            <v-snackbar
+                v-model="versionStore.showUpdatePrompt"
+                location="bottom"
+                width="100%"
+                color="primary"
+                elevation="2"
+                :timeout="-1"
+            >
+                <div class="snackbar-content update-available">
+                    <span>A new version of the app is available.<br/>Please refresh to ensure the best experience.</span>
+                    <div class="buttons">
+                        <v-btn
+                            color="white"
+                            text
+                            @click="refreshApp"
+                        >
+                            Refresh
+                        </v-btn>
+                        <v-btn
+                            variant="tonal"
+                            color="surface"
+                            @click="versionStore.showUpdatePrompt = false"
+                        >
+                            Dismiss
+                        </v-btn>
+                    </div>
+                </div>
+            </v-snackbar>
         </v-main>
         <GlobalDialogs />
     </v-app>
@@ -19,11 +47,14 @@ import { useCurrencyStore } from "@/stores/currency";
 import { usePolarStore } from "@/stores/polar";
 import { usePWA } from "@/stores/pwa";
 import { useTheme } from "vuetify";
+import { useVersion } from "@/stores/version";
 
 const auth = useAuthStore();
 const currencyStore = useCurrencyStore();
 const pwa = usePWA();
 const polarStore = usePolarStore();
+const versionStore = useVersion();
+
 const vuetifyTheme = useTheme();
 
 const loading = ref(true);
@@ -56,6 +87,10 @@ auth.$subscribe((mutation) => {
     setThemeColor();
 });
 
+const refreshApp = () => {
+    window.location.reload();
+};
+
 onMounted(async () => {
     if (UMAMI_URL && UMAMI_ID) {
         const script = document.createElement("script");
@@ -73,6 +108,8 @@ onMounted(async () => {
         console.log("User is logged in, initializing polar store");
         await polarStore.init();
     }
+
+    versionStore.startVersionCheck(1000 * 10);
 
     loading.value = false;
 });
@@ -121,6 +158,24 @@ nav a:first-of-type {
 
 .page-content {
     height: 100%;
+}
+
+.update-available {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 1rem;
+
+    .buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    @media screen and (max-width: 768px){
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 
 @media (min-width: 1024px) {
