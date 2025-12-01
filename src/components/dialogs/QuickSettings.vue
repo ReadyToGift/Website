@@ -115,14 +115,14 @@ const menu = shallowRef(false);
 const emit = defineEmits(["logout", "logIn"]);
 
 const updatePrefs = async () => {
-    if (this.auth.user) {
-        const accountResponse = await account.updatePrefs(this.auth.newUserPrefs);
-        this.auth.userPrefs = accountResponse.prefs;
+    if (auth.user) {
+        const accountResponse = await account.updatePrefs(auth.newUserPrefs);
+        auth.userPrefs = accountResponse.prefs;
     } else {
-        localStorage.setItem("userPrefs", JSON.stringify(this.auth.newUserPrefs));
+        localStorage.setItem("userPrefs", JSON.stringify(auth.newUserPrefs));
     }
 
-    this.auth.userPrefs = { ...this.auth.newUserPrefs };
+    auth.userPrefs = { ...auth.newUserPrefs };
 
     menu.value = false;
 };

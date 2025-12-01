@@ -4,7 +4,7 @@
             expand-on-hover
             permanent
             rail
-            v-if="$vuetify.display.mdAndUp"
+            v-if="!$vuetify.display.mobile"
         >
             <v-list v-if="auth.user">
                 <v-list-item

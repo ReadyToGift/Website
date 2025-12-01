@@ -148,12 +148,14 @@
 
 
         <v-sheet
-            elevation="4"
+            elevation="0"
             v-else-if="!loading"
         >
             <v-tabs
                 color="primary"
                 v-model="tab"
+                :stacked="$vuetify.display.mobile"
+                :align-tabs="$vuetify.display.mobile ? 'center' : 'left'"
             >
                 <v-tab
                     value="public"

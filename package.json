@@ -7,7 +7,7 @@
         "build": "astro build",
         "preview": "astro preview",
         "astro": "astro",
-        "op": "op run --no-masking --env-file=\"./1password.env\" -- pnpm",
+        "op": "op --account my.1password.eu run --no-masking --env-file=\"./1password.env\" -- pnpm",
         "make:lists-public-read": "node scripts/make-items-public-read.js"
     },
     "dependencies": {
