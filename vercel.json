@@ -1,0 +1,7 @@
+{
+    "rewrites": [
+        { "source": "/dash/(.*)", "destination": "/dash" },
+        { "source": "/list/(.*)", "destination": "/list" },
+        { "source": "/(.*)", "destination": "/404" }
+    ]
+}
