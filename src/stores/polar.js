@@ -104,31 +104,6 @@ export const usePolarStore = defineStore("polar", {
                 return false;
             }
             return this.publicListLimit <= userLists.listCount.public;
-        },
-        async getSubscriptions() {
-            const subscriptions = await polar.customerPortal.subscriptions.list(
-                {
-                    customerSession: this.session.token
-                },
-                {}
-            );
-
-            if (subscriptions.result.pagination.totalCount === 0) {
-                this.subscriptions = [];
-                this.sessionLoading = false;
-                return;
-            }
-
-            this.subscriptions = subscriptions.result.items;
-        }
-    },
-    getters: {
-        publicListLimitReached() {
-            const userLists = useUserLists();
-            if (this.publicListLimit === -1) {
-                return false;
-            }
-            return this.publicListLimit <= userLists.listCount.public;
         }
     }
 });

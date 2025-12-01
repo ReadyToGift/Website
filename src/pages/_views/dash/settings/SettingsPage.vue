@@ -9,8 +9,15 @@
             >
                 <v-tab
                     value="account"
+                    to="/dash/settings/account"
                 >
                     Account
+                </v-tab>
+                <v-tab
+                    value="billing"
+                    to="/dash/settings/billing"
+                >
+                    Billing
                 </v-tab>
             </v-tabs>
             <v-tabs-window v-model="tab">
@@ -20,6 +27,12 @@
                 >
                     <AccountSettings />
                 </v-tabs-window-item>
+                <v-tabs-window-item
+                    value="billing"
+                    class="pt-4"
+                >
+                    <BillingSettings />
+                </v-tabs-window-item>
             </v-tabs-window>
         </v-sheet>
     </div>
@@ -27,6 +40,7 @@
 
 <script setup>
 import AccountSettings from "./AccountSettings.vue";
+import BillingSettings from "./BillingSettings.vue";
 import { shallowRef } from "vue";
 
 const tab = shallowRef("account");

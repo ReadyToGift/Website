@@ -111,7 +111,7 @@
             "timeout": 15,
             "entrypoint": "src/get-customer-session.js",
             "commands": "npm install",
-            "specification": "s-0.5vcpu-512mb",
+            "specification": "s-1vcpu-512mb",
             "path": "functions/polar"
         },
         {
@@ -127,7 +127,7 @@
             "timeout": 15,
             "entrypoint": "src/main.js",
             "commands": "npm install",
-            "specification": "s-0.5vcpu-512mb",
+            "specification": "s-1vcpu-512mb",
             "path": "functions/get-polar-checkout"
         },
         {

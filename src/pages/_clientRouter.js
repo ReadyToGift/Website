@@ -27,13 +27,18 @@ if (!import.meta.env.SSR) {
             },
             {
                 path: "/dash/settings",
+                redirect: "/dash/settings/account",
+                meta: { requiresAuth: true }
+            },
+            {
+                path: "/dash/settings/account",
                 component: () => import("@/pages/_views/dash/settings/SettingsPage.vue"),
-                children: [
-                    {
-                        path: "account",
-                        component: () => import("@/pages/_views/dash/settings/AccountSettings.vue")
-                    }
-                ]
+                meta: { requiresAuth: true }
+            },
+            {
+                path: "/dash/settings/billing",
+                component: () => import("@/pages/_views/dash/settings/SettingsPage.vue"),
+                meta: { requiresAuth: true }
             },
             {
                 path: "/dash/recovery/start",
