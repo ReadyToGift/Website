@@ -9,7 +9,8 @@ export const GET = async () => {
     }), {
         status: 200,
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Cache-Control": "no-store"
         }
     });
 };

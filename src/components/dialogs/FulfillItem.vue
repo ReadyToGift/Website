@@ -148,6 +148,14 @@ export default {
                 );
             } catch (e) {
                 if (e instanceof AppwriteException) {
+                    if (e.type === "document_already_exists") {
+                        this.alert = {
+                            text: "This item is already fulfilled. Please refresh the page.",
+                            title: "Error"
+                        };
+                        this.loading = false;
+                        return;
+                    }
                     this.alert = {
                         text: e.message,
                         title: "Error"
