@@ -63,6 +63,12 @@
                     </v-list>
                 </v-list-item>
                 <v-list-item
+                    :prepend-icon="mdiInformation"
+                    to="/dash/about"
+                >
+                    About
+                </v-list-item>
+                <v-list-item
                     v-if="!!auth.user"
                     to="/dash/settings"
                     :prepend-icon="mdiAccountCircle"
@@ -101,7 +107,7 @@
 </template>
 
 <script setup>
-import { mdiAccountCircle, mdiCog } from "@mdi/js";
+import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
 import { clientRouter } from "@/pages/_clientRouter";
 import { shallowRef } from "vue";

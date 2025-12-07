@@ -8,13 +8,14 @@ const INITIAL_RETRY_DELAY_MS = 2000;
 export const useVersion = defineStore("version", {
     state: () => ({
         loadCommit: null,
+        loadBuildDate: null,
         checkInterval: null,
         outdated: false,
         showUpdatePrompt: false,
         isChecking: false
     }),
     actions: {
-        async getBuildCommit(timeoutMs = FETCH_TIMEOUT_MS) {
+        async getBuildInfo(timeoutMs = FETCH_TIMEOUT_MS) {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), timeoutMs);
             try {
@@ -25,7 +26,8 @@ export const useVersion = defineStore("version", {
                     return null;
                 }
                 const data = await resp.json();
-                return data && data.commit ? data.commit : null;
+                // Expecting at least { commit: string, buildDate?: string }
+                return data && data.commit ? { commit: data.commit, buildDate: data.buildDate || null } : null;
             } catch (err) {
                 if (err && err.name === "AbortError") {
                     console.warn("Version fetch aborted due to timeout");
@@ -40,8 +42,8 @@ export const useVersion = defineStore("version", {
 
         async _fetchInitialCommitWithRetries() {
             for (let i = 0; i < INITIAL_RETRIES; i++) {
-                const commit = await this.getBuildCommit();
-                if (commit) return commit;
+                const info = await this.getBuildInfo();
+                if (info && info.commit) return info;
                 await new Promise((res) => setTimeout(res, INITIAL_RETRY_DELAY_MS));
             }
             return null;
@@ -54,23 +56,36 @@ export const useVersion = defineStore("version", {
             this.isChecking = true;
 
             // establish a baseline commit (with retries)
-            this.loadCommit = await this._fetchInitialCommitWithRetries();
+            const baseline = await this._fetchInitialCommitWithRetries();
+            if (baseline) {
+                this.loadCommit = baseline.commit;
+                this.loadBuildDate = baseline.buildDate || null;
+            } else {
+                this.loadCommit = null;
+                this.loadBuildDate = null;
+            }
 
             const loop = async () => {
                 if (!this.isChecking) return;
                 try {
-                    const latestBuildCommit = await this.getBuildCommit();
-                    if (this.loadCommit && latestBuildCommit && latestBuildCommit !== this.loadCommit) {
+                    const latest = await this.getBuildInfo();
+                    const latestCommit = latest && latest.commit ? latest.commit : null;
+                    const latestBuildDate = latest && latest.buildDate ? latest.buildDate : null;
+
+                    if (this.loadCommit && latestCommit && latestCommit !== this.loadCommit) {
                         this.outdated = true;
                         this.showUpdatePrompt = true;
+                        // update build date for reference
+                        this.loadBuildDate = latestBuildDate;
                         this.stopVersionCheck();
                         return;
                     }
-                    if (!this.loadCommit && latestBuildCommit) {
-                        this.loadCommit = latestBuildCommit;
+                    if (!this.loadCommit && latestCommit) {
+                        this.loadCommit = latestCommit;
+                        this.loadBuildDate = latestBuildDate;
                     }
                 } catch {
-                    // handled in getBuildCommit
+                    // handled in getBuildInfo
                 } finally {
                     if (this.isChecking) {
                         this.checkInterval = setTimeout(loop, intervalMs);

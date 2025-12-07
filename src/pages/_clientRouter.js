@@ -60,6 +60,10 @@ if (!import.meta.env.SSR) {
                 path: "/dash/lists",
                 component: () => import("@/pages/_views/dash/UserLists.vue"),
                 meta: { requiresAuth: true }
+            },
+            {
+                path: "/dash/about",
+                component: () => import("@/pages/_views/dash/AboutPage.vue")
             }
         ]
     });
