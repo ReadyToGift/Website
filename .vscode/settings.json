@@ -8,5 +8,12 @@
     "editor.formatOnSaveMode": "file",
     "eslint.format.enable": true,
     "files.autoSave": "onFocusChange",
-    "editor.tabSize": 4
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "eslint.validate": [
+      "javascript",
+      "javascriptreact",
+      "html",
+      "vue",
+    ],
 }
