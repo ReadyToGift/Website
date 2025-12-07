@@ -1,3 +1,4 @@
+/* global Sentry */
 import { account, avatars } from "@/appwrite";
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
@@ -41,9 +42,7 @@ export const useAuthStore = defineStore("auth", {
             return await dialogs.create({
                 async: true,
                 component: markRaw(TotpChallenge),
-                emits: [
-                    "cancel", "success", "totp-removed"
-                ],
+                emits: ["cancel", "success", "totp-removed"],
                 fullscreen: false,
                 maxWidth: "80%",
                 title: "Multi-Factor Authentication"
@@ -95,20 +94,20 @@ export const useAuthStore = defineStore("auth", {
                     this.user = await account.get();
                 } catch (error) {
                     switch (error.type) {
-                    case "general_unauthorized_scope":
-                        break;
+                        case "general_unauthorized_scope":
+                            break;
 
-                    case "user_more_factors_required":
-                        if ((await this.createTOTPChallengeDialog()).action !== "cancel" ) {
-                            this.user = await account.get();
-                            break;
-                        } else {
-                            await account.deleteSession("current");
-                            this.user = null;
-                            break;
-                        }
-                    default:
-                        throw error;
+                        case "user_more_factors_required":
+                            if ((await this.createTOTPChallengeDialog()).action !== "cancel") {
+                                this.user = await account.get();
+                                break;
+                            } else {
+                                await account.deleteSession("current");
+                                this.user = null;
+                                break;
+                            }
+                        default:
+                            throw error;
                     }
                 }
 
@@ -131,11 +130,15 @@ export const useAuthStore = defineStore("auth", {
                     }
 
                     this.mfaFactors = await account.listMFAFactors();
-
                 } else {
                     if (SENTRY_DSN) {
                         setSentryUser(null);
                     }
+                }
+
+                if (SENTRY_DSN) {
+                    const replay = Sentry.getReplay();
+                    replay.start();
                 }
             } catch {
                 if (SENTRY_DSN) {

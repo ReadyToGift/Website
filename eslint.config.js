@@ -6,6 +6,7 @@ export default [
     { files: ["**/*.{js,mjs,cjs,vue,.ts}"] },
     { languageOptions: { globals: { ...globals.browser, process: "readonly" } } },
     pluginJs.configs.recommended,
+    { plugins: { vue: pluginVue } },
     ...pluginVue.configs["flat/essential"],
     {
         ignores: ["node_modules/*", "dist/*", ".git/*"]
