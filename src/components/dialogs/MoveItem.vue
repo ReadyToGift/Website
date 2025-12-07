@@ -160,7 +160,8 @@ export default {
                         Query.equal("author", this.auth.user.$id),
                         Query.orderDesc("$updatedAt"),
                         Query.notEqual("$id", this.list.$id),
-                        Query.select(["*","items.*"])
+                        Query.select(["*","items.*"]),
+                        Query.limit(1000)
                     ]
                 );
 

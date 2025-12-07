@@ -344,6 +344,7 @@ export default {
             this.loading = true;
 
             const listQuery = [
+                Query.limit(1000),
                 this.auth.userPrefs.listSorting.order === "asc"
                     ? Query.orderAsc(this.auth.userPrefs.listSorting.type.value)
                     : Query.orderDesc(this.auth.userPrefs.listSorting.type.value)

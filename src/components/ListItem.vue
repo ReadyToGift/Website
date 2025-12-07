@@ -75,8 +75,7 @@
                 <v-img
                     :src="imageURL"
                     alt=""
-                    max-height="200"
-                    height="auto"
+                    height="200"
                     width="auto"
                     max-width="300"
                     position="center right"

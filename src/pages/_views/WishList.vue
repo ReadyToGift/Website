@@ -415,7 +415,8 @@ export default {
                         APPWRITE_FULFILLMENT_COLLECTION,
                         [
                             Query.equal("item", list.items.map((item) => item.$id)),
-                            Query.select(["*", "item.*"])
+                            Query.select(["*", "item.*"]),
+                            Query.limit(list.items.length)
                         ]
                     )).documents;
                 }
