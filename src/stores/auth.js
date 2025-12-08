@@ -142,9 +142,13 @@ export const useAuthStore = defineStore("auth", {
                 this.user = null;
                 const localPrefs = localStorage.getItem("userPrefs");
                 if (localPrefs) {
-                    this.userPrefs = JSON.parse(localPrefs);
+                    this.userPrefs = {
+                        ...this.userPrefs,
+                        ...JSON.parse(localPrefs)
+                    };
                 } else {
                     this.userPrefs = {
+                        ...this.userPrefs,
                         darkMode:
                             window.matchMedia &&
                             window.matchMedia("(prefers-color-scheme: dark)").matches,
