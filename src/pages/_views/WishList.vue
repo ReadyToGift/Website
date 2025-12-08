@@ -536,7 +536,7 @@ export default {
             });
         }
         clientRouter.afterEach(async (to, from) => {
-            if (to.params.listId !== from.params.listId) {
+            if (to.params.listId !== from.params.listId && to.params.listId) {
                 this.list = false;
                 this.communityItems = [];
                 this.fulfillments = [];
