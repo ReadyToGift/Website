@@ -1,4 +1,3 @@
-/* global Sentry */
 import { account, avatars } from "@/appwrite";
 import { defineStore } from "pinia";
 import { markRaw } from "vue";
@@ -7,34 +6,27 @@ import { setUser as setSentryUser } from "@sentry/vue";
 import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
 import { useDialogs } from "./dialogs";
 
+const defaultPrefs = {
+    darkMode: false,
+    spoilSurprises: false,
+    showTotalPrice: false,
+    savedLists: [],
+    listSorting: {
+        type: { name: "Last updated", value: "$updatedAt" },
+        order: "asc"
+    },
+    history: [],
+    hidePWAInstallPrompt: false
+};
+
 export const useAuthStore = defineStore("auth", {
     state: () => ({
         user: null,
         mfaFactors: {},
         avatar: null,
         previouslyLoggedInUserID: localStorage.getItem("previouslyLoggedInUserID"),
-        userPrefs: {
-            darkMode: false,
-            spoilSurprises: false,
-            showTotalPrice: false,
-            savedLists: [],
-            listSorting: {
-                type: { name: "Last updated", value: "$updatedAt" },
-                order: "asc"
-            },
-            hidePWAInstallPrompt: false
-        },
-        newUserPrefs: {
-            darkMode: false,
-            spoilSurprises: false,
-            showTotalPrice: false,
-            savedLists: [],
-            listSorting: {
-                type: { name: "Last updated", value: "$updatedAt" },
-                order: "asc"
-            },
-            hidePWAInstallPrompt: false
-        }
+        userPrefs: { ...defaultPrefs },
+        newUserPrefs: { ...defaultPrefs }
     }),
     actions: {
         async createTOTPChallengeDialog() {
@@ -190,6 +182,14 @@ export const useAuthStore = defineStore("auth", {
             if (this.user) {
                 this.user.mfa = mfa;
             }
+        },
+        addToHistory(item) {
+            this.userPrefs.history.unshift(item);
+            this.userPrefs.history = this.userPrefs.history
+                .filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // remove duplicates
+                .slice(0, 5); // keep only last 5 items
+
+            this.updatePrefs(this.userPrefs);
         }
     },
     getters: {

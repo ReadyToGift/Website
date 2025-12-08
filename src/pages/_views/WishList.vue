@@ -118,8 +118,8 @@
 
 <script>
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { avatars, databases } from "@/appwrite";
 import { clientRouter } from "@/pages/_clientRouter";
-import { databases } from "@/appwrite";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
@@ -470,6 +470,13 @@ export default {
                 window.addEventListener("appinstalled", () => {
                     this.pwaPromo = false;
                 });
+
+                this.auth.addToHistory({
+                    avatar: avatars.getInitials(this.list.authorName),
+                    id: this.list.$id,
+                    subtitle: `By ${this.list.authorName}`,
+                    title: this.list.title
+                });
             } catch (error) {
                 if (error?.code === 404) {
                     this.newItem.notFound = true;
@@ -528,6 +535,15 @@ export default {
                 public: publicLists.length
             });
         }
+        clientRouter.afterEach(async (to, from) => {
+            if (to.params.listId !== from.params.listId) {
+                this.list = false;
+                this.communityItems = [];
+                this.fulfillments = [];
+                this.avoidSpoilersDialogShown = false;
+                await this.loadList(to.params.listId);
+            }
+        });
     }
 };
 </script>

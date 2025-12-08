@@ -24,6 +24,24 @@
                     to="/dash/lists"
                 />
             </v-list>
+            <v-list
+                v-if="auth.userPrefs.history.length > 0"
+            >
+                <v-divider />
+                <v-list-item
+                    :prepend-icon="mdiClock"
+                    title="Recently Viewed"
+                    disabled
+                />
+                <v-list-item
+                    v-for="history in auth.userPrefs.history"
+                    :key="history.id"
+                    :title="history.title"
+                    :subtitle="history.subtitle"
+                    :to="`/list/${history.id}`"
+                    :prepend-avatar="history.avatar"
+                />
+            </v-list>
             <template v-slot:append>
                 <v-list>
                     <v-list-item
@@ -115,6 +133,7 @@
 <script>
 import {
     mdiAccountCircle,
+    mdiClock,
     mdiCog,
     mdiFormatListBulleted,
     mdiGift,
@@ -122,7 +141,8 @@ import {
     mdiLockReset,
     mdiLogin,
     mdiLogout,
-    mdiMenu, mdiTune
+    mdiMenu,
+    mdiTune
 } from "@mdi/js";
 import { account } from "@/appwrite";
 import { clientRouter } from "@/pages/_clientRouter";
@@ -144,6 +164,7 @@ export default {
             auth: useAuthStore(),
             loadingLoginLogout: false,
             mdiAccountCircle,
+            mdiClock,
             mdiCog,
             mdiFormatListBulleted,
             mdiGift,
