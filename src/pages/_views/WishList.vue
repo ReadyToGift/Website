@@ -97,6 +97,21 @@
                 </template>
             </v-alert>
         </div>
+        <div
+            class="add-item-fab"
+            v-if="$vuetify.display.mobile"
+        >
+            <ModifyItem
+                :list="list"
+                :currency="list.currency"
+                :quickCreateURL="quickCreateURL"
+                :wishlistOwner="wishlistOwner"
+                @unsetQuickCreateURL="resetQuickCreateURL"
+                @newItem="addItem"
+                @updateList="updateList"
+                v-if="auth.isLoggedIn"
+            />
+        </div>
     </div>
     <NotFound v-else />
 </template>
@@ -108,6 +123,7 @@ import { databases } from "@/appwrite";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
+import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import NotFound from "@/pages/_views/NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
 import { Query } from "appwrite";
@@ -120,6 +136,7 @@ export default {
     components: {
         ListCard,
         ListItem,
+        ModifyItem,
         NotFound,
         PWAPrompt
     },
@@ -244,6 +261,17 @@ export default {
         }
     },
     methods: {
+        resetQuickCreateURL() {
+            const { quickcreateurl, ...remainingQueries } = Object.fromEntries(
+                new URLSearchParams(window.location.search)
+            );
+            if (quickcreateurl) {
+                const newQueryString = new URLSearchParams(remainingQueries).toString();
+                const newURL =
+                    window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
+                window.history.replaceState({}, document.title, newURL);
+            }
+        },
         async updateList(data) {
             this.list.title = data.list.title;
             this.list.description = data.list.description;
@@ -544,6 +572,14 @@ main {
                 }
             }
         }
+    }
+
+    .add-item-fab {
+        position: sticky;
+        bottom: 1.5rem;
+        width: fit-content;
+        margin-left: auto;
+        padding-top: 1rem;
     }
 
     @media screen and (max-width: 768px) {

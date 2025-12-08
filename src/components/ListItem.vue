@@ -20,24 +20,26 @@
                     @fulfillItem="$emit('fulfillItem', $event)"
                     @unfulfillItem="$emit('unfulfillItem', item.$id)"
                 />
-                <v-btn
-                    :append-icon="mdiOpenInNew"
-                    :href="item.url"
-                    target="_blank"
-                    v-if="item.url && !$vuetify.display.mobile"
-                    variant="outlined"
-                    size="small"
-                >
-                    Open Website
-                </v-btn>
-                <v-btn
-                    :icon="mdiOpenInNew"
-                    :href="item.url"
-                    target="_blank"
-                    v-if="item.url && $vuetify.display.mobile"
-                    variant="outlined"
-                    size="small"
-                />
+                <template v-if="item.url">
+                    <v-btn
+                        :append-icon="mdiOpenInNew"
+                        :href="item.url"
+                        target="_blank"
+                        v-if="!$vuetify.display.mobile || !wishlistOwner"
+                        variant="outlined"
+                        size="small"
+                    >
+                        Open Website
+                    </v-btn>
+                    <v-btn
+                        :icon="mdiOpenInNew"
+                        :href="item.url"
+                        target="_blank"
+                        v-else
+                        variant="outlined"
+                        size="small"
+                    />
+                </template>
                 <ModifyItem
                     variant="outlined"
                     :item="item"

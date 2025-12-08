@@ -5,22 +5,32 @@
         :fullscreen="$vuetify.display.mobile ? true : false"
     >
         <template v-slot:activator="{ props: activatorProps }">
-            <v-btn
-                v-bind="activatorProps"
-                :append-icon="mdiPlus"
-                base-color="primary"
-                :variant="variant"
-                v-if="!item"
-            >
-                Add{{ wishlistOwner ? "" : " Purchased" }} Item
-            </v-btn>
-            <v-btn
-                v-bind="activatorProps"
-                :icon="mdiPencil"
-                base-color="primary"
-                :variant="variant"
-                v-else
-            />
+            <template v-if="item">
+                <v-btn
+                    v-bind="activatorProps"
+                    :icon="mdiPencil"
+                    base-color="primary"
+                    :variant="variant"
+                />
+            </template>
+            <template v-else>
+                <v-btn
+                    v-bind="activatorProps"
+                    :append-icon="mdiPlus"
+                    base-color="primary"
+                    :variant="variant"
+                    v-if="!$vuetify.display.mobile"
+                >
+                    Add{{ wishlistOwner ? "" : " Purchased" }} Item
+                </v-btn>
+                <v-fab
+                    v-bind="activatorProps"
+                    size="large"
+                    rounded="circle"
+                    :icon="mdiPlus"
+                    v-else
+                />
+            </template>
         </template>
 
         <template v-slot:default="{ isActive }">

@@ -16,7 +16,7 @@
             @unsetQuickCreateURL="resetQuickCreateURL"
             @newItem="(data) => $emit('newItem', data)"
             @updateList="$emit('updateList', $event)"
-            v-if="auth.isLoggedIn"
+            v-if="auth.isLoggedIn && !$vuetify.display.mobile"
         />
 
         <v-btn
