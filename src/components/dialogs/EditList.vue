@@ -1,82 +1,82 @@
 <template>
-    <div>
-        <v-dialog
-            :max-width="$vuetify.display.mobile ? '100%' : '90%'"
-            :fullscreen="$vuetify.display.mobile ? true : false"
-            v-model="dialogOpen"
-            key="edit-list-dialog"
-        >
-            <template v-slot:activator="{ props: activatorProps }">
-                <v-list-item
-                    v-bind="activatorProps"
-                    :prepend-icon="mdiPencil"
-                    title="Edit List"
-                    link
-                    v-if="!$vuetify.display.mobile"
-                />
-                <v-btn
-                    v-bind="activatorProps"
-                    :icon="mdiPencil"
-                    v-else
-                />
-            </template>
+    <v-dialog
+        :max-width="$vuetify.display.mobile ? '100%' : '90%'"
+        :fullscreen="$vuetify.display.mobile ? true : false"
+        v-model="dialogOpen"
+        key="edit-list-dialog"
+    >
+        <template v-slot:activator="{ props: activatorProps }">
+            <v-btn
+                v-bind="activatorProps"
+                :prepend-icon="mdiPencil"
+                variant="outlined"
+                color="primary"
+                v-if="!$vuetify.display.mobile"
+            >
+                Edit
+            </v-btn>
+            <v-btn
+                v-bind="activatorProps"
+                :icon="mdiPencil"
+                v-else
+            />
+        </template>
 
-            <template v-slot:default="{ isActive }">
-                <v-card title="Edit List">
-                    <v-card-text class="d-flex flex-column ga-4">
-                        <ListFields
-                            v-model:list="editedList"
-                            :previousValues="previousValues"
-                        />
-                        <v-alert
-                            v-if="alert"
-                            type="error"
-                            dismissible
-                            border="start"
-                            class="mt-4 min-w-0 overflow-visible flex-shrink-1"
-                            elevation="2"
-                            :icon="mdiAlert"
-                            :title="alert.title"
-                            :text="alert.text"
-                        />
-                        <v-alert
-                            v-if="!editedList.private && polar.publicListLimitReached"
-                            type="warning"
-                            border="start"
-                            class="mt-4 min-w-0 overflow-visible flex-shrink-1"
-                            elevation="2"
-                            variant="tonal"
+        <template v-slot:default="{ isActive }">
+            <v-card title="Edit List">
+                <v-card-text class="d-flex flex-column ga-4">
+                    <ListFields
+                        v-model:list="editedList"
+                        :previousValues="previousValues"
+                    />
+                    <v-alert
+                        v-if="alert"
+                        type="error"
+                        dismissible
+                        border="start"
+                        class="mt-4 min-w-0 overflow-visible flex-shrink-1"
+                        elevation="2"
+                        :icon="mdiAlert"
+                        :title="alert.title"
+                        :text="alert.text"
+                    />
+                    <v-alert
+                        v-if="!editedList.private && polar.publicListLimitReached"
+                        type="warning"
+                        border="start"
+                        class="mt-4 min-w-0 overflow-visible flex-shrink-1"
+                        elevation="2"
+                        variant="tonal"
+                    >
+                        You have reached your public list allowance.<br/><br/>
+                        Please upgrade to create unlimited public lists, or make some of your existing lists private.
+                        <br/>
+                        <v-btn
+                            to="/dash/billing"
+                            color="warning"
+                            class="mt-4"
                         >
-                            You have reached your public list allowance.<br/><br/>
-                            Please upgrade to create unlimited public lists, or make some of your existing lists private.
-                            <br/>
-                            <v-btn
-                                to="/dash/billing"
-                                color="warning"
-                                class="mt-4"
-                            >
-                                Upgrade
-                            </v-btn>
-                        </v-alert>
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-btn
-                            text="Cancel"
-                            @click="isActive.value = false"
-                        />
-                        <v-btn
-                            color="primary"
-                            text="Save"
-                            @click="updateList"
-                            variant="elevated"
-                            :loading="loading"
-                            :disabled="!editedList.private && polar.publicListLimitReached"
-                        />
-                    </v-card-actions>
-                </v-card>
-            </template>
-        </v-dialog>
-    </div>
+                            Upgrade
+                        </v-btn>
+                    </v-alert>
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn
+                        text="Cancel"
+                        @click="isActive.value = false"
+                    />
+                    <v-btn
+                        color="primary"
+                        text="Save"
+                        @click="updateList"
+                        variant="elevated"
+                        :loading="loading"
+                        :disabled="!editedList.private && polar.publicListLimitReached"
+                    />
+                </v-card-actions>
+            </v-card>
+        </template>
+    </v-dialog>
 </template>
 
 <script>

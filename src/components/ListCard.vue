@@ -55,16 +55,18 @@
                             />
                         </template>
 
-                        <EditList
-                            :list="props.list"
-                            @updateList="(data) => emit('updateList', data)"
-                            key="1"
-                        />
+                        <div key="edit">
+                            <EditList
+                                :list="props.list"
+                                @updateList="(data) => emit('updateList', data)"
+                            />
+                        </div>
 
-                        <DeleteList
-                            :list="props.list"
-                            key="2"
-                        />
+                        <div key="delete">
+                            <DeleteList
+                                :list="props.list"
+                            />
+                        </div>
                     </v-speed-dial>
                 </div>
             </div>

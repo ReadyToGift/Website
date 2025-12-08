@@ -1,61 +1,61 @@
 <template>
-    <div>
-        <v-dialog
-            :max-width="$vuetify.display.mobile ? '100%' : '500px'"
-            :fullscreen="$vuetify.display.mobile ? true : false"
-            v-model="dialogOpen"
-            key="delete-list-dialog"
-        >
-            <template v-slot:activator="{ props: activatorProps }">
-                <v-list-item
-                    v-bind="activatorProps"
-                    :prepend-icon="mdiDelete"
-                    title="Delete List"
-                    link
-                    base-color="error"
-                    v-if="!$vuetify.display.mobile"
-                />
-                <v-btn
-                    v-bind="activatorProps"
-                    :icon="mdiDelete"
-                    title="Delete List"
-                    color="error"
-                    v-else
-                />
-            </template>
+    <v-dialog
+        :max-width="$vuetify.display.mobile ? '100%' : '500px'"
+        :fullscreen="$vuetify.display.mobile ? true : false"
+        v-model="dialogOpen"
+        key="delete-list-dialog"
+    >
+        <template v-slot:activator="{ props: activatorProps }">
+            <v-btn
+                v-bind="activatorProps"
+                :prepend-icon="mdiDelete"
+                title="Delete List"
+                color="error"
+                variant="outlined"
+                v-if="!$vuetify.display.mobile"
+            >
+                Delete
+            </v-btn>
+            <v-btn
+                v-bind="activatorProps"
+                :icon="mdiDelete"
+                title="Delete List"
+                color="error"
+                v-else
+            />
+        </template>
 
-            <template v-slot:default="{ isActive }">
-                <v-card title="Delete List">
-                    <v-card-text>
-                        Are you sure you want to delete this list?
-                        <v-alert
-                            v-if="alert"
-                            type="error"
-                            border="start"
-                            elevation="2"
-                            :icon="mdiAlert"
-                            :title="alert.title"
-                            :text="alert.text"
-                            class="mt-4"
-                        />
-                    </v-card-text>
-                    <v-card-actions>
-                        <v-btn
-                            text="Cancel"
-                            @click="isActive.value = false"
-                        />
-                        <v-btn
-                            color="error"
-                            text="Delete"
-                            @click="deleteList"
-                            variant="elevated"
-                            :loading="loading"
-                        />
-                    </v-card-actions>
-                </v-card>
-            </template>
-        </v-dialog>
-    </div>
+        <template v-slot:default="{ isActive }">
+            <v-card title="Delete List">
+                <v-card-text>
+                    Are you sure you want to delete this list?
+                    <v-alert
+                        v-if="alert"
+                        type="error"
+                        border="start"
+                        elevation="2"
+                        :icon="mdiAlert"
+                        :title="alert.title"
+                        :text="alert.text"
+                        class="mt-4"
+                    />
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn
+                        text="Cancel"
+                        @click="isActive.value = false"
+                    />
+                    <v-btn
+                        color="error"
+                        text="Delete"
+                        @click="deleteList"
+                        variant="elevated"
+                        :loading="loading"
+                    />
+                </v-card-actions>
+            </v-card>
+        </template>
+    </v-dialog>
 </template>
 
 <script>

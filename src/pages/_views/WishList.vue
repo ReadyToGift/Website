@@ -7,99 +7,99 @@
         <v-skeleton-loader type="card" />
         <v-skeleton-loader type="card" />
     </div>
-    <div
-        class="page-content"
-        v-else-if="!newItem.notFound"
-    >
-        <PWAPrompt class="mb-5"/>
-        <ListCard
-            :header="true"
-            :list="list"
-            :communityItems="communityItems"
-            :spoilSurprises="spoilSurprises"
-            :list-saved="listSaved"
-            :quickCreateURL="quickCreateURL"
-            :own-list="wishlistOwner"
-            @updateList="updateList"
-            @newItem="addItem"
-        />
-        <div class="filters">
-            <v-switch
-                label="Show Fulfilled"
-                v-model="showFulfilled"
-                color="primary"
-                inset
-                v-if="!wishlistOwner"
+    <template v-else-if="!newItem.notFound">
+        <div
+            class="page-content"
+        >
+            <PWAPrompt class="mb-5"/>
+            <ListCard
+                :header="true"
+                :list="list"
+                :communityItems="communityItems"
+                :spoilSurprises="spoilSurprises"
+                :list-saved="listSaved"
+                :quickCreateURL="quickCreateURL"
+                :own-list="wishlistOwner"
+                @updateList="updateList"
+                @newItem="addItem"
             />
-        </div>
-        <v-alert
-            v-if="!wishlistOwner"
-            type="info"
-            :icon="mdiInformation"
-            elevation="2"
-            class="mt-5"
-            text="Make sure to mark anything as Fulfilled if you've purchased or plan on purchasing any of the items on the list! This will not be shown to the owner of this list."
-            color="primary"
-        />
-
-        <div
-            class="items"
-            v-if="itemsByPriceGroups && itemsByPriceGroups.length"
-        >
-            <div
-                class="item-price-group"
-                v-for="priceGroup in itemsByPriceGroups"
-                :key="priceGroup.price"
-            >
-                <h3>{{ priceGroup.title }}</h3>
-                <v-divider />
-                <div class="item-price-group-items">
-                    <ListItem
-                        v-for="item in priceGroup.items"
-                        :key="item.$id"
-                        :item="item"
-                        :list="list"
-                        :wishlistOwner="wishlistOwner"
-                        :currency="list.currency"
-                        @removeItem="removeItem(item.$id)"
-                        @loadList="loadList($event)"
-                        @editItem="editItem($event)"
-                        @fulfillItem="fulfillItem($event)"
-                        @unfulfillItem="unfulfillItem($event)"
-                    />
-                </div>
+            <div class="filters">
+                <v-switch
+                    label="Show Fulfilled"
+                    v-model="showFulfilled"
+                    color="primary"
+                    inset
+                    v-if="!wishlistOwner"
+                />
             </div>
-        </div>
-        <div
-            class="no-items"
-            v-else
-        >
-            <v-spacer height="20" />
             <v-alert
+                v-if="!wishlistOwner"
                 type="info"
                 :icon="mdiInformation"
                 elevation="2"
                 class="mt-5"
+                text="Make sure to mark anything as Fulfilled if you've purchased or plan on purchasing any of the items on the list! This will not be shown to the owner of this list."
                 color="primary"
+            />
+
+            <div
+                class="items"
+                v-if="itemsByPriceGroups && itemsByPriceGroups.length"
             >
-                <template
-                    v-slot:text
-                    v-if="list.items && list.items.length"
+                <div
+                    class="item-price-group"
+                    v-for="priceGroup in itemsByPriceGroups"
+                    :key="priceGroup.price"
                 >
-                    Items exist on this list, but they've all been fulfilled. Lucky them!
-                </template>
-                <template
-                    v-slot:text
-                    v-else
+                    <h3>{{ priceGroup.title }}</h3>
+                    <v-divider />
+                    <div class="item-price-group-items">
+                        <ListItem
+                            v-for="item in priceGroup.items"
+                            :key="item.$id"
+                            :item="item"
+                            :list="list"
+                            :wishlistOwner="wishlistOwner"
+                            :currency="list.currency"
+                            @removeItem="removeItem(item.$id)"
+                            @loadList="loadList($event)"
+                            @editItem="editItem($event)"
+                            @fulfillItem="fulfillItem($event)"
+                            @unfulfillItem="unfulfillItem($event)"
+                        />
+                    </div>
+                </div>
+            </div>
+            <div
+                class="no-items"
+                v-else
+            >
+                <v-spacer height="20" />
+                <v-alert
+                    type="info"
+                    :icon="mdiInformation"
+                    elevation="2"
+                    class="mt-5"
+                    color="primary"
                 >
-                    No items currently exist in this list.
-                    <template v-if="wishlistOwner"> Add some! </template>
-                </template>
-            </v-alert>
+                    <template
+                        v-slot:text
+                        v-if="list.items && list.items.length"
+                    >
+                        Items exist on this list, but they've all been fulfilled. Lucky them!
+                    </template>
+                    <template
+                        v-slot:text
+                        v-else
+                    >
+                        No items currently exist in this list.
+                        <template v-if="wishlistOwner"> Add some! </template>
+                    </template>
+                </v-alert>
+            </div>
         </div>
         <div
             class="add-item-fab"
-            v-if="$vuetify.display.mobile"
         >
             <ModifyItem
                 :list="list"
@@ -112,7 +112,7 @@
                 v-if="auth.isLoggedIn"
             />
         </div>
-    </div>
+    </template>
     <NotFound v-else />
 </template>
 
@@ -593,9 +593,11 @@ main {
     .add-item-fab {
         position: sticky;
         bottom: 1.5rem;
+        right: 3rem;
         width: fit-content;
         margin-left: auto;
         padding-top: 1rem;
+        
     }
 
     @media screen and (max-width: 768px) {
@@ -606,6 +608,10 @@ main {
                     align-items: start;
                 }
             }
+        }
+
+        .add-item-fab {
+            right: calc((100% - var(--section-width)) / 2);
         }
     }
 }

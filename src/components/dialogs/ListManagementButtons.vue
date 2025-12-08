@@ -7,51 +7,12 @@
         size="small"
         :class="props.class"
     >
-        <ModifyItem
+        <EditList
             :list="list"
-            :variant="variant"
-            :currency="currency"
-            :quickCreateURL="quickCreateURL"
-            :wishlistOwner="wishlistOwner"
-            @unsetQuickCreateURL="resetQuickCreateURL"
-            @newItem="(data) => $emit('newItem', data)"
             @updateList="$emit('updateList', $event)"
-            v-if="auth.isLoggedIn && !$vuetify.display.mobile"
+            @dialogClosed="menuOpen = false"
+            v-if="!$vuetify.display.mobile"
         />
-
-        <v-btn
-            size="small"
-            icon
-            variant="outlined"
-            v-if="wishlistOwner && !$vuetify.display.mobile"
-            v-bind="menuOpen"
-        >
-            <v-icon :icon="mdiMenuDown" />
-
-            <v-menu
-                activator="parent"
-                location="bottom end"
-                transition="fade-transition"
-                v-model="menuOpen"
-            >
-                <v-list
-                    density="compact"
-                    min-width="250"
-                    rounded="lg"
-                    slim
-                >
-                    <EditList
-                        :list="list"
-                        @updateList="$emit('updateList', $event)"
-                        @dialogClosed="menuOpen = false"
-                    />
-                    <DeleteList
-                        :list="list"
-                        @dialogClosed="menuOpen = false"
-                    />
-                </v-list>
-            </v-menu>
-        </v-btn>
 
         <v-dialog
             :max-width="$vuetify.display.mobile ? '100%' : '500px'"
@@ -60,18 +21,11 @@
         >
             <template v-slot:activator>
                 <v-btn
-                    :icon="mdiClipboard"
-                    variant="outlined"
-                    @click="quickCreate"
-                    v-if="$vuetify.display.mobile"
-                />
-                <v-btn
                     :prepend-icon="mdiClipboard"
                     variant="outlined"
                     @click="quickCreate"
-                    v-else
                 >
-                    <template v-if="!$vuetify.display.mobile"> Quickcreate </template>
+                    Quick Create
                 </v-btn>
             </template>
 
@@ -106,6 +60,12 @@
             Share
         </v-btn>
 
+        <DeleteList
+            :list="list"
+            @dialogClosed="menuOpen = false"
+            v-if="!$vuetify.display.mobile"
+        />
+
         <v-btn
             :prepend-icon="listSaved ? mdiStarOff : mdiStar"
             :variant="listSaved ? 'tonal' : 'outlined'"
@@ -128,11 +88,10 @@
 </template>
 
 <script setup>
-import { mdiClipboard, mdiMenuDown, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
+import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
 import { account } from "@/appwrite";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
-import ModifyItem from "./ModifyItem.vue";
 import { ref } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useDialogs } from "@/stores/dialogs";
@@ -303,19 +262,6 @@ const quickCreate = async () => {
         };
         quickcreateDialogOpen.value = true;
         console.error("Clipboard read error:", error);
-    }
-};
-
-const resetQuickCreateURL = () => {
-    quickCreateURL.value = "";
-    const { quickcreateurl, ...remainingQueries } = Object.fromEntries(
-        new URLSearchParams(window.location.search)
-    );
-    if (quickcreateurl) {
-        const newQueryString = new URLSearchParams(remainingQueries).toString();
-        const newURL =
-            window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
-        window.history.replaceState({}, document.title, newURL);
     }
 };
 
