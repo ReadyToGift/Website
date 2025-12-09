@@ -290,7 +290,7 @@ export default {
             this.showFulfilled = true;
             this.$nextTick(() => {
                 setTimeout(() => {
-                    const newItem = this.$el.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    const newItem = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
                     newItem.scrollIntoView({
                         behavior: "smooth",
                         block: "center"
@@ -314,6 +314,15 @@ export default {
                     return item;
                 });
             }
+            this.$nextTick(() => {
+                setTimeout(() => {
+                    const newItem = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    newItem.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
+                }, 500);
+            });
         },
         async removeItem(id) {
             if (this.communityItems.find((item) => item.$id === id)) {
@@ -344,7 +353,7 @@ export default {
 
             if (this.showFulfilled === true) {
                 this.$nextTick(() => {
-                    const el = this.$el.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    const el = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
                     el.scrollIntoView({
                         behavior: "smooth",
                         block: "center"
@@ -361,7 +370,7 @@ export default {
             });
 
             this.$nextTick(() => {
-                const el = this.$el.querySelector(`[data-item-id="${itemId}"]`);
+                const el = document.body.querySelector(`[data-item-id="${itemId}"]`);
                 el.scrollIntoView({
                     behavior: "smooth",
                     block: "center"
