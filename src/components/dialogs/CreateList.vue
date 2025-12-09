@@ -141,6 +141,16 @@ export default {
             if (open === true) {
                 this.listId = this.list.$id;
                 this.newList.private = this.private;
+            } else {
+                this.alert = false;
+                this.loading = false;
+                this.newList = {
+                    currency: "USD",
+                    description: "",
+                    private: false,
+                    shortUrl: null,
+                    title: ""
+                };
             }
         }
     },
