@@ -304,6 +304,9 @@ export default {
             font-size: 1.8rem;
             margin: 0;
             align-self: center;
+            word-break: break-word;
+            white-space: pre-wrap;
+            word-wrap: normal;
         }
 
         .v-btn-group {
