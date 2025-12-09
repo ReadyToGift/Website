@@ -11,7 +11,7 @@
             :list="list"
             @updateList="$emit('updateList', $event)"
             @dialogClosed="menuOpen = false"
-            v-if="!$vuetify.display.mobile"
+            v-if="!$vuetify.display.mobile && wishlistOwner"
         />
 
         <v-dialog
@@ -45,28 +45,6 @@
         </v-dialog>
 
         <v-btn
-            variant="outlined"
-            :icon="mdiShare"
-            @click="copyListURL"
-            v-if="$vuetify.display.mobile && wishlistOwner"
-        />
-
-        <v-btn
-            variant="outlined"
-            :prepend-icon="mdiShare"
-            @click="copyListURL"
-            v-else
-        >
-            Share
-        </v-btn>
-
-        <DeleteList
-            :list="list"
-            @dialogClosed="menuOpen = false"
-            v-if="!$vuetify.display.mobile"
-        />
-
-        <v-btn
             :prepend-icon="listSaved ? mdiStarOff : mdiStar"
             :variant="listSaved ? 'tonal' : 'outlined'"
             v-if="!wishlistOwner"
@@ -75,6 +53,20 @@
         >
             {{ listSaved ? "Unsave" : "Save" }}
         </v-btn>
+
+        <v-btn
+            variant="outlined"
+            :prepend-icon="mdiShare"
+            @click="copyListURL"
+        >
+            Share
+        </v-btn>
+
+        <DeleteList
+            :list="list"
+            @dialogClosed="menuOpen = false"
+            v-if="!$vuetify.display.mobile && wishlistOwner"
+        />
 
         <v-snackbar
             v-model="shareButtonSnackbarOpen"
