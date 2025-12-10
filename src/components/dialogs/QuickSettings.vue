@@ -109,7 +109,6 @@
 <script setup>
 import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
 import { shallowRef } from "vue";
 import { useAuthStore } from "@/stores/auth";
 
@@ -132,9 +131,5 @@ const updatePrefs = async () => {
 
     menu.value = false;
 };
-
-clientRouter.afterEach(() => {
-    menu.value = false;
-});
 
 </script>

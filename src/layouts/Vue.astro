@@ -23,7 +23,7 @@ const { requiresAuth = false } = Astro.props;
             }
         }
     </style>
-    <VueLayout client:only requiresAuth={requiresAuth}>
+    <VueLayout client:load requiresAuth={requiresAuth}>
         <slot />
     </VueLayout>
 </div>

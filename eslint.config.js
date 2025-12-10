@@ -75,21 +75,5 @@ export default [
             ],
             "vue/script-indent": ["error", 4]
         }
-    },
-    {
-        files: ["src/**/*.vue"],
-        rules: {
-            "vue/sort-keys": [
-                "error",
-                "asc",
-                {
-                    caseSensitive: true,
-                    ignoreChildrenOf: ["model", "methods"],
-                    ignoreGrandchildrenOf: ["computed", "directives", "inject", "methods", "props", "watch"],
-                    minKeys: 2,
-                    natural: false
-                }
-            ]
-        }
     }
 ];

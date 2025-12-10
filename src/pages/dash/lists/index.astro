@@ -1,0 +1,12 @@
+---
+import Layout from "@/layouts/Layout.astro"
+
+const { user } = Astro.locals;
+
+console.log({user})
+
+export const prerender = false;
+export const requireAuth = true;
+---
+
+{user}

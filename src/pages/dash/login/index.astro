@@ -1,0 +1,72 @@
+---
+import VueLayout from "@/layouts/VueLayout.astro";
+import LoginPage from "./_LoginPage.vue";
+
+const { user } = Astro.locals;
+import { createAdminClient, getServersideSessionClient, SESSION_COOKIE } from "@/server/appwrite";
+import { AppwriteException } from "node-appwrite";
+
+const params = new URLSearchParams(Astro.request.url.search);
+const redirect = params.get("redirect") || "/dash/lists";
+
+if (Astro.request.method === "POST") {
+    try {
+        const body = await Astro.request.json();
+        const { email, password } = body;
+
+        const { account } = createAdminClient();
+
+        const session = await account.createEmailPasswordSession({
+            email,
+            password,
+        });
+
+        Astro.cookies.set(SESSION_COOKIE, session.secret, {
+            path: "/",
+            expires: new Date(session.expire),
+            sameSite: "strict",
+            secure: true,
+            httpOnly: true,
+        });
+
+        try {
+            const sessionClient = getServersideSessionClient(session.secret);
+            const user = await sessionClient.account.get();
+            console.log({user});
+        } catch (error) {
+            if (error instanceof AppwriteException) {
+                console.log({error})
+                return new Response(error.response, {
+                    status: error.code || 400,
+                    headers: { "Content-Type": "application/json" },
+                });
+            }
+        }
+
+        return new Response("OK", { status: 200 });
+    } catch (error) {
+        if (error instanceof AppwriteException) {
+            console.log({error})
+            return new Response(error.response, {
+                status: error.code || 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        }
+
+        return new Response(JSON.stringify({ error: error.message }), {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+}
+
+export const prerender = false;
+---
+
+<VueLayout>
+    <LoginPage 
+        client:load
+        redirect={redirect}
+    />
+</VueLayout>
+

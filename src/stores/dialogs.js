@@ -1,5 +1,8 @@
 import { defineStore } from "pinia";
+import { markRaw } from "vue";
 import { v7 as uuidv7 } from "uuid";
+
+import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
 
 export const useDialogs = defineStore("dialogs", {
     state: () => ({
@@ -32,6 +35,18 @@ export const useDialogs = defineStore("dialogs", {
             this.dialogs.push({ open: true, resolvePromise, id: uuidv7(), ...dialog });
 
             return dialog.async ? promise : null;
+        },
+        async createTOTPChallengeDialog() {
+            return this.create({
+                async: true,
+                component: markRaw(TotpChallenge),
+                emits: [
+                    "cancel", "success", "totp-removed"
+                ],
+                fullscreen: false,
+                maxWidth: "80%",
+                title: "Multi-Factor Authentication"
+            });
         }
     }
 });

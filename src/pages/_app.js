@@ -7,5 +7,7 @@ const pinia = createPinia();
 export default function setup(app) {
     app.use(pinia);
     app.use(vuetify);
-    app.use(clientRouter);
+    if (clientRouter) {
+        app.use(clientRouter);
+    }
 }

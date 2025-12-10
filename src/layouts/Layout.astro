@@ -1,3 +1,7 @@
+---
+import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
+---
+
 <!doctype html>
 <html lang="en">
     <head>
@@ -200,6 +204,19 @@
             href="/apple-splash-1136-640.jpg"
             media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
         />
+        {
+            UMAMI_ID && UMAMI_URL && UMAMI_DOMAINS ? (
+                <>
+                    <script
+                        async
+                        defer
+                        data-website-id={UMAMI_ID}
+                        data-domains={UMAMI_DOMAINS}
+                        src={UMAMI_URL}
+                    ></script>
+                </>
+            ) : null
+        }
     </head>
     <body>
         <slot />
