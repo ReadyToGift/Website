@@ -36,6 +36,24 @@ export const useDialogs = defineStore("dialogs", {
 
             return dialog.async ? promise : null;
         },
+        async completeMFAchallenge(code, factor = "totp") {
+            const response = await fetch("/api/auth/mfa/challenge", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ code, factor })
+            });
+            // const challenge = await account.createMFAChallenge({
+            //     factor
+            // });
+            // const challengeId = challenge.$id;
+
+            // await account.updateMFAChallenge({
+            //     challengeId,
+            //     otp: code
+            // });
+        },
         async createTOTPChallengeDialog() {
             return this.create({
                 async: true,

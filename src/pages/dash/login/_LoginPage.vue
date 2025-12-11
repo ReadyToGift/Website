@@ -73,7 +73,7 @@
 </template>
 
 <script setup>
-import { defineProps, markRaw, onMounted, shallowRef } from "vue";
+import { defineProps, shallowRef } from "vue";
 import { mdiAlert, mdiGithub } from "@mdi/js";
 import { LOGIN_METHODS } from "astro:env/client";
 import { useDialogs } from "@/stores/dialogs";
@@ -86,8 +86,6 @@ const props = defineProps({
         type: String
     }
 });
-
-console.log(props);
 
 const methods = LOGIN_METHODS.split(",").map((method) => method.trim());
 const error = shallowRef(null);

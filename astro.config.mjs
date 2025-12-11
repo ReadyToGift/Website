@@ -5,7 +5,13 @@ import vue from "@astrojs/vue";
 
 import sentry from "@sentry/astro";
 
-import vercel from "@astrojs/vercel";
+// import vercel from "@astrojs/vercel";
+// const adapter = vercel();
+
+import node from "@astrojs/node";
+const adapter = node({
+    mode: "standalone"
+});
 
 // https://astro.build/config
 export default defineConfig({
@@ -82,5 +88,5 @@ export default defineConfig({
 
     output: "static",
 
-    adapter: vercel()
+    adapter
 });

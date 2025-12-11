@@ -1,5 +1,4 @@
 <template>
-    {{ dialogs.dialogs }}
     <v-dialog
         v-for="dialog in dialogs.dialogs"
         :key="dialog.id"

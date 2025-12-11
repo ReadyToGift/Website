@@ -35,23 +35,25 @@ if (Astro.request.method === "POST") {
             console.log({user});
         } catch (error) {
             if (error instanceof AppwriteException) {
-                console.log({error})
                 return new Response(error.response, {
                     status: error.code || 400,
                     headers: { "Content-Type": "application/json" },
                 });
             }
+            
+            console.log({error})
         }
 
         return new Response("OK", { status: 200 });
     } catch (error) {
         if (error instanceof AppwriteException) {
-            console.log({error})
             return new Response(error.response, {
                 status: error.code || 400,
                 headers: { "Content-Type": "application/json" },
             });
         }
+        
+        console.log({error})
 
         return new Response(JSON.stringify({ error: error.message }), {
             status: 400,
