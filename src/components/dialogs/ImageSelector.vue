@@ -78,7 +78,7 @@
 </template>
 
 <script setup>
-import { defineEmits, defineProps, onMounted, shallowRef, useTemplateRef } from "vue";
+import { onMounted, shallowRef, useTemplateRef } from "vue";
 import { Splide, SplideSlide, SplideTrack } from "@splidejs/vue-splide";
 import { mdiChevronRight } from "@mdi/js";
 

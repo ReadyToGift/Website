@@ -1,5 +1,23 @@
-import { atom } from "nanostores";
-import { client } from "@/appwrite";
+import { account, avatars } from "@/appwrite";
+import { defineStore } from "pinia";
+import { markRaw } from "vue";
+import { SENTRY_DSN } from "astro:env/client";
+import { setUser as setSentryUser } from "@sentry/vue";
+import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
+import { useDialogs } from "./dialogs";
+
+const defaultPrefs = {
+    darkMode: false,
+    spoilSurprises: false,
+    showTotalPrice: false,
+    savedLists: [],
+    listSorting: {
+        type: { name: "Last updated", value: "$updatedAt" },
+        order: "asc"
+    },
+    history: [],
+    hidePWAInstallPrompt: false
+};
 
 export const useAuthStore = defineStore("auth", {
     state: () => ({
@@ -16,7 +34,9 @@ export const useAuthStore = defineStore("auth", {
             return await dialogs.create({
                 async: true,
                 component: markRaw(TotpChallenge),
-                emits: ["cancel", "success", "totp-removed"],
+                emits: [
+                    "cancel", "success", "totp-removed"
+                ],
                 fullscreen: false,
                 maxWidth: "80%",
                 title: "Multi-Factor Authentication"
@@ -68,20 +88,20 @@ export const useAuthStore = defineStore("auth", {
                     this.user = await account.get();
                 } catch (error) {
                     switch (error.type) {
-                        case "general_unauthorized_scope":
-                            break;
+                    case "general_unauthorized_scope":
+                        break;
 
-                        case "user_more_factors_required":
-                            if ((await this.createTOTPChallengeDialog()).action !== "cancel") {
-                                this.user = await account.get();
-                                break;
-                            } else {
-                                await account.deleteSession("current");
-                                this.user = null;
-                                break;
-                            }
-                        default:
-                            throw error;
+                    case "user_more_factors_required":
+                        if ((await this.createTOTPChallengeDialog()).action !== "cancel" ) {
+                            this.user = await account.get();
+                            break;
+                        } else {
+                            await account.deleteSession("current");
+                            this.user = null;
+                            break;
+                        }
+                    default:
+                        throw error;
                     }
                 }
 
@@ -164,7 +184,7 @@ export const useAuthStore = defineStore("auth", {
         addToHistory(item) {
             this.userPrefs.history.unshift(item);
             this.userPrefs.history = this.userPrefs.history
-                .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
+                .filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // remove duplicates
                 .slice(0, 5); // keep only last 5 items
 
             this.updatePrefs(this.userPrefs);

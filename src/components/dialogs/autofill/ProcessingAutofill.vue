@@ -56,7 +56,7 @@
 
 <script setup>
 import { client, databases, functions } from "@/appwrite";
-import { computed, defineProps, onMounted, onUnmounted, shallowRef } from "vue";
+import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
 import { APPWRITE_DB } from "astro:env/client";
 

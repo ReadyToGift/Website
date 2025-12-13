@@ -40,6 +40,7 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
+import currencyStore from "@/stores/currency";
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -50,7 +51,6 @@ import { useTheme } from "vuetify";
 import { useVersion } from "@/stores/version";
 
 const auth = useAuthStore();
-const currencyStore = useCurrencyStore();
 const pwa = usePWA();
 const polarStore = usePolarStore();
 const versionStore = useVersion();

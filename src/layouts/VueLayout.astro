@@ -1,12 +1,12 @@
 ---
 import Layout from "./Layout.astro";
-import GlobalDialogs from "@/components/GlobalDialogs.vue";
 import AppWrapper from "./AppWrapper.vue";
-import ClientEvents from "@/components/ClientEvents.vue";
+
+const { user } = Astro.props;
 ---
 
 <Layout>
-    <AppWrapper client:only="vue">
+    <AppWrapper user={user} client:load>
         <slot />
     </AppWrapper>
 </Layout>

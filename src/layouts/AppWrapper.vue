@@ -1,14 +1,13 @@
 <template>
     <v-app
-        old-theme="auth.userPrefs.darkMode ? 'dark' : 'light'"
-        theme="dark"
+        :theme="prefs?.darkMode ? 'dark' : 'light'"
     >
-        <DashNav />
+        <!-- <DashNav /> -->
         <v-main>
             <slot></slot>
             <GlobalDialogs />
             <v-snackbar
-                v-model="versionStore.showUpdatePrompt"
+                v-model="showUpdatePrompt"
                 location="bottom"
                 width="100%"
                 color="primary"
@@ -28,7 +27,7 @@
                         <v-btn
                             variant="tonal"
                             color="surface"
-                            @click="versionStore.showUpdatePrompt = false"
+                            @click="showUpdatePromptStore.set(false)"
                         >
                             Dismiss
                         </v-btn>
@@ -40,24 +39,82 @@
 </template>
 
 <script setup>
-import DashNav from "@/components/DashNav.vue";
+import "vuetify/styles";
+import "@/assets/main.scss";
+import { $prefs, loadPrefs } from "@/stores/prefs";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
-import { usePWA } from "@/stores/pwa";
-import { useVersion } from "@/stores/version";
+import { init as initAuth } from "@/stores/auth";
+import { init as initCurrencies } from "@/stores/currency";
+import { showUpdatePrompt as showUpdatePromptStore } from "@/stores/version";
+import { useStore } from "@nanostores/vue";
+import { useTheme } from "vuetify";
 
-const pwa = usePWA();
-const versionStore = useVersion();
+const prefs = useStore($prefs);
 
-window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    pwa.setDeferredPrompt(e);
+const props = defineProps({
+    user: {
+        type: Object,
+        required: false
+    }
 });
 
-window.addEventListener("appinstalled", () => {
-    pwa.setAppInstalled(true);
-    console.log("App is installed!");
+console.log({ user: props.user });
+if (props.user) {
+    if (props.user.prefs) {
+        console.log("Loading user preferences:", props.user.prefs);
+        loadPrefs(props.user.prefs);
+    }
+    if (props.user.account) {
+        console.log("Initializing auth with user account and session.");
+        initAuth({ user: props.user.account, session: props.user.session } );
+    }
+}
+
+const vuetifyTheme = useTheme();
+
+// Initialize currencies without blocking
+initCurrencies().catch((error) => {
+    console.error("Failed to initialize currencies:", error);
 });
+
+const showUpdatePrompt = useStore(showUpdatePromptStore);
+
+const refreshApp = () => {
+    window.location.reload();
+};
+
+const setThemeColor = () => {
+    try {
+        vuetifyTheme.change(prefs.value.darkMode ? "dark" : "light");
+        console.log("Theme color set to:", prefs.value.darkMode ? "dark" : "light");
+    } catch (error) {
+        console.error("Failed to set theme color:", error);
+    }
+};
+
+setThemeColor();
+
+
+
+// import { usePWA } from "@/stores/pwa";
+// import { useVersion } from "@/stores/version";
+
+// const pwa = usePWA();
+// const versionStore = useVersion();
+
+// console.log(window);
+
+// window.addEventListener("beforeinstallprompt", (e) => {
+//     e.preventDefault();
+//     pwa.setDeferredPrompt(e);
+// });
+
+// window.addEventListener("appinstalled", () => {
+//     pwa.setAppInstalled(true);
+//     console.log("App is installed!");
+// });
 </script>
+
 
 <style scoped>
 header {

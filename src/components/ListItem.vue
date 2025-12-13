@@ -156,13 +156,13 @@ import { avatars, storage } from "@/appwrite";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
 import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { convertPriority } from "@/utils";
+import currencyStore from "@/stores/currency";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
 import { ImageFormat } from "appwrite";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
 import { useAuthStore } from "@/stores/auth";
-import { useCurrencyStore } from "@/stores/currency";
 import validation from "@/utils/validation";
 import VueMarkdown from "vue-markdown-render";
 
@@ -196,7 +196,7 @@ export default {
         return {
             auth: useAuthStore(),
             convertPriority,
-            currencyStore: useCurrencyStore(),
+            currencyStore: currencyStore,
             mdiGift,
             mdiOpenInNew,
             mdiWeb,

@@ -64,13 +64,13 @@
                 </v-list-item>
                 <v-list-item
                     :prepend-icon="mdiInformation"
-                    to="/dash/about"
+                    href="/dash/about"
                 >
                     About
                 </v-list-item>
                 <v-list-item
                     v-if="!!auth.user"
-                    to="/dash/settings"
+                    href="/dash/settings"
                     :prepend-icon="mdiAccountCircle"
                 >
                     Account Settings
@@ -110,9 +110,9 @@
 import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
 import { shallowRef } from "vue";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
-const auth = useAuthStore();
+// const auth = useAuthStore();
 
 const loadingLoginLogout = shallowRef(false);
 const menu = shallowRef(false);

@@ -1,70 +1,39 @@
-import { defineStore } from "pinia";
-import { markRaw } from "vue";
+import { map } from "nanostores";
 import { v7 as uuidv7 } from "uuid";
 
-import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
+export const dialogs = map({});
 
-export const useDialogs = defineStore("dialogs", {
-    state: () => ({
-        dialogs: []
-    }),
-    actions: {
-        close(id, actionText, data = null) {
-            let dialog = this.dialogs.find((d) => d.id === id);
-            if (!dialog) return;
-            if (dialog.async) {
-                dialog.resolvePromise({ action: actionText, data });
-            }
+export const create = (dialog) => {
+    console.log("Creating dialog:", dialog);
+    let resolvePromise;
+    let promise;
 
-            dialog.open = false;
-
-            setTimeout(() => {
-                delete this.dialogs[id];
-            }, 500);
-        },
-        create(dialog) {
-            let resolvePromise;
-            let promise;
-
-            if (dialog.async) {
-                promise = new Promise((resolve) => {
-                    resolvePromise = resolve;
-                });
-            }
-
-            this.dialogs.push({ open: true, resolvePromise, id: uuidv7(), ...dialog });
-
-            return dialog.async ? promise : null;
-        },
-        async completeMFAchallenge(code, factor = "totp") {
-            const response = await fetch("/api/auth/mfa/challenge", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ code, factor })
-            });
-            // const challenge = await account.createMFAChallenge({
-            //     factor
-            // });
-            // const challengeId = challenge.$id;
-
-            // await account.updateMFAChallenge({
-            //     challengeId,
-            //     otp: code
-            // });
-        },
-        async createTOTPChallengeDialog() {
-            return this.create({
-                async: true,
-                component: markRaw(TotpChallenge),
-                emits: [
-                    "cancel", "success", "totp-removed"
-                ],
-                fullscreen: false,
-                maxWidth: "80%",
-                title: "Multi-Factor Authentication"
-            });
-        }
+    if (dialog.async) {
+        promise = new Promise((resolve) => {
+            resolvePromise = resolve;
+        });
     }
-});
+
+    const id = uuidv7();
+    dialogs.setKey(id, { open: true, resolvePromise, id, ...dialog });
+
+    console.log(dialogs.get());
+
+    return dialog.async ? promise : null;
+};
+
+export const close = (id, actionText, data = null) => {
+    const dialog = dialogs.get()[id];
+    if (!dialog) return;
+    
+    if (dialog.async) {
+        dialog.resolvePromise({ action: actionText, data });
+    }
+
+    // Update the dialog's open state immutably
+    dialogs.setKey(id, { ...dialog, open: false });
+
+    setTimeout(() => {
+        dialogs.setKey(id, undefined);
+    }, 500);
+};

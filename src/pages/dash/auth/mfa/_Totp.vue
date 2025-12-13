@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { defineEmits, shallowRef } from "vue";
+import { shallowRef } from "vue";
 import { account } from "@/appwrite";
 import { useDialogs } from "@/stores/dialogs";
 

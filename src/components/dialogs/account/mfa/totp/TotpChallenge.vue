@@ -81,14 +81,12 @@
 </template>
 
 <script setup>
-import { defineEmits, shallowRef } from "vue";
-import { account } from "@/appwrite";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
+import { shallowRef } from "vue";
+// import { account } from "@/appwrite";
+// import { useAuthStore } from "@/stores/auth";
+import { completeMFAchallenge } from "@/stores/mfa";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
-
-const dialogs = useDialogs();
 
 const code = shallowRef("");
 const recoveryCode = shallowRef("");
@@ -129,7 +127,7 @@ const submit = async () => {
             // });
             // emit("totp-removed");
         } else {
-            await dialogs.completeMFAchallenge(code.value, "totp");
+            await completeMFAchallenge(code.value, "totp");
             emit("success");
         }
     } catch (error) {

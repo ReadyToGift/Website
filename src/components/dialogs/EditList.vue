@@ -83,6 +83,7 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
+import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import { useAuthStore } from "@/stores/auth";
@@ -108,9 +109,9 @@ export default {
     data() {
         return {
             alert: false,
-            auth: useAuthStore(),
+            // auth: useAuthStore(),
+            createDialog,
             dialogOpen: false,
-            dialogs: useDialogs(),
             editedList: {},
             listId: null,
             loading: false,
@@ -152,7 +153,7 @@ export default {
             if (this.editedList.private) {
                 this.editedList.shortUrl = null;
 
-                const resp = await this.dialogs.create({
+                const resp = await this.createDialog({
                     actions: [
                         {
                             action: "close",

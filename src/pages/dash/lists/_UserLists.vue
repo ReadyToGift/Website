@@ -8,7 +8,7 @@
             title="Verification Required"
             text="Please verify your email address to create lists."
             class="mb-4"
-            v-if="auth?.user?.emailVerification === false"
+            v-if="user.emailVerification === false"
         >
             <v-card-actions>
                 <v-btn
@@ -21,7 +21,7 @@
                 >
                     <v-card>
                         <v-card-text>
-                            A verification email has been sent to {{ auth.user.email }}. Please
+                            A verification email has been sent to {{ auth.user.value.email }}. Please
                             check your inbox and spam folder, the link will be valid for 7 days.
                         </v-card-text>
 
@@ -37,7 +37,6 @@
                 </v-dialog>
             </v-card-actions>
         </v-alert>
-        <PWAPrompt />
         <v-card
             color="surface"
             variant="flat"
@@ -50,14 +49,14 @@
                 <template v-slot:append>
                     <CreateList
                         @createList="createList"
-                        :disabled="auth?.user?.emailVerification === false"
+                        :disabled="user?.emailVerification === false"
                         :private="tab === 'private'"
                     />
                 </template>
             </v-card-item>
             <v-card-text
                 class="px-0"
-                v-if="auth.userPrefs.listSorting"
+                v-if="prefs.listSorting"
             >
                 <div class="sorting">
                     <v-btn-group
@@ -65,7 +64,7 @@
                         divided
                     >
                         <v-btn ref="sortTypeButton">
-                            {{ auth?.userPrefs?.listSorting.type.name }}
+                            {{ prefs.listSorting.type.name }}
                             <v-menu
                                 activator="parent"
                                 location="bottom start"
@@ -85,7 +84,7 @@
                         </v-btn>
                         <v-btn
                             :icon="
-                                auth?.newUserPrefs?.listSorting.order === 'asc'
+                                newUserPrefs?.listSorting.order === 'asc'
                                     ? mdiSortAscending
                                     : mdiSortDescending
                             "
@@ -96,7 +95,7 @@
                         :items="sorting.typeOptions"
                         item-title="text"
                         item-value="value"
-                        v-model="auth.newUserPrefs.listSorting.type"
+                        v-model="newUserPrefs.listSorting.type"
                         return-object
                         hide-details
                         :menu-props="{
@@ -273,177 +272,192 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { account, databases } from "@/appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { computed, ref } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
-import { clientRouter } from "@/pages/_clientRouter";
+import { Query } from "appwrite";
+
+import { $prefs } from "@/stores/prefs";
+import auth from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { useStore } from "@nanostores/vue";
+
 import CreateList from "@/components/dialogs/CreateList.vue";
 import ListCard from "@/components/ListCard.vue";
-import PWAPrompt from "@/components/PWAPrompt.vue";
-import { Query } from "appwrite";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
 import { usePolarStore } from "@/stores/polar";
 import { useUserLists } from "@/stores/userLists";
 import validation from "@/utils/validation";
 
-export default {
-    components: {
-        CreateList,
-        ListCard,
-        PWAPrompt
+const prefs = useStore($prefs);
+const user = useStore(auth.user);
+const polar = usePolarStore();
+
+console.log(user.value);
+
+const props = defineProps({
+    title: {
+        type: String,
+        default: null
     },
-    data() {
-        return {
-            auth: useAuthStore(),
-            dialogs: useDialogs(),
-            lists: [],
-            loading: true,
-            mdiEarth,
-            mdiInformation,
-            mdiLock,
-            mdiSortAscending,
-            mdiSortDescending,
-            mdiStar,
-            polar: usePolarStore(),
-            quickCreateURL: false,
-            savedLists: [],
-            sorting: {
-                typeOptions: [
-                    { name: "Title", value: "title" },
-                    { name: "Last updated", value: "$updatedAt" },
-                    { name: "Created", value: "$createdAt" },
-                    { name: "Item Count", value: "itemCount" }
-                ]
-            },
-            tab: "public",
-            userLists: useUserLists(),
-            verificationDialog: false
-        };
+    text: {
+        type: String,
+        default: null
     },
-    computed: {
-        privateLists() {
-            return this.lists.filter((list) => list.private);
-        },
-        publicLists() {
-            return this.lists.filter((list) => !list.private);
-        }
-    },
-    methods: {
-        createList(data) {
-            const query = {};
-            if (this.quickCreateURL) {
-                query.quickcreateurl = this.quickCreateURL;
-            }
-            clientRouter.push({
-                path: `/list/${data.list.$id}?` + new URLSearchParams(query).toString()
-            });
-        },
-        async getLists() {
-            this.loading = true;
+    url: {
+        type: String,
+        default: null
+    }
+});
 
-            const listQuery = [
-                Query.limit(1000),
-                this.auth.userPrefs.listSorting.order === "asc"
-                    ? Query.orderAsc(this.auth.userPrefs.listSorting.type.value)
-                    : Query.orderDesc(this.auth.userPrefs.listSorting.type.value)
-            ];
+const newUserPrefs = $prefs.get();
 
-            const authorQuery = Query.equal("author", this.auth.user.$id);
+const lists = ref([]);
+const loading = ref(true);
+const quickCreateURL = ref(false);
+const savedLists = ref([]);
+const sorting = ref({
+    typeOptions: [
+        { name: "Title", value: "title" },
+        { name: "Last updated", value: "$updatedAt" },
+        { name: "Created", value: "$createdAt" },
+        { name: "Item Count", value: "itemCount" }
+    ]
+});
+const tab = ref("public");
+const verificationDialog = ref(false);
 
-            if (this.auth.userPrefs?.savedLists.length) {
-                listQuery.push(
-                    Query.or([authorQuery, Query.equal("$id", this.auth.userPrefs.savedLists)])
-                );
-            } else {
-                listQuery.push(authorQuery);
-            }
+const privateLists = computed(() => {
+    return lists.value.filter((list) => list.private);
+});
 
-            try {
-                const lists = await databases.listDocuments(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    listQuery
-                );
+const publicLists = computed(() => {
+    return lists.value.filter((list) => !list.private);
+});
 
-                this.savedLists = lists.documents.filter((list) =>
-                    this.auth.userPrefs.savedLists.includes(list.$id)
-                );
-                this.lists = lists.documents.filter(
-                    (list) => !this.auth.userPrefs.savedLists.includes(list.$id)
-                );
+const createList = (data) => {
+    const query = {};
+    if (quickCreateURL.value) {
+        query.quickcreateurl = quickCreateURL.value;
+    }
+    const urlSearchParams = new URLSearchParams(query).toString();
+    if (urlSearchParams.length) {
+        window.location.href = `/list/${data.list.$id}?` + urlSearchParams;
+        return;
+    }
+    window.location.href = `/list/${data.list.$id}`;
+};
 
-                this.userLists.setCount({
-                    private: this.privateLists.length,
-                    public: this.publicLists.length
-                });
+const getLists = async () => {
+    if (!user.value) {
+        console.error("User not loaded yet");
+        return;
+    }
+    
+    loading.value = true;
 
-                this.loading = false;
-            } catch (error) {
-                this.dialogs.create({
-                    actions: [
-                        {
-                            action: this.getLists,
-                            closeAfterAction: true,
-                            text: "Retry"
-                        }
-                    ],
-                    text: error,
-                    title: "Failed to load lists"
-                });
-            }
-        },
-        async setSortType(event) {
-            this.auth.newUserPrefs.listSorting.type = event[0];
-            await this.getLists();
-            try {
-                await this.auth.updatePrefs(this.auth.newUserPrefs);
-            } catch {
-                alert("Failed to update user prefs");
-            }
-        },
-        async toggleSortDirection() {
-            this.auth.newUserPrefs.listSorting.order =
-                this.auth.newUserPrefs.listSorting.order === "asc" ? "desc" : "asc";
-            await this.getLists();
-            try {
-                await this.auth.updatePrefs(this.auth.newUserPrefs);
-            } catch {
-                alert("Failed to update user prefs");
-            }
-        },
-        async verifyEmail() {
-            try {
-                await account.createVerification("https://readyto.gift/dash/verify");
+    const listQuery = [
+        Query.limit(1000),
+        prefs.value.listSorting.order === "asc"
+            ? Query.orderAsc(prefs.value.listSorting.type.value)
+            : Query.orderDesc(prefs.value.listSorting.type.value)
+    ];
 
-                this.verificationDialog = true;
-            } catch (error) {
-                alert(error);
-            }
-        }
-    },
-    async mounted() {
-        await this.getLists();
+    const authorQuery = Query.equal("author", user.value.$id);
 
-        // Handle quick create URL query
-        const { title, text, url } = Object.fromEntries(
-            new URLSearchParams(window.location.search)
+    if (user.value.userPrefs?.savedLists.length) {
+        listQuery.push(
+            Query.or([authorQuery, Query.equal("$id", user.value.userPrefs.savedLists)])
+        );
+    } else {
+        listQuery.push(authorQuery);
+    }
+
+    try {
+        const listsResponse = await databases.listDocuments(
+            APPWRITE_DB,
+            APPWRITE_LIST_COLLECTION
+            // listQuery
         );
 
-        if (!title && !text && !url) return;
+        savedLists.value = listsResponse.documents.filter((list) =>
+            prefs.value.savedLists?.includes(list.$id)
+        );
+        lists.value = listsResponse.documents.filter(
+            (list) => !prefs.value.savedLists?.includes(list.$id)
+        );
 
-        if (!url) {
-            if (text.match(validation.urlRegexGlobal)) {
-                this.quickCreateURL = text.match(validation.urlRegexGlobal)[0];
-            } else if (title.match(validation.urlRegexGlobal)) {
-                this.quickCreateURL = title.match(validation.urlRegexGlobal)[0];
-            }
-        } else {
-            this.quickCreateURL = url;
-        }
+        this.userLists.setCount({
+            private: this.privateLists.length,
+            public: this.publicLists.length
+        });
+
+        loading.value = false;
+    } catch (error) {
+        console.log({ error });
+        createDialog({
+            actions: [
+                {
+                    action: getLists,
+                    closeAfterAction: true,
+                    text: "Retry"
+                }
+            ],
+            text: error,
+            title: "Failed to load lists"
+        });
     }
 };
+
+const setSortType = async (event) => {
+    auth.newUserPrefs.listSorting.type = event[0];
+    await getLists();
+    try {
+        await auth.updatePrefs(auth.newUserPrefs);
+    } catch {
+        alert("Failed to update user prefs");
+    }
+};
+
+const toggleSortDirection = async () => {
+    auth.newUserPrefs.listSorting.order =
+        auth.newUserPrefs.listSorting.order === "asc" ? "desc" : "asc";
+    await getLists();
+    try {
+        await auth.updatePrefs(auth.newUserPrefs);
+    } catch {
+        alert("Failed to update user prefs");
+    }
+};
+
+const verifyEmail = async () => {
+    try {
+        await account.createVerification("https://readyto.gift/dash/verify");
+
+        verificationDialog.value = true;
+    } catch (error) {
+        alert(error);
+    }
+};
+
+try {
+    await getLists();
+} catch (error) {
+    console.error("Failed to load lists:", error);
+}
+
+if (props.title || props.text || props.url) {
+    if (!props.url) {
+        if (props.text.match(validation.urlRegexGlobal)) {
+            quickCreateURL.value = props.text.match(validation.urlRegexGlobal)[0];
+        } else if (props.title.match(validation.urlRegexGlobal)) {
+            quickCreateURL.value = props.title.match(validation.urlRegexGlobal)[0];
+        }
+    } else {
+        quickCreateURL.value = props.url;
+    }
+}
 </script>
 
 <style lang="scss" scoped>

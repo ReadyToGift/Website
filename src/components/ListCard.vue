@@ -1,6 +1,6 @@
 <template>
     <v-card
-        :to=" props.header || props.type === 'selectable' ? undefined : `/list/${props.list.$id}${quickCreateURL && ownList ? `?quickcreateurl=${props.quickCreateURL}` : ''}`"
+        :href=" props.header || props.type === 'selectable' ? undefined : `/list/${props.list.$id}${quickCreateURL && ownList ? `?quickcreateurl=${props.quickCreateURL}` : ''}`"
         :title="props.list.title"
         variant="tonal"
         :color="props.selected ? 'primary' : 'default'"
@@ -103,10 +103,10 @@
                     :prepend-icon="mdiInvoiceList"
                     variant="tonal"
                     rounded
-                    v-if="authStore.userPrefs.showTotalPrice && list.items && list.items.length > 0"
+                    v-if="prefs.showTotalPrice && list.items && list.items.length > 0"
                 >
                     {{
-                        currencyStore.formatter(props.list.currency).format(
+                        currencyFormatter(props.list.currency).format(
                             list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
                                 (
                                     !ownList || (ownList && spoilSurprises) ? communityItems.reduce((sum, item) => sum + (item.price || 0), 0) : 0
@@ -149,37 +149,38 @@
                 />
             </div>
             <v-alert
-                v-if="!authStore.isLoggedIn"
+                v-if="!authStore.user"
                 type="info"
                 elevation="2"
                 :icon="mdiAlert"
                 class="m-4 mb-8"
                 color="primary"
             >
-                <router-link
+                <a
                     style="color: inherit; font-weight: bold;"
-                    to="/dash/login"
-                >Log in</router-link> to add your own items, to avoid the list creator receiving duplicate gifts, and to manage your wish lists!
+                    href="/dash/login"
+                >Log in</a> to add your own items, to avoid the list creator receiving duplicate gifts, and to manage your wish lists!
             </v-alert>
         </v-card-text>
     </v-card>
 </template>
 
 <script setup>
-import { defineEmits, defineProps } from "vue";
 import { mdiAlert, mdiDotsVertical, mdiEarth, mdiFileDocumentMultiple, mdiInvoiceList, mdiLock, mdiUpdate } from "@mdi/js";
+import { $prefs } from "@/stores/prefs";
+import authStore from "@/stores/auth";
 import { avatars } from "@/appwrite";
+import { formatter as currencyFormatter } from "@/stores/currency";
 import DeleteList from "./dialogs/DeleteList.vue";
 import EditList from "./dialogs/EditList.vue";
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useCurrencyStore } from "@/stores/currency";
+import { useStore } from "@nanostores/vue";
+
+const prefs = useStore($prefs);
+
 import VueMarkdown from "vue-markdown-render";
 
 const emit = defineEmits(["newItem", "updateList"]);
-
-const currencyStore = useCurrencyStore();
-const authStore = useAuthStore();
 
 const props = defineProps({
     buttonProps: {

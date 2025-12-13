@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { computed, defineEmits, defineProps, shallowRef } from "vue";
+import { computed, shallowRef } from "vue";
 import { mdiAccount, mdiEye, mdiEyeOff, mdiPencil } from "@mdi/js";
 
 const dialogOpen = shallowRef(false);

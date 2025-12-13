@@ -1,11 +1,12 @@
 // https://flori.dev/reads/astro-vue-router/
 
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
 let clientRouter;
 
 if (!import.meta.env.SSR) {
+    console.log("Creating client router");
     clientRouter = createRouter({
         history: createWebHistory(import.meta.env.BASE_URL || "/"),
         routes: [
@@ -16,10 +17,6 @@ if (!import.meta.env.SSR) {
             {
                 path: "/list/:listId",
                 component: () => import("@/pages/_views/WishList.vue")
-            },
-            {
-                path: "/dash/login",
-                component: () => import("@/pages/_views/dash/LoginPage.vue")
             },
             {
                 path: "/dash/register",
@@ -57,11 +54,6 @@ if (!import.meta.env.SSR) {
                 component: () => import("@/pages/_views/NotFound.vue")
             },
             {
-                path: "/dash/lists",
-                component: () => import("@/pages/_views/dash/UserLists.vue"),
-                meta: { requiresAuth: true }
-            },
-            {
                 path: "/dash/about",
                 component: () => import("@/pages/_views/dash/AboutPage.vue")
             }
@@ -69,8 +61,8 @@ if (!import.meta.env.SSR) {
     });
 
     clientRouter.beforeEach(async (to, from, next) => {
-        const authStore = useAuthStore();
-        await authStore.init();
+        // const authStore = useAuthStore();
+        // await authStore.init();
         if (to.meta && to.meta.requiresAuth) {
             if (!authStore.isLoggedIn) {
                 return next({

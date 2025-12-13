@@ -89,7 +89,6 @@ import { AppwriteException, ID, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPlus } from "@mdi/js";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { useAuthStore } from "@/stores/auth";
 import { usePolarStore } from "@/stores/polar";
 import { useUserLists } from "@/stores/userLists";
 
@@ -119,7 +118,7 @@ export default {
     data() {
         return {
             alert: false,
-            auth: useAuthStore(),
+            // auth: useAuthStore(),
             dialogOpen: false,
             listId: null,
             loading: false,

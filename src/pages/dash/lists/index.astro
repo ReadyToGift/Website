@@ -1,12 +1,22 @@
 ---
-import Layout from "@/layouts/Layout.astro"
+import VueLayout from "@/layouts/VueLayout.astro";
+import UserLists from "./_UserLists.vue";
 
 const { user } = Astro.locals;
+const params = new URLSearchParams(Astro.url.search);
 
-console.log({user})
+const { title, text, url } = Object.fromEntries(params.entries());
 
 export const prerender = false;
 export const requireAuth = true;
 ---
 
-{user}
+<VueLayout user={user}>
+    <UserLists 
+        client:load
+        {title}
+        {text}
+        {url}
+    />
+</VueLayout>
+

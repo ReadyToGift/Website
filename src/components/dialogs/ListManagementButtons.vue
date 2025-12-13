@@ -85,12 +85,10 @@ import { account } from "@/appwrite";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
+// import { useAuthStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
 import validation from "@/utils/validation";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
 
 const shareButtonSnackbarOpen = ref(false);
 
@@ -160,13 +158,13 @@ const saveList = async () => {
     listSaveLoading.value = true;
     if (!auth.user) {
         listSaveLoading.value = false;
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
                     text: "Log In",
-                    to: "/dash/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search)
+                    href: "/dash/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search)
                 },
                 {
                     action: "close",
@@ -191,7 +189,7 @@ const saveList = async () => {
             listSaveLoading.value = false;
         } catch (error) {
             listSaveLoading.value = false;
-            dialogs.create({
+            createDialog({
                 actions: [
                     {
                         action: "close",
@@ -214,7 +212,7 @@ const saveList = async () => {
             listSaveLoading.value = false;
         } catch (error) {
             listSaveLoading.value = false;
-            dialogs.create({
+            createDialog({
                 actions: [
                     {
                         action: "close",

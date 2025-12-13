@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { computed, defineProps } from "vue";
+import { computed } from "vue";
 import { mdiNumeric1 } from "@mdi/js";
 
 const props = defineProps({

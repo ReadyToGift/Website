@@ -1,13 +1,31 @@
+import { createSessionClient } from "@/server/appwrite";
+
 export const prerender = false;
 
-export async function POST(req, { locals }) {
+export async function POST(req) {
     const { request } = req;
-    console.log(locals);
+    const { code, factor } = await request.json();
+    if (!code || !factor) {
+        return new Response("Missing code or factor", { status: 400 });
+    }
 
-    const body = await request.json();
-    console.log({ body });
+    try {
+        const client = createSessionClient({ request });
 
-    console.log({ locals });
+        const challenge = await client.account.createMFAChallenge({
+            factor: factor
+        });
 
-    return new Response(200);
+        const challengeId = challenge.$id;
+
+        await client.account.updateMFAChallenge({
+            challengeId: challengeId,
+            otp: code
+        });
+
+        return new Response(200);
+    } catch (error) {
+        console.error("Error completing MFA challenge:", error);
+        return new Response("Error completing MFA challenge", { status: 500 });
+    }
 }

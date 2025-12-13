@@ -73,12 +73,10 @@
 </template>
 
 <script setup>
-import { defineProps, shallowRef } from "vue";
 import { mdiAlert, mdiGithub } from "@mdi/js";
+import { createTOTPChallengeDialog } from "@/stores/mfa";
 import { LOGIN_METHODS } from "astro:env/client";
-import { useDialogs } from "@/stores/dialogs";
-
-const dialogs = useDialogs();
+import { shallowRef } from "vue";
 
 const props = defineProps({
     redirect: {
@@ -103,7 +101,6 @@ const methodsData = {
 const passwordLogin = async (event) => {
     const form = event.target;
     const formData = new FormData(form);
-    console.log("FormData entries:", [...formData.entries()]);
     const email = formData.get("email");
     const password = formData.get("password");
     console.log({ email, password });
@@ -115,7 +112,6 @@ const passwordLogin = async (event) => {
         body: JSON.stringify({ email, password, redirect: props.redirect }),
         method: "POST"
     });
-    
 
     if (response.ok) {
         console.log("Login successful");
@@ -124,7 +120,19 @@ const passwordLogin = async (event) => {
         const errorData = await response.json();
 
         if (errorData.type === "user_more_factors_required") {
-            const totpChallengeResp = await dialogs.createTOTPChallengeDialog();
+            const totpChallengeResp = await createTOTPChallengeDialog();
+            console.log({ totpChallengeResp });
+            if (totpChallengeResp.action === "success") {
+                window.location.href = props.redirect;
+                return;
+            } else {
+                alert.value = {
+                    type: "error",
+                    icon: mdiAlert,
+                    title: "Login Failed",
+                    text: "TOTP verification failed."
+                };
+            }
         } else {
             alert.value = {
                 type: "error",

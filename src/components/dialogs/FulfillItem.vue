@@ -105,7 +105,7 @@ import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION } from "astro:env/client";
 import { AppwriteException, ID } from "appwrite";
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
 import { databases } from "@/appwrite";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
 export default {
     title: "ListDialog",
@@ -122,7 +122,7 @@ export default {
     data() {
         return {
             alert: false,
-            auth: useAuthStore(),
+            // auth: useAuthStore(),
             dialogOpen: false,
             loading: false,
             mdiAlert,

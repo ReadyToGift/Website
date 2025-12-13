@@ -8,7 +8,7 @@
 </template>
 
 <script setup>
-import { defineProps, markRaw } from "vue";
+import { markRaw } from "vue";
 import RecoveryCodes from "./RecoveryCodes.vue";
 import { useAuthStore } from "@/stores/auth";
 import { useDialogs } from "@/stores/dialogs";

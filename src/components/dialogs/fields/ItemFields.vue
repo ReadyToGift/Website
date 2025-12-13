@@ -147,15 +147,14 @@
 <script setup>
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
 import { ref, useTemplateRef } from "vue";
+import currencyStore from "@/stores/currency";
 import { priorityMap } from "@/utils";
 import RevertPrompt from "@/components/RevertPrompt.vue";
-import { useCurrencyStore } from "@/stores/currency";
 import validation from "@/utils/validation";
 
 const emit = defineEmits(["file-state"]);
 
 const item = defineModel("item");
-const currencyStore = useCurrencyStore();
 
 const imageUploadInput = useTemplateRef("image-upload-input");
 

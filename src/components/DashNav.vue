@@ -21,7 +21,7 @@
                 <v-list-item
                     :prepend-icon="mdiFormatListBulleted"
                     title="Lists"
-                    to="/dash/lists"
+                    href="/dash/lists"
                 />
             </v-list>
             <v-list
@@ -38,7 +38,7 @@
                     :key="history.id"
                     :title="history.title"
                     :subtitle="history.subtitle"
-                    :to="`/list/${history.id}`"
+                    :href="`/list/${history.id}`"
                     :prepend-avatar="history.avatar"
                 />
             </v-list>
@@ -86,7 +86,7 @@
         >
             <v-toolbar-title>
                 <v-btn
-                    to="/dash/lists"
+                    href="/dash/lists"
                     :prepend-icon="mdiGift"
                     color="on-primary-container"
                 >
@@ -96,7 +96,7 @@
 
             <template v-slot:append>
                 <v-btn
-                    to="/dash/lists"
+                    href="/dash/lists"
                     v-if="auth.user"
                     :prepend-icon="mdiFormatListBulleted"
                     color="on-primary-container"
@@ -144,10 +144,10 @@ import {
     mdiMenu,
     mdiTune
 } from "@mdi/js";
-import { account } from "@/appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
+// import { account } from "@/appwrite";
+// import { clientRouter } from "@/pages/_clientRouter";
 import QuickSettings from "./dialogs/QuickSettings.vue";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
 export default {
     components: {
@@ -161,7 +161,7 @@ export default {
     },
     data() {
         return {
-            auth: useAuthStore(),
+            // auth: useAuthStore(),
             loadingLoginLogout: false,
             mdiAccountCircle,
             mdiClock,
@@ -180,22 +180,22 @@ export default {
         logIn () {
             this.loadingLoginLogout = true;
             const currentPath = window.location.pathname + window.location.search;
-            clientRouter.push({
-                path: "/dash/login",
-                query: { redirect: encodeURIComponent(currentPath) }
-            });
+            // clientRouter.push({
+            //     path: "/dash/login",
+            //     query: { redirect: encodeURIComponent(currentPath) }
+            // });
             this.loadingLoginLogout = false;
         },
         async logout() {
             this.loadingLoginLogout = true;
-            await account.deleteSession("current");
-            this.auth.user = null;
-            await this.auth.init();
+            // await account.deleteSession("current");
+            // this.auth.user = null;
+            // await this.auth.init();
             this.loadingLoginLogout = false;
-            const route = clientRouter.currentRoute.value;
-            if (route.meta.requiresAuth) {
-                this.logIn();
-            }
+            // const route = clientRouter.currentRoute.value;
+            // if (route.meta.requiresAuth) {
+            //     this.logIn();
+            // }
         }
     }
 };

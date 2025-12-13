@@ -1,6 +1,6 @@
 <template>
     <v-dialog
-        v-for="dialog in dialogs.dialogs"
+        v-for="dialog in Object.values(dialogs || {})"
         :key="dialog.id"
         v-model="dialog.open"
         :max-width="dialog.maxWidth || (
@@ -28,7 +28,7 @@
                     @click="actionHandler(action, dialog.id)"
                     :color="action.color || 'primary'"
                     :variant="action.variant || 'text'"
-                    :to="action.to"
+                    :href="action.href"
                 >
                     {{ action.text }}
                 </v-btn>
@@ -39,20 +39,27 @@
 
 
 <script setup>
-import { computed } from "vue";
-import { useDialogs } from "@/stores/dialogs";
+import { close as closeDialog, dialogs as dialogsStore } from "@/stores/dialogs";
+import { computed, watch } from "vue";
+import { useStore } from "@nanostores/vue";
 
-const dialogs = useDialogs();
+const dialogs = useStore(dialogsStore);
+
+// Debug: watch for changes
+watch(dialogs, (newVal) => {
+    console.log("GlobalDialogs updated:", Object.values(newVal || {}));
+}, { deep: true });
 
 const dialogEmits = computed(() => {
+    const dialogsValue = Object.values(dialogs.value || {});
     return Object.fromEntries(
-        dialogs.dialogs.map((dialog) => {
+        dialogsValue.map((dialog) => {
             if (!dialog.emits) return [dialog.id, {}];
 
             const emits = {};
             for (const emit of dialog.emits) {
                 emits[emit] = (emitData) => {
-                    dialogs.close(dialog.id, emit, emitData);
+                    closeDialog(dialog.id, emit, emitData);
                 };
             }
 
@@ -62,7 +69,7 @@ const dialogEmits = computed(() => {
 });
 
 const handleAfterLeave = (id) => {
-    dialogs.close(id, "closed");
+    closeDialog(id, "closed");
 };
 
 const actionHandler = (action, id) => {
@@ -71,7 +78,7 @@ const actionHandler = (action, id) => {
     }
 
     if (action.action === "close" || action.closeAfterAction) {
-        dialogs.close(id, action.text);
+        closeDialog(id, action.text);
     }
 };
 

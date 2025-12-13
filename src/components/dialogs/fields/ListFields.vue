@@ -83,11 +83,11 @@
 </template>
 
 <script setup>
-import { computed, defineProps } from "vue";
-import { useCurrencyStore } from "@/stores/currency";
-const list = defineModel("list");
-const currencyStore = useCurrencyStore();
+import { computed } from "vue";
+import currencyStore from "@/stores/currency";
 import RevertPrompt from "@/components/RevertPrompt.vue";
+
+const list = defineModel("list");
 
 const origin = computed(() => window.location.origin);
 

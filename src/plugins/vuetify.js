@@ -6,7 +6,7 @@ import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
 import { VStepperVertical, VStepperVerticalActions, VStepperVerticalItem } from "vuetify/labs/VStepperVertical";
 import { createVuetify } from "vuetify";
 import { md3 } from "vuetify/blueprints";
-
+import { $prefs } from "@/stores/prefs";
 
 const lightTheme = {
     dark: false,
@@ -118,6 +118,8 @@ const darkTheme = {
     }
 };
 
+console.log("Vuetify initialized with dark mode:", $prefs.value.darkMode);
+
 export default createVuetify({
     blueprint: md3,
     components: {
@@ -146,7 +148,7 @@ export default createVuetify({
         }
     },
     theme: {
-        defaultTheme: "light",
+        defaultTheme: $prefs.value.darkMode ? "dark" : "light",
         themes: {
             light: lightTheme,
             dark: darkTheme

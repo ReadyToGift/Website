@@ -99,10 +99,10 @@
 import { APPWRITE_DB, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Query } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
-import { clientRouter } from "@/pages/_clientRouter";
+// import { clientRouter } from "@/pages/_clientRouter";
 import { databases } from "@/appwrite";
 import ListCard from "../ListCard.vue";
-import { useAuthStore } from "@/stores/auth";
+// import { useAuthStore } from "@/stores/auth";
 
 export default {
     title: "ListDialog",
@@ -126,7 +126,7 @@ export default {
     data() {
         return {
             alert: false,
-            auth: useAuthStore(),
+            // auth: useAuthStore(),
             dialogOpen: false,
             listId: null,
             lists: [],
@@ -245,7 +245,7 @@ export default {
             }
         },
         goToList() {
-            clientRouter.push(`/list/${this.selectedList.$id}`);
+            window.location.href = `/list/${this.selectedList.$id}`;
             this.dialogOpen = false;
         },
         selectList(list) {

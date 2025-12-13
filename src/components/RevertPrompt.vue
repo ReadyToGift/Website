@@ -16,7 +16,6 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
 import { mdiUndoVariant } from "@mdi/js";
 
 defineProps({

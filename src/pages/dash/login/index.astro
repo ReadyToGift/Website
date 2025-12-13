@@ -3,8 +3,9 @@ import VueLayout from "@/layouts/VueLayout.astro";
 import LoginPage from "./_LoginPage.vue";
 
 const { user } = Astro.locals;
-import { createAdminClient, getServersideSessionClient, SESSION_COOKIE } from "@/server/appwrite";
-import { AppwriteException } from "node-appwrite";
+console.log(user);
+import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
+import { AppwriteException } from "appwrite";
 
 const params = new URLSearchParams(Astro.request.url.search);
 const redirect = params.get("redirect") || "/dash/lists";
@@ -30,7 +31,8 @@ if (Astro.request.method === "POST") {
         });
 
         try {
-            const sessionClient = getServersideSessionClient(session.secret);
+            console.log({session});
+            const sessionClient = createSessionClient({ session: session.secret });
             const user = await sessionClient.account.get();
             console.log({user});
         } catch (error) {
@@ -41,7 +43,10 @@ if (Astro.request.method === "POST") {
                 });
             }
             
-            console.log({error})
+            return new Response(JSON.stringify({ error: error.message }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
         }
 
         return new Response("OK", { status: 200 });
@@ -64,8 +69,7 @@ if (Astro.request.method === "POST") {
 
 export const prerender = false;
 ---
-
-<VueLayout>
+<VueLayout user={user}>
     <LoginPage 
         client:load
         redirect={redirect}
