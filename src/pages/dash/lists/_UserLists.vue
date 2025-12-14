@@ -8,12 +8,14 @@
             title="Verification Required"
             text="Please verify your email address to create lists."
             class="mb-4"
+            variant="tonal"
             v-if="user.emailVerification === false"
         >
             <v-card-actions>
                 <v-btn
-                    variant="outlined"
                     @click="verifyEmail"
+                    color="warning"
+                    variant="elevated"
                 > Send Verification Email </v-btn>
                 <v-dialog
                     max-width="500"
