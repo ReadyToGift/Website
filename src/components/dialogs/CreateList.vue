@@ -89,8 +89,11 @@ import { AppwriteException, ID, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPlus } from "@mdi/js";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { usePolarStore } from "@/stores/polar";
-import { useUserLists } from "@/stores/userLists";
+
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
+
+const user = useStore(userStore);
 
 export default {
     title: "ListDialog",
@@ -118,7 +121,6 @@ export default {
     data() {
         return {
             alert: false,
-            // auth: useAuthStore(),
             dialogOpen: false,
             listId: null,
             loading: false,
@@ -202,13 +204,13 @@ export default {
 
             try {
                 let permissions = [
-                    Permission.delete(Role.user(this.auth.user.$id)),
-                    Permission.update(Role.user(this.auth.user.$id))
+                    Permission.delete(Role.user(user.value.$id)),
+                    Permission.update(Role.user(user.value.$id))
                 ];
 
                 if (this.newList.private) {
                     permissions.push(
-                        Permission.read(Role.user(this.auth.user.$id))
+                        Permission.read(Role.user(user.value.$id))
                     );
                 } else {
                     permissions.push(
@@ -222,8 +224,8 @@ export default {
                     ID.unique(),
                     {
                         ...this.newList,
-                        author: this.auth.user.$id,
-                        authorName: this.auth.user.name,
+                        author: user.value.$id,
+                        authorName: user.value.name,
                         itemCount: 0
                     },
                     permissions

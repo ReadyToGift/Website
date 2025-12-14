@@ -35,7 +35,7 @@
         label="Currency"
         v-model="list.currency"
         :items="
-            currencyStore.currencies.map((currency) => ({
+            currencies.get().map((currency) => ({
                 title: currency.code,
                 value: currency.code
             }))
@@ -84,7 +84,7 @@
 
 <script setup>
 import { computed } from "vue";
-import currencyStore from "@/stores/currency";
+import { currencies } from "@/stores/currency";
 import RevertPrompt from "@/components/RevertPrompt.vue";
 
 const list = defineModel("list");
