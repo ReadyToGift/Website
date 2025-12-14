@@ -44,6 +44,7 @@
                                 :selected="selectedList === list"
                                 @click="selectList(list)"
                                 type="selectable"
+                                :own-list="true"
                             />
                         </div>
                         <v-alert
@@ -97,12 +98,13 @@
 
 <script>
 import { APPWRITE_DB, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { AppwriteException, Query } from "appwrite";
+import { AppwriteException, Permission, Query, Role  } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
-// import { clientRouter } from "@/pages/_clientRouter";
 import { databases } from "@/appwrite";
 import ListCard from "../ListCard.vue";
-// import { useAuthStore } from "@/stores/auth";
+
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
@@ -126,7 +128,6 @@ export default {
     data() {
         return {
             alert: false,
-            // auth: useAuthStore(),
             dialogOpen: false,
             listId: null,
             lists: [],
@@ -135,7 +136,8 @@ export default {
             mdiAlert,
             mdiFileDocumentArrowRight,
             selectedList: null,
-            success: false
+            success: false,
+            user: useStore(userStore)
         };
     },
     watch: {
@@ -157,7 +159,7 @@ export default {
                     APPWRITE_DB,
                     APPWRITE_LIST_COLLECTION,
                     [
-                        Query.equal("author", this.auth.user.$id),
+                        Query.equal("author", this.user.$id),
                         Query.orderDesc("$updatedAt"),
                         Query.notEqual("$id", this.list.$id),
                         Query.select(["*","items.*"]),
@@ -197,14 +199,32 @@ export default {
         async moveToList() {
             this.loadingMove = true;
 
+            let permissions = [
+                Permission.delete(Role.user(this.user.$id)),
+                Permission.update(Role.user(this.user.$id))
+            ];
+
+            let privateListPermissions = [
+                ...permissions,
+                Permission.read(Role.user(this.user.$id))
+            ];
+
+            let publicListPermissions = [
+                ...permissions,
+                Permission.read(Role.any())
+            ];
+
             try {
                 await databases.updateDocument(
                     APPWRITE_DB,
                     APPWRITE_ITEM_COLLECTION,
                     this.item.$id,
                     {
-                        list: this.selectedList
-                    }
+                        list: this.selectedList.$id
+                    },
+                    this.selectedList.private
+                        ? privateListPermissions
+                        : publicListPermissions
                 );
 
                 await databases.updateDocument(

@@ -34,3 +34,12 @@ export const updatePrefs = async (updatedPrefs) => {
     }
     $prefs.set(Object.assign({}, $prefs.get(), updatedPrefs));
 };
+
+export const addToHistory = (item) => {
+    let history = $prefs.get().history;
+    history.unshift(item);
+    history = history.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // remove duplicates
+        .slice(0, 5); 
+    $prefs.set({ ...$prefs.get(), history });
+
+};

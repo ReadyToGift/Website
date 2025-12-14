@@ -216,7 +216,7 @@
                             :key="list.$id"
                             :list="list"
                             :quickCreateURL="quickCreateURL"
-                            :ownList="auth.isLoggedIn && list.author === auth.user.$id"
+                            :ownList="user && list.author === user.$id"
                         />
                     </v-list>
                     <v-alert
@@ -237,7 +237,7 @@
                             :key="list.$id"
                             :list="list"
                             :quickCreateURL="quickCreateURL"
-                            :ownList="auth.isLoggedIn && list.author === auth.user.$id"
+                            :ownList="user && list.author === user.$id"
                         />
                     </v-list>
                     <v-alert
@@ -256,8 +256,7 @@
                             v-for="list in savedLists"
                             :key="list.$id"
                             :list="list"
-                            :quickCreateURL="quickCreateURL"
-                            :ownList="auth.isLoggedIn && list.author === auth.user.$id"
+                            :ownList="false"
                         />
                     </v-list>
                     <v-alert

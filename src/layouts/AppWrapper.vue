@@ -118,20 +118,14 @@ window.addEventListener("appinstalled", () => {
 onMounted(() => {
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });
-
-
-
-// import { usePWA } from "@/stores/pwa";
-// import { useVersion } from "@/stores/version";
-
-// const pwa = usePWA();
-// const versionStore = useVersion();
-
-// console.log(window)
 </script>
 
 
 <style scoped>
+.v-application {
+    height: auto;
+}
+
 header {
     line-height: 1.5;
     max-height: 100vh;

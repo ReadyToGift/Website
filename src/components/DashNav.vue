@@ -144,8 +144,6 @@ import {
     mdiMenu,
     mdiTune
 } from "@mdi/js";
-// import { account } from "@/appwrite";
-// import { clientRouter } from "@/pages/_clientRouter";
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
 import { $prefs } from "@/stores/prefs";

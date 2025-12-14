@@ -109,7 +109,7 @@
                 @unsetQuickCreateURL="resetQuickCreateURL"
                 @newItem="addItem"
                 @updateList="updateList"
-                v-if="auth.isLoggedIn"
+                v-if="user"
             />
         </div>
     </template>
@@ -119,7 +119,6 @@
 <script>
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { avatars, databases } from "@/appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
@@ -127,9 +126,12 @@ import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import NotFound from "@/pages/_views/NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
 import { Query } from "appwrite";
-import { useAuthStore } from "@/stores/auth";
-import { useCurrencyStore } from "@/stores/currency";
-import { useDialogs } from "@/stores/dialogs";
+
+import { $prefs, addToHistory } from "@/stores/prefs";
+import { previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { formatter as currencyFormatter } from "@/stores/currency";
+import { useStore } from "@nanostores/vue";
 import { useUserLists } from "@/stores/userLists";
 
 export default {
@@ -142,11 +144,11 @@ export default {
     },
     data() {
         return {
-            auth: useAuthStore(),
+            addToHistory,
             avoidSpoilersDialogShown: false,
             communityItems: [],
-            currency: useCurrencyStore(),
-            dialogs: useDialogs(),
+            currencyFormatter,
+            createDialog,
             fulfillments: [],
             list: false,
             loadedAsAuthor: false,
@@ -162,10 +164,23 @@ export default {
             notFound: false,
             userLists: useUserLists(),
             priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+            prefs: useStore($prefs),
+            previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
             pwaPromo: false,
             showFulfilled: localStorage.getItem("showFulfilled") !== "false",
-            sort: "price"
+            sort: "price",
+            user: useStore(userStore)
         };
+    },
+    props: {
+        listId: {
+            type: String,
+            required: false
+        },
+        quickCreateURL: {
+            type: String,
+            required: false
+        }
     },
     computed: {
         itemsByPriceGroups() {
@@ -182,13 +197,11 @@ export default {
                     const lowerBound = index === 0 ? 0 : this.priceGroups[index - 1];
                     const upperBound = price;
 
-                    const title = price === 0 ? "Flexible Gifts" : this.currency
-                        .formatter(this.list.currency)
+                    const title = price === 0 ? "Flexible Gifts" : this.currencyFormatter(this.list.currency)
                         .format(lowerBound)
                         .split(".")[0] +
                         " - " +
-                        this.currency
-                            .formatter(this.list.currency)
+                        this.currencyFormatter(this.list.currency)
                             .format(upperBound)
                             .split(".")[0];
 
@@ -245,19 +258,14 @@ export default {
             return priceGroupItems;
         },
         listSaved() {
-            if (!this.auth.userPrefs.savedLists) return false;
-            return this.auth.userPrefs.savedLists.includes(this.list.$id);
-        },
-        quickCreateURL() {
-            if (!this.list) return "";
-            const route = clientRouter.currentRoute.value;
-            return route.query.quickcreateurl || "";
+            if (!this.prefs.savedLists) return false;
+            return this.prefs.savedLists.includes(this.listId);
         },
         spoilSurprises() {
-            return this.auth.userPrefs.spoilSurprises;
+            return this.prefs.spoilSurprises;
         },
         wishlistOwner() {
-            return this.auth.isLoggedIn && this.auth.user.$id === this.list.author;
+            return this.user && this.user.$id === this.list.author;
         }
     },
     methods: {
@@ -379,13 +387,13 @@ export default {
         },
         async createAvoidSpoilersDialog(list) {
             if (this.avoidSpoilersDialogShown) return;
-            if (!this.auth.user && this.auth.previouslyLoggedInUserID && list.author === this.auth.previouslyLoggedInUserID) {
+            if (!this.user && this.previouslyLoggedInUserID && list.author === this.previouslyLoggedInUserID) {
                 this.avoidSpoilersDialogShown = true;
-                const dialogResponse = await this.dialogs.create({
+                const dialogResponse = await this.createDialog({
                     actions: [
                         {
                             action: () => {
-                                this.auth.removePreviouslyLoggedInUserID();
+                                previouslyLoggedInUserIDStore.set(null);
                             },
                             closeAfterAction: true,
                             color: "error",
@@ -394,10 +402,7 @@ export default {
                         },
                         {
                             action: async () => {
-                                await clientRouter.push({
-                                    path: "/dash/login",
-                                    query: { redirect: encodeURIComponent(clientRouter.currentRoute.value.fullPath) }
-                                });
+                                window.location.href = "/dash/login?redirect=" + encodeURIComponent(window.location.href);
                             },
                             closeAfterAction: true,
                             color: "primary",
@@ -437,7 +442,7 @@ export default {
 
                 this.communityItems = communityItems.documents;
 
-                this.loadedAsAuthor = this.auth.user && list.author === this.auth.user.$id;
+                this.loadedAsAuthor = this.user && list.author === this.user.$id;
 
                 this.avoidSpoilersDialogShown = await this.createAvoidSpoilersDialog(list);
                 if (this.avoidSpoilersDialogShown) return;
@@ -480,7 +485,7 @@ export default {
                     this.pwaPromo = false;
                 });
 
-                this.auth.addToHistory({
+                this.addToHistory({
                     avatar: avatars.getInitials(this.list.authorName),
                     id: this.list.$id,
                     subtitle: `By ${this.list.authorName}`,
@@ -492,7 +497,7 @@ export default {
                     return;
                 }
                 console.error(error);
-                this.dialogs.create({
+                this.createDialog({
                     actions: [
                         {
                             action: "close",

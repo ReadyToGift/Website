@@ -110,9 +110,7 @@
 import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
 import { ref } from "vue";
-// import { useAuthStore } from "@/stores/auth";
 
-// const auth = useAuthStore();
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 import { user as authUser } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";

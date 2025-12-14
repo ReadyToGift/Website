@@ -2,7 +2,7 @@
     <v-card
         class="item"
         :data-fulfilled="
-            !!item.fulfillment && (!wishlistOwner || (wishlistOwner && spoilSurprises)) || (!!item.communityList && !(auth.isLoggedIn && item.contributorId === auth.user.$id))
+            !!item.fulfillment && (!wishlistOwner || (wishlistOwner && spoilSurprises)) || (!!item.communityList && !(user && item.contributorId === user.$id))
         "
         variant="tonal"
         :data-item-id="item.$id"
@@ -46,7 +46,7 @@
                     :currency="currency"
                     @editItem="$emit('editItem', $event)"
                     :wishlistOwner="wishlistOwner"
-                    v-if="(wishlistOwner && !item.communityList) || (auth.isLoggedIn && item.contributorId === auth.user.$id)"
+                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
                 />
                 <MoveItem
                     variant="outlined"
@@ -60,7 +60,7 @@
                     variant="outlined"
                     :item="item"
                     @removeItem="$emit('removeItem', $event)"
-                    v-if="(wishlistOwner && !item.communityList) || (auth.isLoggedIn && item.contributorId === auth.user.$id)"
+                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
                 />
             </v-btn-group>
         </div>
@@ -111,7 +111,7 @@
                         variant="elevated"
                         rounded
                     >
-                        <span>{{ currencyStore.formatter(this.currency).format(item.price) }}</span>
+                        <span>{{ currencyFormatter(this.currency).format(item.price) }}</span>
                     </v-chip>
                     <v-chip
                         v-if="item.priority !== 'none' && item.priority"
@@ -139,7 +139,7 @@
                     rounded
                     v-if="item.communityList"
                 >
-                    <template v-if="auth.isLoggedIn && item.contributorId === auth.user.$id">
+                    <template v-if="user && item.contributorId === user.$id">
                         You contributed this item
                     </template>
                     <template v-else>
@@ -156,15 +156,18 @@ import { avatars, storage } from "@/appwrite";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
 import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { convertPriority } from "@/utils";
-import currencyStore from "@/stores/currency";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
 import { ImageFormat } from "appwrite";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
-import { useAuthStore } from "@/stores/auth";
 import validation from "@/utils/validation";
 import VueMarkdown from "vue-markdown-render";
+
+import { $prefs } from "@/stores/prefs";
+import { formatter as currencyFormatter } from "@/stores/currency";
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 
 export default {
     props: {
@@ -194,13 +197,14 @@ export default {
     },
     data() {
         return {
-            auth: useAuthStore(),
             convertPriority,
-            currencyStore: currencyStore,
+            currencyFormatter,
             mdiGift,
             mdiOpenInNew,
             mdiWeb,
-            validation
+            validation,
+            user: useStore(userStore),
+            prefs: useStore($prefs)
         };
     },
     computed: {
@@ -234,7 +238,7 @@ export default {
             }
         },
         spoilSurprises() {
-            return this.auth.userPrefs.spoilSurprises;
+            return this.prefs.spoilSurprises;
         }
     },
     methods: {

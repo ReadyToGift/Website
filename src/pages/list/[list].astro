@@ -1,0 +1,17 @@
+---
+import VueLayout from "@/layouts/VueLayout.astro";
+import WishList from "./_WishList.vue";
+
+const { user } = Astro.locals;
+const { list } = Astro.params;
+
+const params = new URLSearchParams(Astro.url.search);
+const { quickCreateURL } = Object.fromEntries(params.entries());
+
+export const prerender = false;
+---
+
+<VueLayout user={user}>
+    <WishList client:only="vue" listId={list} quickCreateURL={quickCreateURL} />
+</VueLayout>
+

@@ -121,7 +121,7 @@ export default {
 
                 this.userLists.adjustCount(this.list.private, -1);
 
-                clientRouter.push("/dash/lists");
+                window.location.href = "/dash/lists";
 
                 this.dialogOpen = false;
                 this.loading = false;

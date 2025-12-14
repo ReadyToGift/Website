@@ -126,8 +126,10 @@ import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
 import { markRaw } from "vue";
 import mime from "mime-types";
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
-// import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
+
+import { create as createDialog } from "@/stores/dialogs";
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 import { usePolarStore } from "@/stores/polar";
 
 export default {
@@ -163,9 +165,8 @@ export default {
     data() {
         return {
             alert: false,
-            // auth: useAuthStore(),
+            createDialog,
             dialogOpen: false,
-            dialogs: useDialogs(),
             errors: {},
             fileState: false,
             itemID: null,
@@ -188,7 +189,8 @@ export default {
             },
             polar: usePolarStore(),
             previousValues: {},
-            uploadingFile: false
+            uploadingFile: false,
+            user: useStore(userStore)
         };
     },
     watch: {
@@ -258,7 +260,7 @@ export default {
         async autofill() {
             this.previousValues = { ...this.modifiedItem };
 
-            const resp = await this.dialogs.create({
+            const resp = await this.createDialog({
                 async: true,
                 component: markRaw(ProcessingAutofill),
                 emits: [
@@ -307,7 +309,7 @@ export default {
                     }
                     return 0;
                 });
-                const imageSelectorResp = await this.dialogs.create({
+                const imageSelectorResp = await this.createDialog({
                     async: true,
                     component: markRaw(ImageSelector),
                     emits: [
@@ -371,13 +373,13 @@ export default {
             }
             try {
                 let permissions = [
-                    Permission.delete(Role.user(this.auth.user.$id)),
-                    Permission.update(Role.user(this.auth.user.$id))
+                    Permission.delete(Role.user(this.user.$id)),
+                    Permission.update(Role.user(this.user.$id))
                 ];
 
                 if (this.wishlistOwner && this.list.private) {
                     permissions.push(
-                        Permission.read(Role.user(this.auth.user.$id))
+                        Permission.read(Role.user(this.user.$id))
                     );
                 } else {
                     permissions.push(
@@ -408,8 +410,8 @@ export default {
                     this.itemID,
                     {
                         communityList: this.wishlistOwner ? null : this.listId,
-                        contributorId: this.wishlistOwner ? null : this.auth.user.$id,
-                        contributorName: this.wishlistOwner ? null : this.auth.user.name,
+                        contributorId: this.wishlistOwner ? null : this.user.$id,
+                        contributorName: this.wishlistOwner ? null : this.user.name,
                         description: this.modifiedItem.description || null,
                         displayPrice: this.modifiedItem.displayPrice,
                         image: this.modifiedItem.image || null,
@@ -493,13 +495,13 @@ export default {
             this.alert = false;
             this.loading = true;
             let permissions = [
-                Permission.delete(Role.user(this.auth.user.$id)),
-                Permission.update(Role.user(this.auth.user.$id))
+                Permission.delete(Role.user(this.user.$id)),
+                Permission.update(Role.user(this.user.$id))
             ];
 
             if (this.wishlistOwner && this.list.private) {
                 permissions.push(
-                    Permission.read(Role.user(this.auth.user.$id))
+                    Permission.read(Role.user(this.user.$id))
                 );
             } else {
                 permissions.push(

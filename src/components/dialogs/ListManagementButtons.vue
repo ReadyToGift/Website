@@ -85,9 +85,15 @@ import { account } from "@/appwrite";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
 import { ref } from "vue";
-// import { useAuthStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
 import validation from "@/utils/validation";
+
+import { $prefs, updatePrefs } from "@/stores/prefs";
+import { create as createDialog } from "@/stores/dialogs";
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
+
+const user = useStore(userStore);
+const prefs = useStore($prefs);
 
 
 const shareButtonSnackbarOpen = ref(false);
@@ -156,7 +162,7 @@ const copyListURL = async () => {
 
 const saveList = async () => {
     listSaveLoading.value = true;
-    if (!auth.user) {
+    if (!user) {
         listSaveLoading.value = false;
         createDialog({
             actions: [
@@ -179,13 +185,16 @@ const saveList = async () => {
         });
         return;
     }
-    if (auth.newUserPrefs.savedLists && auth.newUserPrefs.savedLists.includes(props.list.$id)) {
-        auth.newUserPrefs.savedLists = auth.newUserPrefs.savedLists.filter(
-            (listId) => listId !== props.list.$id
-        );
+    if (prefs.value.savedLists && prefs.value.savedLists.includes(props.list.$id)) {
+        // Unsave list
         try {
-            const accountResp = await account.updatePrefs(auth.newUserPrefs);
-            auth.userPrefs = accountResp.prefs;
+            await updatePrefs({
+                ...prefs.value,
+                savedLists: prefs.value.savedLists.filter(
+                    (listId) => listId !== props.list.$id
+                )
+
+            });
             listSaveLoading.value = false;
         } catch (error) {
             listSaveLoading.value = false;
@@ -205,10 +214,11 @@ const saveList = async () => {
             });
         }
     } else {
-        auth.newUserPrefs.savedLists = [...auth.newUserPrefs.savedLists, props.list.$id];
         try {
-            const accountResp = await account.updatePrefs(auth.newUserPrefs);
-            auth.userPrefs = accountResp.prefs;
+            await updatePrefs({
+                ...prefs.value,
+                savedLists: [...prefs.value.savedLists, props.list.$id]
+            });
             listSaveLoading.value = false;
         } catch (error) {
             listSaveLoading.value = false;

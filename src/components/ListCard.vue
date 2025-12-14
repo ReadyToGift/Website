@@ -130,7 +130,7 @@
             />
         </template>
 
-        <v-card-text v-if="props.header && (props.list.description || $vuetify.display.mobile || !authStore.isLoggedIn)">
+        <v-card-text v-if="props.header && (props.list.description || $vuetify.display.mobile || !user)">
             <VueMarkdown
                 v-if="props.list.description"
                 :source="props.list.description"
@@ -149,7 +149,7 @@
                 />
             </div>
             <v-alert
-                v-if="!authStore.user"
+                v-if="!user"
                 type="info"
                 elevation="2"
                 :icon="mdiAlert"
@@ -168,15 +168,16 @@
 <script setup>
 import { mdiAlert, mdiDotsVertical, mdiEarth, mdiFileDocumentMultiple, mdiInvoiceList, mdiLock, mdiUpdate } from "@mdi/js";
 import { $prefs } from "@/stores/prefs";
-import authStore from "@/stores/auth";
 import { avatars } from "@/appwrite";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import DeleteList from "./dialogs/DeleteList.vue";
 import EditList from "./dialogs/EditList.vue";
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
+import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 const prefs = useStore($prefs);
+const user = useStore(userStore);
 
 import VueMarkdown from "vue-markdown-render";
 

@@ -105,7 +105,9 @@ import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION } from "astro:env/client";
 import { AppwriteException, ID } from "appwrite";
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
 import { databases } from "@/appwrite";
-// import { useAuthStore } from "@/stores/auth";
+
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
@@ -122,13 +124,13 @@ export default {
     data() {
         return {
             alert: false,
-            // auth: useAuthStore(),
             dialogOpen: false,
             loading: false,
             mdiAlert,
             mdiGift,
             mdiGiftOff,
-            name: ""
+            name: "",
+            user: useStore(userStore)
         };
     },
     methods: {
@@ -207,8 +209,8 @@ export default {
         }
     },
     mounted() {
-        if (this.auth.user && this.auth.user.name) {
-            this.name = this.auth.user.name.split(" ")[0];
+        if (this.user && this.user.name) {
+            this.name = this.user.name.split(" ")[0];
         }
     }
 };
