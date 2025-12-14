@@ -3,12 +3,17 @@ import VueLayout from "@/layouts/VueLayout.astro";
 import LoginPage from "./_LoginPage.vue";
 
 const { user } = Astro.locals;
-console.log(user);
 import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
 import { AppwriteException } from "appwrite";
 
 const params = new URLSearchParams(Astro.request.url.search);
 const redirect = params.get("redirect") || "/dash/lists";
+
+if (user.account) {
+    const { account } = createSessionClient({ request: Astro.request });
+    await account.deleteSession({sessionId: "current"});
+    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
+}
 
 if (Astro.request.method === "POST") {
     try {
@@ -71,7 +76,7 @@ export const prerender = false;
 ---
 <VueLayout user={user}>
     <LoginPage 
-        client:load
+        client:only="vue"
         redirect={redirect}
     />
 </VueLayout>

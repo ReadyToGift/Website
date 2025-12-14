@@ -58,10 +58,8 @@ const props = defineProps({
     }
 });
 
-console.log({ user: props.user });
 if (props.user) {
     if (props.user.prefs) {
-        console.log("Loading user preferences:", props.user.prefs);
         loadPrefs(props.user.prefs);
     }
     if (props.user.account) {

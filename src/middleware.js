@@ -13,16 +13,17 @@ export const onRequest = defineMiddleware(async (context, next) => {
         session: null,
         prefs: {}
     };
+
+    if (context.isPrerendered) return next();
+
     try {
-        if (!context.isPrerendered) {
-            const { account, session } = createSessionClient({ request });
-            locals.user.account = await account.get();
-            locals.user.session = session;
-            locals.user.prefs = await account.getPrefs();
+        const { account, session } = createSessionClient({ request });
+        locals.user.account = await account.get();
+        locals.user.session = session;
+        locals.user.prefs = await account.getPrefs();
             
-            authStore.init({ user: locals.user.account, session: locals.user.session });
-            loadPrefs(locals.user.prefs);
-        }
+        authStore.init({ user: locals.user.account, session: locals.user.session });
+        loadPrefs(locals.user.prefs);
     } catch (error) {
         locals.user.account = null;
         if (error instanceof AppwriteException) {
@@ -30,7 +31,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
                 locals.user.requiresMFA = true;
             }
         }
-    }  
+    }
 
     return next();
 });

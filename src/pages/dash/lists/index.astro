@@ -1,19 +1,23 @@
 ---
 import VueLayout from "@/layouts/VueLayout.astro";
 import UserLists from "./_UserLists.vue";
+import requireAuth from "@/server/requireAuth";
 
 const { user } = Astro.locals;
+
+const authRedirect = requireAuth(Astro);
+if (authRedirect) return authRedirect;
+
 const params = new URLSearchParams(Astro.url.search);
 
 const { title, text, url } = Object.fromEntries(params.entries());
 
 export const prerender = false;
-export const requireAuth = true;
+
 ---
 
 <VueLayout user={user}>
-    <UserLists 
-        client:load
+    <UserLists client:only="vue"
         {title}
         {text}
         {url}

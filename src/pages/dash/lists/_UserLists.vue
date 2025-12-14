@@ -294,8 +294,6 @@ const prefs = useStore($prefs);
 const user = useStore(auth.user);
 const polar = usePolarStore();
 
-console.log(user.value);
-
 const props = defineProps({
     title: {
         type: String,
