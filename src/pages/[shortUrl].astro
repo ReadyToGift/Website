@@ -1,0 +1,30 @@
+---
+import { createAdminClient } from "@/server/appwrite";
+import { Query } from "node-appwrite";
+import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+
+const { shortUrl } = Astro.params;
+
+const client = createAdminClient();
+
+const response = await client.tablesDB.listRows({
+    databaseId: APPWRITE_DB,
+    tableId: APPWRITE_LIST_COLLECTION,
+    queries: [
+        Query.equal("shortUrl", shortUrl),
+        Query.limit(1)
+    ]
+});
+
+if (response.total === 0) {
+    return new Response("Not Found", { status: 404 });
+}
+
+if (response.total > 1) {
+    console.warn(`Warning: Multiple lists found with the same shortUrl: ${shortUrl}`);
+}
+
+return Astro.redirect(`/list/${response.rows[0].$id}`);
+
+export const prerender = false;
+---

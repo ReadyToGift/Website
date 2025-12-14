@@ -19,6 +19,9 @@ export function createAdminClient() {
         },
         get locale() {
             return new appwriteSdk.Locale(client);
+        },
+        get tablesDB() {
+            return new appwriteSdk.TablesDB(client);
         }
     };
 }
