@@ -1,0 +1,13 @@
+---
+import VueLayout from "@/layouts/VueLayout.astro";
+import AboutPage from "./_AboutPage.vue";
+import requireAuth from "@/server/requireAuth";
+
+export const prerender = true;
+
+---
+
+<VueLayout>
+    <AboutPage client:only="vue" />
+</VueLayout>
+

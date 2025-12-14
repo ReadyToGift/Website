@@ -42,17 +42,17 @@
 import "vuetify/styles";
 import "@/assets/main.scss";
 import { useTheme } from "vuetify";
+import { onMounted, watch } from "vue";
 
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
+import { useStore } from "@nanostores/vue";
+
 import { $prefs, loadPrefs } from "@/stores/prefs";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
-import { showUpdatePrompt as showUpdatePromptStore } from "@/stores/version";
-import { useStore } from "@nanostores/vue";
-import { watch } from "vue";
-
+import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
 
 const prefs = useStore($prefs);
 
@@ -102,6 +102,10 @@ watch(
         setThemeColor();
     }
 );
+
+onMounted(() => {
+    startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
+});
 
 
 
