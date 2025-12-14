@@ -41,8 +41,8 @@
 <script setup>
 import "vuetify/styles";
 import "@/assets/main.scss";
-import { useTheme } from "vuetify";
 import { onMounted, watch } from "vue";
+import { useTheme } from "vuetify";
 
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
@@ -50,9 +50,10 @@ import GlobalDialogs from "@/components/GlobalDialogs.vue";
 import { useStore } from "@nanostores/vue";
 
 import { $prefs, loadPrefs } from "@/stores/prefs";
+import { appInstalled, deferredPrompt } from "@/stores/pwa";
+import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
-import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
 
 const prefs = useStore($prefs);
 
@@ -103,6 +104,17 @@ watch(
     }
 );
 
+window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt.set(e);
+    console.log("beforeinstallprompt event fired");
+});
+
+window.addEventListener("appinstalled", () => {
+    appInstalled.set(true);
+    console.log("App is installed!");
+});
+
 onMounted(() => {
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });
@@ -115,17 +127,7 @@ onMounted(() => {
 // const pwa = usePWA();
 // const versionStore = useVersion();
 
-// console.log(window);
-
-// window.addEventListener("beforeinstallprompt", (e) => {
-//     e.preventDefault();
-//     pwa.setDeferredPrompt(e);
-// });
-
-// window.addEventListener("appinstalled", () => {
-//     pwa.setAppInstalled(true);
-//     console.log("App is installed!");
-// });
+// console.log(window)
 </script>
 
 

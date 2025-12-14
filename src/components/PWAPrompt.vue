@@ -2,7 +2,7 @@
     <v-card
         title="Try the app!"
         variant="tonal"
-        v-if="!locallyDismissed && pwa.deferredPrompt && auth.userPrefs.hidePWAInstallPrompt !== true"
+        v-if="!locallyDismissed && deferredPrompt && prefs.hidePWAInstallPrompt !== true"
     >
         <v-card-text pt="4">
             <p>
@@ -55,34 +55,33 @@
 </template>
 
 <script setup>
+import { $prefs, updatePrefs } from "@/stores/prefs";
+import { appInstalled, deferredPrompt as deferredPromptStore, locallyDismissed as locallyDismissedStore } from "@/stores/pwa";
+import { create as createDialog } from "@/stores/dialogs";
 import { mdiMenuDown } from "@mdi/js";
 import { ref } from "vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
-import { usePWA } from "@/stores/pwa";
+import { useStore } from "@nanostores/vue";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
-const pwa = usePWA();
+const prefs = useStore($prefs);
+const locallyDismissed = useStore(locallyDismissedStore);
+const deferredPrompt = useStore(deferredPromptStore);
 
-let locallyDismissed = ref(localStorage.getItem("hidePWAInstallPrompt") === "true");
 let menuOpen = ref(false);
 
 const installPWA = () => {
     console.log("installing PWA");
-    pwa.deferredPrompt.prompt();
-    pwa.deferredPrompt.userChoice.then((choiceResult) => {
+    deferredPrompt.value.prompt();
+    deferredPrompt.value.userChoice.then((choiceResult) => {
         if (choiceResult.outcome === "accepted") {
-            pwa.setAppInstalled(true);
+            appInstalled.value = true;
         }
-        pwa.setDeferredPrompt(null);
+        deferredPromptStore.set(null);
     });
 };
 
 const dismissForever = async () => {
-    auth.userPrefs.hidePWAInstallPrompt = true;
-    await auth.updatePrefs(auth.userPrefs);
-    dialogs.create({
+    await updatePrefs({ ...$prefs.value, hidePWAInstallPrompt: true });
+    createDialog({
         actions: [
             {
                 action: "close",
@@ -97,9 +96,8 @@ const dismissForever = async () => {
 };
 
 const dismissForDevice = () => {
-    localStorage.setItem("hidePWAInstallPrompt", true);
-    locallyDismissed.value = true;
-    dialogs.create({
+    locallyDismissedStore.set(true);
+    createDialog({
         actions: [
             {
                 action: "close",

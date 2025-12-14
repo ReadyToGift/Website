@@ -24,8 +24,6 @@
 <script setup>
 import { loadBuildDate, loadCommit } from "@/stores/version";
 import { mdiCalendarClock, mdiInformationOutline } from "@mdi/js";
-
-console.log(loadBuildDate);
 </script>
 
 <style lang="scss" scoped>
