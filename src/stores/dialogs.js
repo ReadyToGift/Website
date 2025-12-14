@@ -4,7 +4,6 @@ import { v7 as uuidv7 } from "uuid";
 export const dialogs = map({});
 
 export const create = (dialog) => {
-    console.log("Creating dialog:", dialog);
     let resolvePromise;
     let promise;
 
@@ -16,8 +15,6 @@ export const create = (dialog) => {
 
     const id = uuidv7();
     dialogs.setKey(id, { open: true, resolvePromise, id, ...dialog });
-
-    console.log(dialogs.get());
 
     return dialog.async ? promise : null;
 };

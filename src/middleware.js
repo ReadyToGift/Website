@@ -9,6 +9,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const url = new URL(request.url);
     locals.user = {
         account: null,
+        avatar: null,
         requiresMFA: false,
         session: null,
         prefs: {}

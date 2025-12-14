@@ -5,6 +5,7 @@ import LoginPage from "./_LoginPage.vue";
 const { user } = Astro.locals;
 import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
 import { AppwriteException } from "appwrite";
+import { AppwriteException as AdminAppwriteException } from "node-appwrite";
 
 const params = new URLSearchParams(Astro.request.url.search);
 const redirect = params.get("redirect") || "/dash/lists";
@@ -56,7 +57,7 @@ if (Astro.request.method === "POST") {
 
         return new Response("OK", { status: 200 });
     } catch (error) {
-        if (error instanceof AppwriteException) {
+        if (error instanceof AdminAppwriteException) {
             return new Response(error.response, {
                 status: error.code || 400,
                 headers: { "Content-Type": "application/json" },

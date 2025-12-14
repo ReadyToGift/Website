@@ -10,14 +10,14 @@
             ></slot>
         </template>
         <v-card>
-            <v-list v-if="auth.user">
+            <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="auth.avatar"
-                    :subtitle="auth.user.name ? auth.user.email : null"
-                    :title="auth.user.name || auth.user.email"
+                    :prepend-avatar="user.avatar"
+                    :subtitle="user.name ? user.email : null"
+                    :title="user.name || user.email"
                 />
             </v-list>
-            <v-divider v-if="auth.user" />
+            <v-divider v-if="user" />
             <v-list>
                 <v-list-item :prepend-icon="mdiCog">
                     Quick Settings
@@ -27,7 +27,7 @@
                         <v-list-item title="Dark Mode">
                             <template #prepend>
                                 <v-switch
-                                    v-model="auth.newUserPrefs.darkMode"
+                                    v-model="newUserPrefs.darkMode"
                                     hide-details
                                     inset
                                     color="primary"
@@ -38,7 +38,7 @@
                         <v-list-item title="Show Total Price">
                             <template #prepend>
                                 <v-switch
-                                    v-model="auth.newUserPrefs.showTotalPrice"
+                                    v-model="newUserPrefs.showTotalPrice"
                                     hide-details
                                     inset
                                     color="primary"
@@ -47,12 +47,12 @@
                             </template>
                         </v-list-item>                            
                         <v-list-item
-                            v-if="!!auth.user"
+                            v-if="!!account"
                             title="Spoil Surprises"
                         >
                             <template #prepend>
                                 <v-switch
-                                    v-model="auth.newUserPrefs.spoilSurprises"
+                                    v-model="newUserPrefs.spoilSurprises"
                                     hide-details
                                     inset
                                     color="primary"
@@ -69,7 +69,7 @@
                     About
                 </v-list-item>
                 <v-list-item
-                    v-if="!!auth.user"
+                    v-if="!!user"
                     href="/dash/settings"
                     :prepend-icon="mdiAccountCircle"
                 >
@@ -79,10 +79,10 @@
             <v-card-actions>
                 <v-spacer />
                 <v-btn
-                    @click="emit('logIn')"
                     color="primary"
-                    v-if="!auth.user"
+                    v-if="!user"
                     :loading="loadingLoginLogout"
+                    :href="`/dash/login?redirect=${redirectURL}`"
                 >
                     Log In</v-btn>
 
@@ -109,27 +109,31 @@
 <script setup>
 import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
-import { shallowRef } from "vue";
+import { ref } from "vue";
 // import { useAuthStore } from "@/stores/auth";
 
 // const auth = useAuthStore();
+import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
+import { user as authUser } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 
-const loadingLoginLogout = shallowRef(false);
-const menu = shallowRef(false);
+const prefs = useStore($prefs);
+const newUserPrefs = ref(Object.assign({}, prefs.value));
 
-const emit = defineEmits(["logout", "logIn"]);
+const user = useStore(authUser);
+
+const loadingLoginLogout = ref(false);
+const menu = ref(false);
+
+const emit = defineEmits(["logout"]);
 
 const updatePrefs = async () => {
-    if (auth.user) {
-        const accountResponse = await account.updatePrefs(auth.newUserPrefs);
-        auth.userPrefs = accountResponse.prefs;
-    } else {
-        localStorage.setItem("userPrefs", JSON.stringify(auth.newUserPrefs));
-    }
-
-    auth.userPrefs = { ...auth.newUserPrefs };
-
+    await updateUserPrefs(newUserPrefs.value);
     menu.value = false;
 };
+
+const redirectURL = encodeURIComponent(
+    window.location.pathname + window.location.search
+);
 
 </script>

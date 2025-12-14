@@ -1,4 +1,4 @@
-import { Account, Avatars, Client, Databases, Functions, Locale, Storage } from "appwrite";
+import { Account, Avatars, Client, Databases, Functions, Locale, Storage, TablesDB } from "appwrite";
 import {
     APPWRITE_DEV_KEY,
     APPWRITE_ENDPOINT,
@@ -17,10 +17,13 @@ const databases = new Databases(client);
 
 const storage = new Storage(client);
 
+
 const avatars = new Avatars(client);
 
 const functions = new Functions(client);
 
 const locale = new Locale(client);
 
-export { avatars, client, account, storage, databases, functions, locale };
+const tablesDB = new TablesDB(client);
+
+export { avatars, client, account, storage, databases, functions, locale, tablesDB };

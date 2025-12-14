@@ -2,7 +2,7 @@
     <v-app
         :theme="prefs?.darkMode ? 'dark' : 'light'"
     >
-        <!-- <DashNav /> -->
+        <DashNav />
         <v-main>
             <slot></slot>
             <GlobalDialogs />
@@ -41,13 +41,18 @@
 <script setup>
 import "vuetify/styles";
 import "@/assets/main.scss";
-import { $prefs, loadPrefs } from "@/stores/prefs";
+import { useTheme } from "vuetify";
+
+import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
+
+import { $prefs, loadPrefs } from "@/stores/prefs";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
 import { showUpdatePrompt as showUpdatePromptStore } from "@/stores/version";
 import { useStore } from "@nanostores/vue";
-import { useTheme } from "vuetify";
+import { watch } from "vue";
+
 
 const prefs = useStore($prefs);
 
@@ -84,13 +89,19 @@ const refreshApp = () => {
 const setThemeColor = () => {
     try {
         vuetifyTheme.change(prefs.value.darkMode ? "dark" : "light");
-        console.log("Theme color set to:", prefs.value.darkMode ? "dark" : "light");
     } catch (error) {
         console.error("Failed to set theme color:", error);
     }
 };
 
 setThemeColor();
+
+watch(
+    () => prefs.value.darkMode,
+    () => {
+        setThemeColor();
+    }
+);
 
 
 

@@ -1,4 +1,6 @@
-import { map } from "nanostores";
+import { account } from "@/appwrite";
+import { persistentMap } from "@nanostores/persistent";
+import { user } from "./auth";
 
 const defaultPrefs = {
     darkMode: false,
@@ -13,8 +15,22 @@ const defaultPrefs = {
     hidePWAInstallPrompt: false
 };
 
-export const $prefs = map({ ...defaultPrefs });
+export const $prefs = persistentMap("userPrefs", { ...defaultPrefs }, {
+    encode: JSON.stringify,
+    decode: JSON.parse
+});
+
+export const newUserPrefs = { ...defaultPrefs };
 
 export const loadPrefs = (prefs) => {
     $prefs.set({ ...defaultPrefs, ...prefs });
+    Object.assign(newUserPrefs, { ...defaultPrefs, ...prefs });
+};
+
+export const updatePrefs = async (updatedPrefs) => {
+    const userAccount = user.get();
+    if (userAccount) {
+        await account.updatePrefs(updatedPrefs);
+    }
+    $prefs.set(Object.assign({}, $prefs.get(), updatedPrefs));
 };

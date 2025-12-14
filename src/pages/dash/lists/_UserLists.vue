@@ -273,13 +273,13 @@
 </template>
 
 <script setup>
-import { account, databases } from "@/appwrite";
+import { account, databases, tablesDB } from "@/appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { computed, ref } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
 import { Query } from "appwrite";
 
-import { $prefs } from "@/stores/prefs";
+import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 import auth from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
@@ -309,7 +309,7 @@ const props = defineProps({
     }
 });
 
-const newUserPrefs = $prefs.get();
+const newUserPrefs = ref($prefs.get());
 
 const lists = ref([]);
 const loading = ref(true);
@@ -364,25 +364,25 @@ const getLists = async () => {
 
     const authorQuery = Query.equal("author", user.value.$id);
 
-    if (user.value.userPrefs?.savedLists.length) {
+    if (prefs.value.savedLists.length) {
         listQuery.push(
-            Query.or([authorQuery, Query.equal("$id", user.value.userPrefs.savedLists)])
+            Query.or([authorQuery, Query.equal("$id", prefs.value.savedLists)])
         );
     } else {
         listQuery.push(authorQuery);
     }
 
     try {
-        const listsResponse = await databases.listDocuments(
-            APPWRITE_DB,
-            APPWRITE_LIST_COLLECTION
-            // listQuery
-        );
+        const listsResponse = await tablesDB.listRows({
+            databaseId: APPWRITE_DB,
+            tableId: APPWRITE_LIST_COLLECTION,
+            queries: listQuery
+        });
 
-        savedLists.value = listsResponse.documents.filter((list) =>
+        savedLists.value = listsResponse.rows.filter((list) =>
             prefs.value.savedLists?.includes(list.$id)
         );
-        lists.value = listsResponse.documents.filter(
+        lists.value = listsResponse.rows.filter(
             (list) => !prefs.value.savedLists?.includes(list.$id)
         );
 
@@ -409,22 +409,24 @@ const getLists = async () => {
 };
 
 const setSortType = async (event) => {
-    auth.newUserPrefs.listSorting.type = event[0];
-    await getLists();
+    newUserPrefs.value.listSorting.type = event[0];
     try {
-        await auth.updatePrefs(auth.newUserPrefs);
-    } catch {
+        await updateUserPrefs(newUserPrefs.value);
+        await getLists();
+    } catch (error) {
+        console.error({ error });
         alert("Failed to update user prefs");
     }
 };
 
 const toggleSortDirection = async () => {
-    auth.newUserPrefs.listSorting.order =
-        auth.newUserPrefs.listSorting.order === "asc" ? "desc" : "asc";
-    await getLists();
+    newUserPrefs.value.listSorting.order =
+        newUserPrefs.value.listSorting.order === "asc" ? "desc" : "asc";
     try {
-        await auth.updatePrefs(auth.newUserPrefs);
-    } catch {
+        await updateUserPrefs(newUserPrefs.value);
+        await getLists();
+    } catch (error) {
+        console.error({ error });
         alert("Failed to update user prefs");
     }
 };

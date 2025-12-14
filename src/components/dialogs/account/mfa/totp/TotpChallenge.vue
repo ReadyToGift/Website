@@ -81,10 +81,8 @@
 </template>
 
 <script setup>
-import { shallowRef } from "vue";
-// import { account } from "@/appwrite";
-// import { useAuthStore } from "@/stores/auth";
 import { completeMFAchallenge } from "@/stores/mfa";
+import { shallowRef } from "vue";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
 
@@ -127,13 +125,18 @@ const submit = async () => {
             // });
             // emit("totp-removed");
         } else {
-            await completeMFAchallenge(code.value, "totp");
+            const response = await completeMFAchallenge(code.value, "totp");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Failed to complete TOTP challenge.");
+            }
             emit("success");
         }
     } catch (error) {
+        console.log("TOTP Challenge Error:", error);
         errorMessage.value = error.message || "An unknown error occurred.";
     } finally {
         code.value = "";
     }
-};
+}; 
 </script>

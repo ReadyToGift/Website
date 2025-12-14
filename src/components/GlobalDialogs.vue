@@ -40,15 +40,10 @@
 
 <script setup>
 import { close as closeDialog, dialogs as dialogsStore } from "@/stores/dialogs";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 import { useStore } from "@nanostores/vue";
 
 const dialogs = useStore(dialogsStore);
-
-// Debug: watch for changes
-watch(dialogs, (newVal) => {
-    console.log("GlobalDialogs updated:", Object.values(newVal || {}));
-}, { deep: true });
 
 const dialogEmits = computed(() => {
     const dialogsValue = Object.values(dialogs.value || {});

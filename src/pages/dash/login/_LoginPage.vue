@@ -103,44 +103,51 @@ const passwordLogin = async (event) => {
     const formData = new FormData(form);
     const email = formData.get("email");
     const password = formData.get("password");
-    console.log({ email, password });
 
-    const response = await fetch("", {
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password, redirect: props.redirect }),
-        method: "POST"
-    });
+    try {
+        const response = await fetch("", {
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ email, password, redirect: props.redirect }),
+            method: "POST"
+        });
 
-    if (response.ok) {
-        console.log("Login successful");
-        window.location.href = props.redirect;
-    } else {
-        const errorData = await response.json();
+        if (response.ok) {
+            window.location.href = props.redirect;
+        } else {
+            const errorData = await response.json();
 
-        if (errorData.type === "user_more_factors_required") {
-            const totpChallengeResp = await createTOTPChallengeDialog();
-            console.log({ totpChallengeResp });
-            if (totpChallengeResp.action === "success") {
-                window.location.href = props.redirect;
-                return;
+            if (errorData.type === "user_more_factors_required") {
+                const totpChallengeResp = await createTOTPChallengeDialog();
+                if (totpChallengeResp.action === "success") {
+                    window.location.href = props.redirect;
+                    return;
+                } else {
+                    error.value = {
+                        type: "error",
+                        icon: mdiAlert,
+                        title: "Login Failed",
+                        text: "TOTP verification failed."
+                    };
+                }
             } else {
-                alert.value = {
+                error.value = {
                     type: "error",
                     icon: mdiAlert,
                     title: "Login Failed",
-                    text: "TOTP verification failed."
+                    text: errorData.message || "An error occurred during login."
                 };
             }
-        } else {
-            alert.value = {
-                type: "error",
-                icon: mdiAlert,
-                title: "Login Failed",
-                text: errorData.message || "An error occurred during login."
-            };
         }
+    } catch (error) {
+        console.error("Login error:", error);
+        error.value = {
+            type: "error",
+            icon: mdiAlert,
+            title: "Login Failed",
+            text: "An unexpected error occurred during login."
+        };
     }
 };
 </script>

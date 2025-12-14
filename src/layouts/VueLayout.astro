@@ -6,7 +6,7 @@ const { user } = Astro.props;
 ---
 
 <Layout>
-    <AppWrapper user={user} client:load>
+    <AppWrapper user={user} client:only="vue">
         <slot />
     </AppWrapper>
 </Layout>

@@ -6,11 +6,11 @@
             rail
             v-if="!$vuetify.display.mobile"
         >
-            <v-list v-if="auth.user">
+            <v-list v-if="account">
                 <v-list-item
-                    :prepend-avatar="auth.avatar"
-                    :title="auth.user.name || auth.user.email"
-                    :subtitle="auth.user.email"
+                    :prepend-avatar="account.avatar"
+                    :title="account.name || account.email"
+                    :subtitle="account.email"
                 />
             </v-list>
             <v-divider/>
@@ -25,7 +25,7 @@
                 />
             </v-list>
             <v-list
-                v-if="auth.userPrefs.history.length > 0"
+                v-if="prefs.history.length > 0"
             >
                 <v-divider />
                 <v-list-item
@@ -34,7 +34,7 @@
                     disabled
                 />
                 <v-list-item
-                    v-for="history in auth.userPrefs.history"
+                    v-for="history in prefs.history"
                     :key="history.id"
                     :title="history.title"
                     :subtitle="history.subtitle"
@@ -64,7 +64,7 @@
                         title="Log Out"
                         @click="logout"
                         :loading="loadingLoginLogout"
-                        v-if="auth.user"
+                        v-if="account"
                     />
                     <v-list-item
                         :prepend-icon="mdiLogin"
@@ -97,7 +97,7 @@
             <template v-slot:append>
                 <v-btn
                     href="/dash/lists"
-                    v-if="auth.user"
+                    v-if="account"
                     :prepend-icon="mdiFormatListBulleted"
                     color="on-primary-container"
                     variant="tonal"
@@ -147,7 +147,11 @@ import {
 // import { account } from "@/appwrite";
 // import { clientRouter } from "@/pages/_clientRouter";
 import QuickSettings from "./dialogs/QuickSettings.vue";
-// import { useAuthStore } from "@/stores/auth";
+
+import { $prefs } from "@/stores/prefs";
+import { user } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
+
 
 export default {
     components: {
@@ -161,8 +165,9 @@ export default {
     },
     data() {
         return {
-            // auth: useAuthStore(),
+            account: useStore(user),
             loadingLoginLogout: false,
+            prefs: useStore($prefs),
             mdiAccountCircle,
             mdiClock,
             mdiCog,
@@ -180,22 +185,16 @@ export default {
         logIn () {
             this.loadingLoginLogout = true;
             const currentPath = window.location.pathname + window.location.search;
-            // clientRouter.push({
-            //     path: "/dash/login",
-            //     query: { redirect: encodeURIComponent(currentPath) }
-            // });
+            window.location.href = `/dash/login?redirect=${encodeURIComponent(currentPath)}`;
             this.loadingLoginLogout = false;
         },
         async logout() {
             this.loadingLoginLogout = true;
-            // await account.deleteSession("current");
-            // this.auth.user = null;
-            // await this.auth.init();
-            this.loadingLoginLogout = false;
-            // const route = clientRouter.currentRoute.value;
-            // if (route.meta.requiresAuth) {
-            //     this.logIn();
-            // }
+            await fetch("/api/auth", {
+                method: "DELETE",
+                credentials: "include"
+            });
+            window.location.reload();
         }
     }
 };
