@@ -1,3 +1,4 @@
+import { account } from "@/appwrite";
 import { create as createDialog } from "./dialogs";
 import { markRaw } from "vue";
 
@@ -24,4 +25,35 @@ export const completeMFAchallenge = async (code, factor = "totp") => {
         },
         body: JSON.stringify({ code, factor })
     });
+};
+
+export const regenerateRecoveryCodes = async () => {
+    try {
+        return (await account.createMFARecoveryCodes()).recoveryCodes;
+    } catch (error) {
+        if (error.type === "user_recovery_codes_already_exists") {
+            const recoveryCodesResponse = await account.updateMFARecoveryCodes();
+
+            return recoveryCodesResponse.recoveryCodes;
+        } else {
+            throw error;
+        }
+    }
+};
+
+export const getRecoveryCodes = async (totp) => {
+    try {
+        return (await account.createMFARecoveryCodes()).recoveryCodes;
+    } catch (error) {
+        if (error.type === "user_recovery_codes_already_exists") {
+            // if no totp, there should be a recent MFA challenge to complete
+            if (totp) await this.completeMFAchallenge(totp);
+
+            const recoveryCodesResponse = await account.getMFARecoveryCodes();
+
+            return recoveryCodesResponse.recoveryCodes;
+        } else {
+            throw error;
+        }
+    }
 };

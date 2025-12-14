@@ -9,12 +9,12 @@
                 <v-tooltip
                     :text="
                         hasAuthenticator
-                            ? auth.user.mfa
+                            ? user.mfa
                                 ? 'Disable MFA'
                                 : 'Enable MFA'
                             : 'You need at least one MFA method enabled to use MFA.'
                     "
-                    v-if="auth.user"
+                    v-if="user"
                 >
                     <template v-slot:activator="{ props }">
                         <div v-bind="props">
@@ -24,7 +24,7 @@
                                 hide-details
                                 :disabled="!hasAuthenticator"
                                 class="ml-4"
-                                :model-value="auth.user.mfa"
+                                :model-value="user.mfa"
                                 @change="toggleMFA"
                             />
                         </div>
@@ -45,21 +45,26 @@ import { account } from "@/appwrite";
 import { computed } from "vue";
 import { mdiShieldCheck } from "@mdi/js";
 import TOTPFactor from "./factors/totp/TOTP.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
+import { mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { useStore } from "@nanostores/vue";
 
-const hasAuthenticator = computed(() => auth.mfaFactors.totp);
+const user = useStore(userStore);
+const mfaFactors = useStore(mfaFactorsStore);
+
+const hasAuthenticator = computed(() => mfaFactors.value.totp);
 
 const toggleMFA = async () => {
     try {
         await account.updateMFA({
-            mfa: !auth.user.mfa
+            mfa: !user.mfa
         });
-        auth.setMFA(!auth.user.mfa);
-        dialogs.create({
+        userStore.set({
+            ...user.value,
+            mfa: !user.value.mfa
+        });
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -67,11 +72,12 @@ const toggleMFA = async () => {
                     text: "OK"
                 }
             ],
-            text: `Multi-Factor Authentication has been ${auth.user.mfa ? "enabled" : "disabled"}.`,
+            text: `Multi-Factor Authentication has been ${user.value.mfa ? "enabled" : "disabled"}.`,
             title: "MFA Updated"
         });
-    } catch {
-        dialogs.create({
+    } catch (error) {
+        console.error("Error toggling MFA:", error);
+        createDialog({
             actions: [
                 {
                     action: "close",

@@ -223,15 +223,18 @@ import {
     mdiShieldKey,
     mdiTrashCan
 } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+
+import { createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";
+import { mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
 
 import ExpanderStep from "@/components/ExpanderStep.vue";
 import ManageRecoveryCodes from "./ManageRecoveryCodes.vue";
 import RecoveryCodes from "./RecoveryCodes.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
+const mfaFactors = useStore(mfaFactorsStore);
+const user = useStore(userStore);
 
 const dialogOpen = shallowRef(false);
 const menuOpen = shallowRef(false);
@@ -248,7 +251,7 @@ const recoveryCodes = shallowRef([]);
 const errors = reactive(Array(3).fill(null));
 
 const totpFactor = computed(() => {
-    return auth.mfaFactors && auth.mfaFactors.totp;
+    return mfaFactors.value && mfaFactors.value.totp;
 });
 
 const copyTotpSecret = () => {
@@ -266,7 +269,7 @@ const nextStep = () => {
 
 const removeTOTP = async () => {
     try {
-        const challengeResp = await auth.createTOTPChallengeDialog();
+        const challengeResp = await createTOTPChallengeDialog();
         if (challengeResp.action === "success") {
             await account.deleteMFAAuthenticator({
                 type: "totp"
@@ -277,10 +280,13 @@ const removeTOTP = async () => {
             });
 
             const factors = await account.listMFAFactors();
-            auth.setMfaFactors(factors);
-            auth.setMFA(false);
+            mfaFactorsStore.set(factors);
+            userStore.set({
+                ...user.value,
+                mfa: false
+            });
 
-            await dialogs.create({
+            await createDialog({
                 actions: [
                     {
                         action: "close",
@@ -297,7 +303,7 @@ const removeTOTP = async () => {
         }
     } catch (error) {
         console.error({ error });
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -313,7 +319,7 @@ const removeTOTP = async () => {
 
 const enableTOTP = async () => {
     try {
-        recoveryCodes.value = await auth.regenerateRecoveryCodes(totpInput.value);
+        recoveryCodes.value = await regenerateRecoveryCodes(totpInput.value);
 
         await account.updateMFAAuthenticator({
             otp: totpInput.value,
@@ -321,7 +327,7 @@ const enableTOTP = async () => {
         });
 
         const factors = await account.listMFAFactors();
-        auth.setMfaFactors(factors);
+        mfaFactorsStore.set(factors);
 
         nextStep(); // Move to recovery codes + success step
     } catch (error) {
@@ -332,7 +338,7 @@ const enableTOTP = async () => {
 
 watch(dialogOpen, async (nowOpen) => {
     if (nowOpen) {
-        if (auth.user.mfa) {
+        if (user.value.mfa) {
             // TOTP is already enabled, no need to setup
             return;
         }

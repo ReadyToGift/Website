@@ -45,6 +45,7 @@
                                             :type="props.name === 'Password' ? (showNewPassword ? 'text' : 'password') : 'text'"
                                         />
                                         <v-text-field
+                                            v-if="props.requiresPassword"
                                             label="Current Password"
                                             autocomplete="current-password"
                                             v-model="proxyModel.value.passwordConfirmation"
@@ -103,6 +104,10 @@ const props = defineProps({
         default: "Field",
         type: String
     },
+    requiresPassword: {
+        default: true,
+        type: Boolean
+    },
     save: {
         required: true,
         type: Function
@@ -134,12 +139,15 @@ const cancel = () => {
 };
 
 const save = async (newValue) => {
-    emits("update:modelValue", newValue);
-
     const success = await props.save(newValue);
     if (!success) {
         return;
     }
+
+    emits("update:modelValue", {
+        ...newValue,
+        passwordConfirmation: ""
+    });
 
     showCurrentPassword.value = false;
     showNewPassword.value = false;

@@ -70,7 +70,7 @@ if (props.user) {
     }
     if (props.user.account) {
         console.log("Initializing auth with user account and session.");
-        initAuth({ user: props.user.account, session: props.user.session } );
+        initAuth({ user: props.user.account, session: props.user.session, factors: props.user.mfaFactors } );
     }
 }
 

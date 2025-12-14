@@ -9,12 +9,11 @@
 
 <script setup>
 import { markRaw } from "vue";
-import RecoveryCodes from "./RecoveryCodes.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
+import { createTOTPChallengeDialog, getRecoveryCodes,regenerateRecoveryCodes } from "@/stores/mfa";
+import { create as createDialog } from "@/stores/dialogs";
+    
+import RecoveryCodes from "./RecoveryCodes.vue";
 
 const props = defineProps({
     action: {
@@ -35,7 +34,7 @@ const props = defineProps({
 
 const manageCodes = async () => {
     if (props.action === "regenerate") {
-        const warningDialogResp = await dialogs.create({
+        const warningDialogResp = await createDialog({
             actions: [
                 {
                     action: "close",
@@ -57,7 +56,7 @@ const manageCodes = async () => {
         }
     }
 
-    const totpChallengeResp = await auth.createTOTPChallengeDialog();
+    const totpChallengeResp = await createTOTPChallengeDialog();
 
     if (totpChallengeResp.action === "cancel" || totpChallengeResp.action === "totp-removed") {
         return;
@@ -66,8 +65,8 @@ const manageCodes = async () => {
     let recoveryCodes = [];
 
     if (props.action === "regenerate") {
-        recoveryCodes = await auth.regenerateRecoveryCodes();
-        dialogs.create({
+        recoveryCodes = await regenerateRecoveryCodes();
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -83,8 +82,8 @@ const manageCodes = async () => {
             title: "Recovery Codes Regenerated"
         });
     } else {
-        recoveryCodes = await auth.getRecoveryCodes();
-        dialogs.create({
+        recoveryCodes = await getRecoveryCodes();
+        createDialog({
             actions: [
                 {
                     action: "close",
