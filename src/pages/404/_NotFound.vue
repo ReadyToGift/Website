@@ -2,7 +2,7 @@
     <div class="page-content">
         <h1>404</h1>
         <p>Page not found</p>
-        <v-btn href="/">Go Home</v-btn>
+        <v-btn href="/dash/lists">Go Home</v-btn>
     </div>
 </template>
 

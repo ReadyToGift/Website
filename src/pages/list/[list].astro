@@ -1,17 +1,43 @@
 ---
 import VueLayout from "@/layouts/VueLayout.astro";
 import WishList from "./_WishList.vue";
+import { createAdminClient } from "@/server/appwrite";
+import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { Permission, Role } from "node-appwrite";
 
 const { user } = Astro.locals;
-const { list } = Astro.params;
+const { list: listId } = Astro.params;
 
 const params = new URLSearchParams(Astro.url.search);
 const { quickCreateURL } = Object.fromEntries(params.entries());
+
+const client = createAdminClient();
+
+let list;
+
+try {
+    list = await client.tablesDB.getRow({
+        databaseId: APPWRITE_DB,
+        tableId: APPWRITE_LIST_COLLECTION,
+        rowId: listId
+    });
+} catch (error) {
+    if (error?.code === 404) {
+        return Astro.rewrite("/404");
+    }
+}
+
+const readAny = list.$permissions.includes(Permission.read(Role.any()));
+const readUser = user.account && list.$permissions.includes(Permission.read(Role.user(user.account.$id)));
+
+if (!readAny && !readUser) {
+    return Astro.rewrite("/404");
+}
 
 export const prerender = false;
 ---
 
 <VueLayout user={user}>
-    <WishList client:only="vue" listId={list} quickCreateURL={quickCreateURL} />
+    <WishList client:only="vue" listId={listId} quickCreateURL={quickCreateURL} />
 </VueLayout>
 

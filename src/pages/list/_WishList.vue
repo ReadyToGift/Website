@@ -1,13 +1,13 @@
 <template>
     <div
         class="page-content"
-        v-if="!list && !newItem.notFound"
+        v-if="!list"
     >
         <v-skeleton-loader type="card" />
         <v-skeleton-loader type="card" />
         <v-skeleton-loader type="card" />
     </div>
-    <template v-else-if="!newItem.notFound">
+    <template v-else>
         <div
             class="page-content"
         >
@@ -113,7 +113,6 @@
             />
         </div>
     </template>
-    <NotFound v-else />
 </template>
 
 <script>
@@ -123,7 +122,6 @@ import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
-import NotFound from "@/pages/_views/NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
 import { Query } from "appwrite";
 
@@ -139,7 +137,6 @@ export default {
         ListCard,
         ListItem,
         ModifyItem,
-        NotFound,
         PWAPrompt
     },
     data() {
@@ -161,8 +158,11 @@ export default {
                 title: "",
                 url: ""
             },
+<<<<<<< HEAD
             notFound: false,
             userLists: useUserLists(),
+=======
+>>>>>>> dcca215 (Update 404 page redirection)
             priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
@@ -492,10 +492,6 @@ export default {
                     title: this.list.title
                 });
             } catch (error) {
-                if (error?.code === 404) {
-                    this.newItem.notFound = true;
-                    return;
-                }
                 console.error(error);
                 this.createDialog({
                     actions: [
