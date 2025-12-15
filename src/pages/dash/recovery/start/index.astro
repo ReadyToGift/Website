@@ -1,0 +1,14 @@
+---
+import VueLayout from "@/layouts/VueLayout.astro";
+import StartRecovery from "./_StartRecovery.vue";
+
+const params = new URLSearchParams(Astro.url.search);
+const redirect = params.get("redirect") || "/dash/lists";
+
+export const prerender = false;
+---
+
+<VueLayout>
+    <StartRecovery client:only="vue" redirect={redirect}/>
+</VueLayout>
+

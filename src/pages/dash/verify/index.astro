@@ -1,0 +1,22 @@
+---
+import VueLayout from "@/layouts/VueLayout.astro";
+import Verify from "./_VerifyPage.vue";
+
+const params = new URLSearchParams(Astro.url.search);
+
+const { userId, secret } = Object.fromEntries(params.entries());
+
+if (!userId || !secret) {
+    return Astro.rewrite("/404");
+}
+
+export const prerender = false;
+---
+<VueLayout>
+    <Verify 
+        client:only="vue"
+        userId={userId}
+        secret={secret}
+    />
+</VueLayout>
+

@@ -7,14 +7,13 @@ import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server
 import { AppwriteException } from "appwrite";
 import { AppwriteException as AdminAppwriteException } from "node-appwrite";
 
-const params = new URLSearchParams(Astro.request.url.search);
+if (user.account) {
+    return Astro.redirect("/dash/lists");
+}
+
+const params = new URLSearchParams(Astro.url.search);
 const redirect = params.get("redirect") || "/dash/lists";
 
-if (user.account) {
-    const { account } = createSessionClient({ request: Astro.request });
-    await account.deleteSession({sessionId: "current"});
-    Astro.cookies.delete(SESSION_COOKIE, { path: "/" });
-}
 
 if (Astro.request.method === "POST") {
     try {
@@ -37,10 +36,8 @@ if (Astro.request.method === "POST") {
         });
 
         try {
-            console.log({session});
             const sessionClient = createSessionClient({ session: session.secret });
             const user = await sessionClient.account.get();
-            console.log({user});
         } catch (error) {
             if (error instanceof AppwriteException) {
                 return new Response(error.response, {

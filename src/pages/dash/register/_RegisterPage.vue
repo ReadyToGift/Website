@@ -43,7 +43,7 @@
         </div>
         <p>
             Already have an account?
-            <router-link :to="`/dash/login?redirect=${redirectPath}`">Login here</router-link>
+            <a :href="`/dash/login?redirect=${redirect}`">Login here</a>
         </p>
     </div>
 </template>
@@ -51,31 +51,27 @@
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
 import { ID } from "appwrite";
-import { useAuthStore } from "@/stores/auth";
 
 export default {
     data() {
-        const route = clientRouter.currentRoute.value;
-        const { redirect } = route.query;
-
-        const redirectPath = redirect
-            ? redirect
-            : "/dash/lists";
-        const successRedirect = window.location.origin + redirectPath;
+        const successRedirect = window.location.origin + this.redirect;
         return {
             alert: false,
-            auth: useAuthStore(),
             loadingRegistration: false,
             mdiAlert,
-            redirectPath,
             registrationDetails: {
                 email: "",
                 password: ""
             },
             successRedirect
         };
+    },
+    props: {
+        redirect: {
+            type: String,
+            default: "/dash/lists"
+        }
     },
     methods: {
         async register() {
@@ -134,10 +130,7 @@ export default {
                     this.loadingRegistration = false;
 
                     setTimeout(() => {
-                        clientRouter.push({
-                            path: "/dash/login",
-                            query: { redirect: this.redirectPath }
-                        });
+                        window.location.href = "/dash/login?redirect=" + this.redirect;
                     }, 2000);
                 }
             } catch (error) {
@@ -149,13 +142,6 @@ export default {
                 this.loadingRegistration = false;
                 return;
             }
-        }
-    },
-    mounted() {
-        if (this.auth.user) {
-            account.deleteSession("current");
-            this.auth.user = null;
-            this.auth.init();
         }
     }
 };

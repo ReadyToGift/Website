@@ -74,6 +74,7 @@
             color="primary"
             :disabled="code.length !== 6"
             @click="submit"
+            :loading="loading"
         >
             Submit
         </v-btn>
@@ -90,8 +91,10 @@ const code = shallowRef("");
 const recoveryCode = shallowRef("");
 const errorMessage = shallowRef("");
 const usingRecoveryCode = shallowRef(false);
+const loading = shallowRef(false);
 
 const submit = async () => {
+    loading.value = true;
     try {
         if (usingRecoveryCode.value) {
             alert("Removing TOTP via recovery code is not yet implemented.");
@@ -137,6 +140,7 @@ const submit = async () => {
         errorMessage.value = error.message || "An unknown error occurred.";
     } finally {
         code.value = "";
+        loading.value = false;
     }
 }; 
 </script>

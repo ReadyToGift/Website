@@ -19,28 +19,34 @@
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
-import { useAuthStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
 
 export default {
     data() {
         return {
             alert: false,
-            auth: useAuthStore(),
+            user: useStore(userStore),
             loadingVerification: false,
             mdiAlert
         };
+    },
+    props: {
+        userId: {
+            type: String,
+            required: true
+        },
+        secret: {
+            type: String,
+            required: true
+        }
     },
     methods: {
         async verify() {
             this.loadingVerification = true;
             this.alert = false;
 
-            const route = clientRouter.currentRoute.value;
-
-            const { userId, secret } = route.query;
-
-            if (!userId || !secret) {
+            if (!this.userId || !this.secret) {
                 this.alert = {
                     text: "Invalid verification link.",
                     title: "Error"
@@ -50,7 +56,7 @@ export default {
             }
 
             try {
-                await account.updateVerification(userId, secret);
+                await account.updateVerification(this.userId, this.secret);
 
                 this.alert = {
                     icon: mdiInformation,
@@ -60,10 +66,7 @@ export default {
                 };
 
                 await this.auth.init();
-
-                setTimeout(() => {
-                    clientRouter.push("/dash/lists");
-                }, 2000);
+                window.location.href = "/dash/lists";
             } catch (error) {
                 this.alert = {
                     text: error.message,

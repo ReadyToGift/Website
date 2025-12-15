@@ -24,6 +24,7 @@
                 <v-btn
                     type="submit"
                     color="primary"
+                    :loading="loading"
                 >
                     Login
                 </v-btn>
@@ -87,6 +88,7 @@ const props = defineProps({
 
 const methods = LOGIN_METHODS.split(",").map((method) => method.trim());
 const error = shallowRef(null);
+const loading = shallowRef(false);
 
 const methodsData = {
     github: {
@@ -103,6 +105,7 @@ const passwordLogin = async (event) => {
     const formData = new FormData(form);
     const email = formData.get("email");
     const password = formData.get("password");
+    loading.value = true;
 
     try {
         const response = await fetch("", {
@@ -149,6 +152,7 @@ const passwordLogin = async (event) => {
             text: "An unexpected error occurred during login."
         };
     }
+    loading.value = false;
 };
 </script>
 
