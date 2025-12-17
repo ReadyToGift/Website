@@ -1,13 +1,9 @@
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { Permission, Query, Role } from "appwrite";
 
-// TODO: Move to TablesDB, and return initial load via server
-
 export const load = async ({
     tablesDB,
     listId,
-    avoidSpoilersDialogShown,
-    createAvoidSpoilersDialog,
     loadedAsAuthor,
     sort = "price",
     user
@@ -37,11 +33,6 @@ export const load = async ({
     })).rows;
 
     loadedAsAuthor = user && list.author === user.$id;
-
-    if (createAvoidSpoilersDialog) {
-        avoidSpoilersDialogShown = await createAvoidSpoilersDialog(list);
-        if (avoidSpoilersDialogShown) return;
-    }
 
     let fulfillments = [];
 
@@ -77,7 +68,6 @@ export const load = async ({
     return {
         list,
         loadedAsAuthor,
-        avoidSpoilersDialogShown,
         fulfillments,
         communityItems
     };
