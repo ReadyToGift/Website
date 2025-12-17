@@ -81,7 +81,10 @@ export default defineConfig({
         vue({
             appEntrypoint: "/src/pages/_app"
         }),
-        sentry()
+        sentry({
+            org: "sentry",
+            project: "readytogift"
+        })
     ],
 
     vite: {
