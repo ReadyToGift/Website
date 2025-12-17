@@ -9,7 +9,7 @@ import vercel from "@astrojs/vercel";
 import node from "@astrojs/node";
 let adapter;
 
-if (import.meta.env.MODE  === "development") {
+if (!import.meta.env.VERCEL) {
     adapter = node({
         mode: "standalone"
     });
