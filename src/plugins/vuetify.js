@@ -116,8 +116,6 @@ const darkTheme = {
     }
 };
 
-console.log("Vuetify initialized with dark mode:", $prefs.value.darkMode);
-
 export default createVuetify({
     blueprint: md3,
     components: {

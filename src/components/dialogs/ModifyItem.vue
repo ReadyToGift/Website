@@ -321,12 +321,12 @@ export default {
                     }
                 });
                 if (imageSelectorResp.action === "select-image") {
-                    this.modifiedItem.image = images[0].src;
+                    this.modifiedItem.image = images[imageSelectorResp.data].src;
                     this.modifiedItem.imageFile = null;
                     this.modifiedItem.imageID = null;
                 } else {
                     // User cancelled image selection
-                    this.modifiedItem.image = this.previousValues.image;
+                    this.modifiedItem.image = images[0].src;
                     this.modifiedItem.imageFile = null;
                     this.modifiedItem.imageID = null;
                 }

@@ -20,6 +20,7 @@
                 :list-saved="listSaved"
                 :quickCreateURL="quickCreateURL"
                 :own-list="wishlistOwner"
+                @quickCreate="quickCreate"
                 @updateList="updateList"
                 @newItem="addItem"
             />
@@ -174,7 +175,8 @@ export default {
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
             showFulfilled: import.meta.env.SSR ? true : localStorage.getItem("showFulfilled") !== "false",
             sort: "price",
-            user: useStore(userStore)
+            user: useStore(userStore),
+            quickCreateURL: null
         };
     },
     props: {
@@ -182,7 +184,7 @@ export default {
             type: String,
             required: false
         },
-        quickCreateURL: {
+        quickCreateURLParam: {
             type: String,
             required: false
         },
@@ -280,15 +282,18 @@ export default {
     },
     methods: {
         resetQuickCreateURL() {
-            const { quickcreateurl, ...remainingQueries } = Object.fromEntries(
+            const { quickCreateURL, ...remainingQueries } = Object.fromEntries(
                 new URLSearchParams(window.location.search)
             );
-            if (quickcreateurl) {
+            if (quickCreateURL) {
                 const newQueryString = new URLSearchParams(remainingQueries).toString();
                 const newURL =
                     window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
                 window.history.replaceState({}, document.title, newURL);
             }
+        },
+        quickCreate(url) {
+            this.quickCreateURL = url;
         },
         async updateList(data) {
             this.list.title = data.list.title;
@@ -530,6 +535,7 @@ export default {
         });
 =======
         await this.loadList({ id: this.listId, listData: this.listData });
+        this.quickCreateURL = this.quickCreateURLParam;
         // show spoilers dialog, maybe before mounted or hide until shown
 >>>>>>> 5277936 (Load list on server)
     }

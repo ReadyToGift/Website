@@ -2,7 +2,8 @@
     <v-dialog
         v-for="dialog in Object.values(dialogs || {})"
         :key="dialog.id"
-        v-model="dialog.open"
+        :model-value="dialog.open"
+        @update:model-value="(value) => !value && closeDialog(dialog.id, 'closed')"
         :max-width="dialog.maxWidth || (
             $vuetify.display.mobile ? '100%' : '500px')"
         :fullscreen="dialog.fullscreen !== undefined ? dialog.fullscreen : $vuetify.display.mobile ? true : false"

@@ -1,6 +1,6 @@
 <template>
     <v-card
-        :href=" props.header || props.type === 'selectable' ? undefined : `/list/${props.list.$id}${quickCreateURL && ownList ? `?quickcreateurl=${props.quickCreateURL}` : ''}`"
+        :href=" props.header || props.type === 'selectable' ? undefined : `/list/${props.list.$id}${quickCreateURL && ownList ? `?quickCreateURL=${props.quickCreateURL}` : ''}`"
         :title="props.list.title"
         variant="tonal"
         :color="props.selected ? 'primary' : 'default'"
@@ -121,9 +121,9 @@
             <ListManagementButtons
                 :list="props.list"
                 :currency="list.currency"
-                :quickCreateQueryURL="props.quickCreateURL"
                 :wishlistOwner="ownList"
                 :listSaved="props.listSaved"
+                @quickCreate="(data) => emit('quickCreate', data)"
                 @newItem="(data) => emit('newItem', data)"
                 @updateList="(data) => emit('updateList', data)"
                 v-if="props.header && !$vuetify.display.mobile"
@@ -140,9 +140,9 @@
                 <ListManagementButtons
                     :list="props.list"
                     :currency="list.currency"
-                    :quickCreateQueryURL="props.quickCreateURL"
                     :wishlistOwner="ownList"
                     :listSaved="props.listSaved"
+                    @quickCreate="(data) => emit('quickCreate', data)"
                     @newItem="(data) => emit('newItem', data)"
                     @updateList="(data) => emit('updateList', data)"
                     v-if="props.header && $vuetify.display.mobile"
@@ -181,7 +181,7 @@ const user = useStore(userStore);
 
 import VueMarkdown from "vue-markdown-render";
 
-const emit = defineEmits(["newItem", "updateList"]);
+const emit = defineEmits(["newItem", "updateList", "quickCreate"]);
 
 const props = defineProps({
     buttonProps: {

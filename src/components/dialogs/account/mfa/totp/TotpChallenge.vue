@@ -82,7 +82,10 @@
 </template>
 
 <script setup>
+import { mfaFactors, user } from "@/stores/auth";
+import { account } from "@/appwrite";
 import { completeMFAchallenge } from "@/stores/mfa";
+import { create as createDialog } from "@/stores/dialogs";
 import { shallowRef } from "vue";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
@@ -97,36 +100,38 @@ const submit = async () => {
     loading.value = true;
     try {
         if (usingRecoveryCode.value) {
-            alert("Removing TOTP via recovery code is not yet implemented.");
-            // await auth.completeMFAchallenge(recoveryCode.value, "recoverycode");
-            // await account.deleteMFAAuthenticator({
-            //     type: "totp"
-            // });
+            await completeMFAchallenge(recoveryCode.value, "recoverycode");
+            await account.deleteMFAAuthenticator({
+                type: "totp"
+            });
 
-            // await account.updateMFA({
-            //     mfa: false
-            // });
+            await account.updateMFA({
+                mfa: false
+            });
 
-            // const factors = await account.listMFAFactors();
-            // if (auth.user) {
-            //     auth.setMfaFactors(factors);
-            //     auth.setMFA(false);
-            // }
+            const factors = await account.listMFAFactors();
+            if (user.value) {
+                mfaFactors.set(factors);
+                user.set({
+                    ...user.value,
+                    mfa: factors.length > 0
+                });
+            }
 
-            // dialogs.create({
-            //     actions: [
-            //         {
-            //             action: "close",
-            //             color: "primary",
-            //             text: "OK"
-            //         }
-            //     ],
-            //     fullscreen: false,
-            //     maxWidth: "90%",
-            //     text: "Your TOTP authenticator has been successfully removed from your account. You can re-enable multi-factor authentication from your account settings at any time.",
-            //     title: "TOTP Removed"
-            // });
-            // emit("totp-removed");
+            createDialog({
+                actions: [
+                    {
+                        action: "close",
+                        color: "primary",
+                        text: "OK"
+                    }
+                ],
+                fullscreen: false,
+                maxWidth: "90%",
+                text: "Your TOTP authenticator has been successfully removed from your account. You can re-enable multi-factor authentication from your account settings at any time.",
+                title: "TOTP Removed"
+            });
+            emit("totp-removed");
         } else {
             const response = await completeMFAchallenge(code.value, "totp");
             if (!response.ok) {

@@ -4,14 +4,6 @@ import { ID } from "appwrite";
 export const sendLoginNotification = async ({ user, ip }) => {
     const { messaging } = createAdminClient();
 
-    console.log("Preparing to send login notification email to user:", user);
-
-
-
-    const emailTarget = user.targets.find((target) => target.providerType === "email");
-
-    console.log({ targets: user.targets, emailTarget });
-
     if (!user.emailVerification) {
         console.log("No verified email target found for user:", user.$id);
         return new Response("OK", { status: 200 });

@@ -81,7 +81,6 @@
 
 <script setup>
 import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
-import { account } from "@/appwrite";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
 import { ref } from "vue";
@@ -100,7 +99,7 @@ const shareButtonSnackbarOpen = ref(false);
 
 const menuOpen = ref(false);
 
-defineEmits(["newItem", "updateList"]);
+const emit = defineEmits(["newItem", "updateList", "quickCreate"]);
 
 const props = defineProps({
     class: {
@@ -119,10 +118,6 @@ const props = defineProps({
         default: false,
         type: Boolean
     },
-    quickCreateQueryURL: {
-        default: "",
-        type: String
-    },
     variant: {
         default: "elevated",
         type: String
@@ -133,7 +128,6 @@ const props = defineProps({
     }
 });
 
-let quickCreateURL = ref("");
 let quickCreateError = ref({
     text: "",
     title: ""
@@ -253,7 +247,7 @@ const quickCreate = async () => {
             };
             quickcreateDialogOpen.value = true;
         } else {
-            quickCreateURL.value = validURLs[0];
+            emit("quickCreate", validURLs[0]);
         }
     } catch (error) {
         quickCreateError.value = {
@@ -264,8 +258,4 @@ const quickCreate = async () => {
         console.error("Clipboard read error:", error);
     }
 };
-
-if (props.quickCreateQueryURL) {
-    quickCreateURL.value = props.quickCreateQueryURL;
-}
 </script>

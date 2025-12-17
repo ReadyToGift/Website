@@ -343,7 +343,7 @@ const publicLists = computed(() => {
 const createList = (data) => {
     const query = {};
     if (quickCreateURL.value) {
-        query.quickcreateurl = quickCreateURL.value;
+        query.quickCreateURL = quickCreateURL.value;
     }
     const urlSearchParams = new URLSearchParams(query).toString();
     if (urlSearchParams.length) {
