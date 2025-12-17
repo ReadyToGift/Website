@@ -5,7 +5,8 @@ import LoginPage from "./_LoginPage.vue";
 const { user } = Astro.locals;
 import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
 import { AppwriteException } from "appwrite";
-import { AppwriteException as AdminAppwriteException } from "node-appwrite";
+import { AppwriteException as AdminAppwriteException, ID } from "node-appwrite";
+import { sendLoginNotification } from "@/server/auth/login/login-email";
 
 if (user.account) {
     return Astro.redirect("/dash/lists");
@@ -20,7 +21,7 @@ if (Astro.request.method === "POST") {
         const body = await Astro.request.json();
         const { email, password } = body;
 
-        const { account } = createAdminClient();
+        const { account, messaging } = createAdminClient();
 
         const session = await account.createEmailPasswordSession({
             email,
@@ -35,9 +36,20 @@ if (Astro.request.method === "POST") {
             httpOnly: true,
         });
 
+        console.log('User logged in, session created:', session.$id);
+
         try {
             const sessionClient = createSessionClient({ session: session.secret });
             const user = await sessionClient.account.get();
+
+            const ip = Astro.request.headers.get("x-forwarded-for") || Astro.request.headers.get("remote-addr") || '';
+
+            try {
+                await sendLoginNotification({ user, ip });
+            } catch (emailError) {
+                console.error('Error sending login notification email:', emailError);
+            }
+            return new Response("OK", { status: 200 });
         } catch (error) {
             if (error instanceof AppwriteException) {
                 return new Response(error.response, {
@@ -52,7 +64,6 @@ if (Astro.request.method === "POST") {
             });
         }
 
-        return new Response("OK", { status: 200 });
     } catch (error) {
         if (error instanceof AdminAppwriteException) {
             return new Response(error.response, {

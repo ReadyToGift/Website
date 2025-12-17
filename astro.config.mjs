@@ -9,12 +9,12 @@ import vercel from "@astrojs/vercel";
 import node from "@astrojs/node";
 let adapter;
 
-if (import.meta.env.PROD) {
-    adapter = vercel();
-} else {
+if (import.meta.env.MODE  === "development") {
     adapter = node({
         mode: "standalone"
     });
+} else {
+    adapter = vercel();
 }
 
 // https://astro.build/config

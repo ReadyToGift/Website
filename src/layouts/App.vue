@@ -76,10 +76,7 @@ if (props.user) {
 
 const vuetifyTheme = useTheme();
 
-// Initialize currencies without blocking
-initCurrencies().catch((error) => {
-    console.error("Failed to initialize currencies:", error);
-});
+await initCurrencies();
 
 const showUpdatePrompt = useStore(showUpdatePromptStore);
 

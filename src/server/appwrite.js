@@ -22,6 +22,9 @@ export function createAdminClient() {
         },
         get tablesDB() {
             return new appwriteSdk.TablesDB(client);
+        },
+        get messaging() {
+            return new appwriteSdk.Messaging(client);
         }
     };
 }

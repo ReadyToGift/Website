@@ -1,5 +1,7 @@
 import { AppwriteException } from "appwrite";
 import { createSessionClient } from "@/server/appwrite";
+import { sendLoginNotification } from "@/server/auth/login/login-email";
+
 
 export const prerender = false;
 
@@ -23,6 +25,16 @@ export async function POST(req) {
             challengeId: challengeId,
             otp: code
         });
+
+        const user = await client.account.get();
+
+        const ip = request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || "";
+
+        try {
+            await sendLoginNotification({ user, ip });
+        } catch (emailError) {
+            console.error("Error sending login notification email:", emailError);
+        }
 
         return new Response(200);
     } catch (error) {

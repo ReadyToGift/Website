@@ -5,6 +5,8 @@ import { createAdminClient } from "@/server/appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { Permission, Role } from "node-appwrite";
 
+import { load as loadList } from "@/utils/list.js";
+
 const { user } = Astro.locals;
 const { list: listId } = Astro.params;
 
@@ -14,30 +16,37 @@ const { quickCreateURL } = Object.fromEntries(params.entries());
 const client = createAdminClient();
 
 let list;
+let loadedAsAuthor = false;
+let communityItems = [];
+let fulfillments = [];
+const avoidSpoilersDialogShown = false;
 
 try {
-    list = await client.tablesDB.getRow({
-        databaseId: APPWRITE_DB,
-        tableId: APPWRITE_LIST_COLLECTION,
-        rowId: listId
-    });
+    const listResponse = await loadList({
+        tablesDB: client.tablesDB,
+        listId,
+        user
+    })
+    list = listResponse.list;
+    loadedAsAuthor = listResponse.loadedAsAuthor;
+    fulfillments = listResponse.fulfillments;
 } catch (error) {
     if (error?.code === 404) {
         return Astro.rewrite("/404");
     }
-}
-
-const readAny = list.$permissions.includes(Permission.read(Role.any()));
-const readUser = user.account && list.$permissions.includes(Permission.read(Role.user(user.account.$id)));
-
-if (!readAny && !readUser) {
-    return Astro.rewrite("/404");
+    console.log({ error });
+    throw error;
 }
 
 export const prerender = false;
 ---
 
 <VueLayout user={user}>
-    <WishList client:only="vue" listId={listId} quickCreateURL={quickCreateURL} />
+    <WishList
+        client:only="vue"
+        listId={listId}
+        quickCreateURL={quickCreateURL}
+        listData={{ list, loadedAsAuthor, fulfillments, communityItems, avoidSpoilersDialogShown }}
+    />
 </VueLayout>
 

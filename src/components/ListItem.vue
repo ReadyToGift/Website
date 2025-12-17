@@ -53,7 +53,6 @@
                     :item="item"
                     :list="list"
                     v-if="wishlistOwner && !item.communityList"
-                    @loadList="$emit('loadList', $event)"
                     @removeItem="$emit('removeItem', $event)"
                 />
                 <DeleteItem

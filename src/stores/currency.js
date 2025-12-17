@@ -22,9 +22,9 @@ export const formatter = (code) => {
     const currency = getCurrency(code);
     return new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: currency.code,
-        minimumFractionDigits: currency.decimalDigits,
-        maximumFractionDigits: currency.decimalDigits
+        currency: code,
+        minimumFractionDigits: currency?.decimalDigits || 2,
+        maximumFractionDigits: currency?.decimalDigits || 2
     });
 };
 

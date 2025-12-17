@@ -1,12 +1,61 @@
 ---
 import Layout from "./Layout.astro";
-import AppWrapper from "./AppWrapper.vue";
+import App from "./App.vue";
 
 const { user } = Astro.props;
+
+let darkMode = "system";
+if (user?.prefs?.darkMode !== undefined) {
+    darkMode = user.prefs.darkMode;
+}
+
+console.log("User dark mode preference:", darkMode);
 ---
 
 <Layout>
-    <AppWrapper user={user} client:only="vue">
-        <slot />
-    </AppWrapper>
+    <div id="app">
+        <noscript>
+            <h1>JavaScript is disabled</h1>
+            <p>
+                This application requires JavaScript to run. Please enable JavaScript to
+                continue.
+            </p>
+        </noscript>
+        <style>
+            
+        </style>
+        <App user={user} client:only="vue">
+            <slot />
+        </App>
+    </div>
 </Layout>
+
+{
+    darkMode === true ? (
+        <style>
+            body {
+                background-color: #111318;
+                color: #F9F9FF;
+            }
+        </style>
+    ) : darkMode === false ? (
+        <style>
+            body {
+                background-color: #F9F9FF;
+                color: #111318;
+            }
+        </style>
+    ) : (
+        <style>
+            body {
+                background-color: white;
+            }
+            @media (prefers-color-scheme: dark) {
+                body {
+                    background-color: #111318;
+                    color: #F9F9FF;
+                }
+            }
+        </style>
+    )
+}

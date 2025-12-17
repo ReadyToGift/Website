@@ -1,13 +1,13 @@
 <template>
     <div
         class="page-content"
-        v-if="!list"
+        v-if="!list && !newItem.notFound"
     >
         <v-skeleton-loader type="card" />
         <v-skeleton-loader type="card" />
         <v-skeleton-loader type="card" />
     </div>
-    <template v-else>
+    <template v-else-if="!newItem.notFound">
         <div
             class="page-content"
         >
@@ -62,7 +62,6 @@
                             :wishlistOwner="wishlistOwner"
                             :currency="list.currency"
                             @removeItem="removeItem(item.$id)"
-                            @loadList="loadList($event)"
                             @editItem="editItem($event)"
                             @fulfillItem="fulfillItem($event)"
                             @unfulfillItem="unfulfillItem($event)"
@@ -113,22 +112,24 @@
             />
         </div>
     </template>
+    <NotFound v-else />
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { avatars, databases } from "@/appwrite";
+import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { avatars, databases, tablesDB } from "@/appwrite";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
+import NotFound from "../404/_NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-import { Query } from "appwrite";
 
 import { $prefs, addToHistory } from "@/stores/prefs";
 import { previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { formatter as currencyFormatter } from "@/stores/currency";
+import { load as loadList } from "@/utils/list.js";
 import { useStore } from "@nanostores/vue";
 import { useUserLists } from "@/stores/userLists";
 
@@ -137,6 +138,7 @@ export default {
         ListCard,
         ListItem,
         ModifyItem,
+        NotFound,
         PWAPrompt
     },
     data() {
@@ -159,15 +161,18 @@ export default {
                 url: ""
             },
 <<<<<<< HEAD
+<<<<<<< HEAD
             notFound: false,
             userLists: useUserLists(),
 =======
 >>>>>>> dcca215 (Update 404 page redirection)
+=======
+            notFound: false,
+>>>>>>> 5277936 (Load list on server)
             priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
-            pwaPromo: false,
-            showFulfilled: localStorage.getItem("showFulfilled") !== "false",
+            showFulfilled: import.meta.env.SSR ? true : localStorage.getItem("showFulfilled") !== "false",
             sort: "price",
             user: useStore(userStore)
         };
@@ -180,6 +185,11 @@ export default {
         quickCreateURL: {
             type: String,
             required: false
+        },
+        listData: {
+            type: Object,
+            required: false,
+            default: null
         }
     },
     computed: {
@@ -421,69 +431,28 @@ export default {
                 return dialogResponse === "No";
             }
         },
-        async loadList(listId) {
+        async loadList({ id: listId, listData }) {
             try {
-                let list = await databases.getDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    listId,
-                    [
-                        Query.select(["*","items.*"])
-                    ]
-                );
-
-                const communityItems = await databases.listDocuments(
-                    APPWRITE_DB,
-                    APPWRITE_ITEM_COLLECTION,
-                    [
-                        Query.equal("communityList", list.$id)
-                    ]
-                );
-
-                this.communityItems = communityItems.documents;
-
-                this.loadedAsAuthor = this.user && list.author === this.user.$id;
-
-                this.avoidSpoilersDialogShown = await this.createAvoidSpoilersDialog(list);
-                if (this.avoidSpoilersDialogShown) return;
-
-                window.document.title = list.title + " - Readyto.gift";
-
-                this.fulfillments = [];
-
-                if (list.items && list.items.length) {
-                    this.fulfillments = (await databases.listDocuments(
-                        APPWRITE_DB,
-                        APPWRITE_FULFILLMENT_COLLECTION,
-                        [
-                            Query.equal("item", list.items.map((item) => item.$id)),
-                            Query.select(["*", "item.*"]),
-                            Query.limit(list.items.length)
-                        ]
-                    )).documents;
+                if (!listData) {
+                    listData = await loadList({
+                        tablesDB,
+                        listId,
+                        avoidSpoilersDialogShown: this.avoidSpoilersDialogShown,
+                        createAvoidSpoilersDialog: this.createAvoidSpoilersDialog,
+                        loadedAsAuthor: this.loadedAsAuthor,
+                        sort: this.sort,
+                        user: this.user
+                    });
+                } else {
+                    console.log("Using preloaded list data");
                 }
 
-                list.items = list.items
-                    .sort((a, b) => {
-                        if (this.sort === "price") {
-                            return a.price - b.price;
-                        }
-                        return a.title.localeCompare(b.title);
-                    })
-                    .map((item) => {
-                        item.fulfillment = this.fulfillments.find(
-                            (fulfillment) => {
-                                return fulfillment.item.$id === item.$id;
-                            }
-                        );
-
-                        return item;
-                    });
-
-                this.list = list;
-                window.addEventListener("appinstalled", () => {
-                    this.pwaPromo = false;
-                });
+                this.list = listData.list;
+                this.loadedAsAuthor = listData.loadedAsAuthor;
+                this.avoidSpoilersDialogShown = listData.avoidSpoilersDialogShown;
+                this.fulfillments = listData.fulfillments;
+                this.communityItems = listData.communityItems;
+                window.document.title = `${this.list.title} - Readyto.gift`;
 
                 this.addToHistory({
                     avatar: avatars.getInitials(this.list.authorName),
@@ -492,6 +461,10 @@ export default {
                     title: this.list.title
                 });
             } catch (error) {
+                if (error?.code === 404) {
+                    this.newItem.notFound = true;
+                    return;
+                }
                 console.error(error);
                 this.createDialog({
                     actions: [
@@ -514,6 +487,7 @@ export default {
         }
     },
     async mounted() {
+<<<<<<< HEAD
         const route = clientRouter.currentRoute.value;
         const { listId } = route.params;
         await this.loadList(listId);
@@ -554,6 +528,10 @@ export default {
                 await this.loadList(to.params.listId);
             }
         });
+=======
+        await this.loadList({ id: this.listId, listData: this.listData });
+        // show spoilers dialog, maybe before mounted or hide until shown
+>>>>>>> 5277936 (Load list on server)
     }
 };
 </script>
