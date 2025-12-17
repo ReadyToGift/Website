@@ -50,7 +50,7 @@
                         title="GitHub"
                         target="_blank"
                     />
-                    <QuickSettings>
+                    <QuickSettings :hide="['login', 'logout']">
                         <template v-slot:activator="{ props }">
                             <v-list-item
                                 :prepend-icon="mdiCog"
@@ -105,7 +105,7 @@
                     Lists
                 </v-btn>
 
-                <QuickSettings>
+                <QuickSettings @logout="logout">
                     <template v-slot:activator="{ props }">
                         <v-btn
                             :icon="mdiAccountCircle"

@@ -80,17 +80,18 @@
                 <v-spacer />
                 <v-btn
                     color="primary"
-                    v-if="!user"
+                    v-if="!user && !hide.includes('login')"
                     :loading="loadingLoginLogout"
                     :href="`/dash/login?redirect=${redirectURL}`"
                 >
-                    Log In</v-btn>
+                    Log In
+                </v-btn>
 
                 <v-btn
                     @click="emit('logout')"
                     color="error"
                     :loading="loadingLoginLogout"
-                    v-else
+                    v-else-if="!hide.includes('logout')"
                 >
                     Logout
                 </v-btn>
@@ -122,6 +123,13 @@ const user = useStore(authUser);
 
 const loadingLoginLogout = ref(false);
 const menu = ref(false);
+
+const props = defineProps({
+    hide: {
+        default: () => ([]),
+        type: Array
+    }
+});
 
 const emit = defineEmits(["logout"]);
 
