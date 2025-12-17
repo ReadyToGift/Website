@@ -83,7 +83,8 @@ export default defineConfig({
         }),
         sentry({
             org: "sentry",
-            project: "readytogift"
+            project: "readytogift",
+            url: "https://sentry.jackbailey.cloud/"
         })
     ],
 
