@@ -75,7 +75,7 @@ import { reactive, watch } from "vue";
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { AppwriteException } from "appwrite";
 
-import { init as initAuth, user as userStore } from "@/stores/auth";
+import { setUser, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
@@ -114,7 +114,7 @@ watch(
 const saveName = async (newValue) => {
     const result = await account.updateName(newValue.value);
     if (result.$id) {
-        initAuth({ user: result });
+        setUser({ user: result });
         return true;
     } else {
         createDialog({
@@ -131,7 +131,7 @@ const saveEmail = async (newValue) => {
         const result = await account.updateEmail(newValue.value, newValue.passwordConfirmation);
         console.log({ result });
         if (result.$id) {
-            initAuth({ user: result });
+            setUser({ user: result });
             await account.createEmailVerification({ url: "https://readyto.gift/dash/verify" });
             createDialog({
                 actions: [

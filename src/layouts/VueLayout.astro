@@ -22,7 +22,7 @@ if (user?.prefs?.darkMode !== undefined) {
         <style>
             
         </style>
-        <App user={user} client:only="vue">
+        <App client:only="vue">
             <slot />
         </App>
     </div>

@@ -14,11 +14,12 @@ export const getAuth = async (context) => {
             const accountClient = sessionClient.account;
             session = sessionClient.session;
     
-            [account, mfaFactors, prefs] = await Promise.all([
+            [account, mfaFactors] = await Promise.all([
                 accountClient.get(),
-                accountClient.listMFAFactors(),
-                accountClient.getPrefs()
+                accountClient.listMFAFactors()
             ]);
+
+            prefs = account?.prefs || {};
         } catch {} // eslint-disable-line no-empty
         const endTime = Date.now();
         console.log(`GetAuth took ${endTime - startTime}ms`);

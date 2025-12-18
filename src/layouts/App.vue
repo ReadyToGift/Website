@@ -49,30 +49,16 @@ import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
 import { useStore } from "@nanostores/vue";
 
-import { $prefs, loadPrefs } from "@/stores/prefs";
 import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
+import { $prefs } from "@/stores/prefs";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
 
 const prefs = useStore($prefs);
 
-const props = defineProps({
-    user: {
-        type: Object,
-        required: false
-    }
-});
-
-if (props.user) {
-    if (props.user.prefs) {
-        loadPrefs(props.user.prefs);
-    }
-    if (props.user.account) {
-        console.log("Initializing auth with user account and session.");
-        initAuth({ user: props.user.account, session: props.user.session, factors: props.user.mfaFactors } );
-    }
-}
+console.log("Initializing auth with user account and session.");
+await initAuth();
 
 const vuetifyTheme = useTheme();
 

@@ -1,25 +1,37 @@
 import { avatars, client } from "@/appwrite";
 import { atom } from "nanostores";
+import { loadPrefs } from "./prefs";
 import { persistentAtom } from "@nanostores/persistent";
 
 export const user = atom(null);
 export const mfaFactors = atom([]);
 export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
 
-export const init = async ({ user: userData, session, factors }) => {
-    if (session) client.setSession(session);
-    if (userData) {
-        if (userData.name) {
-            userData.avatar = avatars.getInitials(userData.name);
-        }
-        if (userData.$id) {
-            previouslyLoggedInUserID.set(userData.$id);
-        }
-        user.set(userData);
+export const setUser = ({ user: userData }) => {
+    user.set({
+        ...user.get(),
+        account: userData
+    });
+};
+
+export const init = async () => {
+    const accountResp = await fetch("/api/auth");
+    const { user: accountData } = await accountResp.json();
+
+    if (accountData.session) client.setSession(accountData.session);
+
+    const userData = {
+        ...accountData.account,
+        avatar: accountData.account?.name ? avatars.getInitials(accountData.account.name) : null
+    };
+
+    loadPrefs(accountData.prefs);
+
+    if (userData.mfaFactors) {
+        mfaFactors.set(accountData.mfaFactors);
     }
-    if (factors) {
-        mfaFactors.set(factors);
-    }
+
+    user.set(userData);
 };
 
 export default {
