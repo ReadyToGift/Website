@@ -13,30 +13,31 @@ const { list: listId } = Astro.params;
 const params = new URLSearchParams(Astro.url.search);
 const { quickCreateURL } = Object.fromEntries(params.entries());
 
-const client = createAdminClient();
+// const client = createAdminClient();
 
-let list;
-let loadedAsAuthor = false;
-let communityItems = [];
-let fulfillments = [];
-const avoidSpoilersDialogShown = false;
+// let list;
+// let loadedAsAuthor = false;
+// let communityItems = [];
+// let fulfillments = [];
+// const avoidSpoilersDialogShown = false;
 
-try {
-    const listResponse = await loadList({
-        tablesDB: client.tablesDB,
-        listId,
-        user
-    })
-    list = listResponse.list;
-    loadedAsAuthor = listResponse.loadedAsAuthor;
-    fulfillments = listResponse.fulfillments;
-} catch (error) {
-    if (error?.code === 404) {
-        return Astro.rewrite("/404");
-    }
-    console.log({ error });
-    throw error;
-}
+// try {
+//     const listResponse = await loadList({
+//         tablesDB: client.tablesDB,
+//         listId,
+//         user
+//     })
+//     list = listResponse.list;
+//     loadedAsAuthor = listResponse.loadedAsAuthor;
+//     fulfillments = listResponse.fulfillments;
+// } catch (error) {
+//     if (error?.code === 404) {
+//         return Astro.rewrite("/404");
+//     }
+//     console.log({ error });
+//     throw error;
+// }
+// listData={{ list, loadedAsAuthor, fulfillments, communityItems, avoidSpoilersDialogShown }}
 
 export const prerender = false;
 ---
@@ -46,7 +47,6 @@ export const prerender = false;
         client:only="vue"
         listId={listId}
         quickCreateURLParam={quickCreateURL}
-        listData={{ list, loadedAsAuthor, fulfillments, communityItems, avoidSpoilersDialogShown }}
     />
 </VueLayout>
 

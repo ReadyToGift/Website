@@ -4,7 +4,6 @@ import { Permission, Query, Role } from "appwrite";
 export const load = async ({
     tablesDB,
     listId,
-    loadedAsAuthor,
     sort = "price",
     user
 }) => {
@@ -17,12 +16,15 @@ export const load = async ({
         ]
     });
 
-    const readAny = list.$permissions.includes(Permission.read(Role.any()));
-    const readUser = user.account && list.$permissions.includes(Permission.read(Role.user(user.account.$id)));
-
-    if (!readAny && !readUser) {
-        throw new Error({ code: 404, message: "List not found" });
+    if (import.meta.env.SSR) {
+        const readAny = list.$permissions.includes(Permission.read(Role.any()));
+        const readUser = user && list.$permissions.includes(Permission.read(Role.user(user.$id)));
+    
+        if (!readAny && !readUser) {
+            throw new Error({ code: 404, message: "List not found" });
+        }
     }
+
 
     const communityItems = (await tablesDB.listRows({
         databaseId: APPWRITE_DB,
@@ -32,7 +34,7 @@ export const load = async ({
         ]
     })).rows;
 
-    loadedAsAuthor = user && list.author === user.$id;
+    const loadedAsAuthor = user && list.author === user.$id;
 
     let fulfillments = [];
 
