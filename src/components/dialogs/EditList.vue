@@ -83,6 +83,7 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
@@ -95,6 +96,15 @@ import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
+    components: {
+        ListFields,
+        VDialog,
+        VBtn,
+        VCard,
+        VCardText,
+        VCardActions,
+        VAlert
+    },
     props: {
         list: {
             type: Object,
@@ -104,9 +114,6 @@ export default {
             type: String,
             default: "elevated"
         }
-    },
-    components: {
-        ListFields
     },
     data() {
         return {

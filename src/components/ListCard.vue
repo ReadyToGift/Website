@@ -167,6 +167,7 @@
 
 <script setup>
 import { mdiAlert, mdiDotsVertical, mdiEarth, mdiFileDocumentMultiple, mdiInvoiceList, mdiLock, mdiUpdate } from "@mdi/js";
+import { VAlert, VCard, VCardText, VChip, VFab, VIcon, VSpeedDial } from "vuetify/components";
 import { $prefs } from "@/stores/prefs";
 import { avatars } from "@/appwrite";
 import { formatter as currencyFormatter } from "@/stores/currency";

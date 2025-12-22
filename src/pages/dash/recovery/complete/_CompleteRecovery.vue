@@ -37,9 +37,16 @@
 
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
+import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
 
 export default {
+    components: {
+        VForm,
+        VTextField,
+        VBtn,
+        VAlert
+    },
     data() {
         return {
             alert: false,

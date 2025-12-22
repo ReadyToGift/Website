@@ -83,6 +83,7 @@
 </template>
 
 <script setup>
+import { VLabel, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
 import { computed } from "vue";
 import { currencies } from "@/stores/currency";
 import RevertPrompt from "@/components/RevertPrompt.vue";

@@ -223,6 +223,7 @@ import {
     mdiShieldKey,
     mdiTrashCan
 } from "@mdi/js";
+import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VCardTitle, VDialog, VIcon, VList, VListItem, VListItemTitle, VMenu, VOtpInput, VSnackbar, VSpacer, VTextField, VTimeline } from "vuetify/components";
 import { useStore } from "@nanostores/vue";
 
 import { createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";

@@ -144,6 +144,16 @@ import {
     mdiMenu,
     mdiTune
 } from "@mdi/js";
+import { 
+    VAppBar, 
+    VBtn, 
+    VDivider, 
+    VList, 
+    VListItem, 
+    VNavigationDrawer, 
+    VProgressLinear, 
+    VToolbarTitle 
+} from "vuetify/components";
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
 import { $prefs } from "@/stores/prefs";
@@ -153,7 +163,15 @@ import { useStore } from "@nanostores/vue";
 
 export default {
     components: {
-        QuickSettings
+        QuickSettings,
+        VNavigationDrawer,
+        VList,
+        VListItem,
+        VDivider,
+        VAppBar,
+        VToolbarTitle,
+        VBtn,
+        VProgressLinear
     },
     props: {
         loading: {

@@ -42,6 +42,7 @@
 import "vuetify/styles";
 import "@/assets/main.scss";
 import { onMounted, watch } from "vue";
+import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
 import { useTheme } from "vuetify";
 
 import DashNav from "@/components/DashNav.vue";

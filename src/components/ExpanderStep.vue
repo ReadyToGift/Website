@@ -42,6 +42,7 @@
 </template>
 
 <script setup>
+import { VAlert, VExpansionPanel, VExpansionPanels, VExpansionPanelText, VExpansionPanelTitle, VTimelineItem } from "vuetify/components";
 import { computed } from "vue";
 import { mdiNumeric1 } from "@mdi/js";
 

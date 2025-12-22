@@ -58,9 +58,18 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION } from "astro:env/client";
 import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiDelete } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
 export default {
     title: "ListDialog",
+    components: {
+        VDialog,
+        VBtn,
+        VCard,
+        VCardText,
+        VCardActions,
+        VAlert
+    },
     props: {
         item: {
             type: Object,

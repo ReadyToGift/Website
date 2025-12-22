@@ -58,6 +58,7 @@
 import { client, databases, functions } from "@/appwrite";
 import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
+import { VCardText, VCardTitle, VChip, VIcon, VTimeline, VTimelineItem } from "vuetify/components";
 import { APPWRITE_DB } from "astro:env/client";
 
 const totalAttempts = shallowRef(0);

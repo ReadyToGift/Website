@@ -147,6 +147,7 @@
 <script setup>
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
 import { ref, useTemplateRef } from "vue";
+import { VBtn, VFileInput, VForm, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
 import currencyStore from "@/stores/currency";
 import { priorityMap } from "@/utils";
 import RevertPrompt from "@/components/RevertPrompt.vue";

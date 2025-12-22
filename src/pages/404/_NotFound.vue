@@ -6,6 +6,10 @@
     </div>
 </template>
 
+<script setup>
+import { VBtn } from "vuetify/components";
+</script>
+
 <style lang="scss" scoped>
 .page-content {
     height: 100%;

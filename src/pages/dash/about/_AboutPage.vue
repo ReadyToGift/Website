@@ -24,6 +24,7 @@
 <script setup>
 import { loadBuildDate, loadCommit } from "@/stores/version";
 import { mdiCalendarClock, mdiInformationOutline } from "@mdi/js";
+import { VCard, VCardText, VCardTitle, VList, VListItem } from "vuetify/components";
 </script>
 
 <style lang="scss" scoped>

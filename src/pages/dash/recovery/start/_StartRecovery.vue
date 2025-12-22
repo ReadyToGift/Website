@@ -37,10 +37,17 @@
 
 <script>
 import { mdiAlert, mdiGithub } from "@mdi/js";
+import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
 import { LOGIN_METHODS } from "astro:env/client";
 
 export default {
+    components: {
+        VForm,
+        VTextField,
+        VBtn,
+        VAlert
+    },
     data() {
         return {
             alert: false,

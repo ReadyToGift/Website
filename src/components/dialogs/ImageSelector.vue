@@ -80,6 +80,7 @@
 <script setup>
 import { onMounted, shallowRef, useTemplateRef } from "vue";
 import { Splide, SplideSlide, SplideTrack } from "@splidejs/vue-splide";
+import { VBtn, VCardActions, VCardSubtitle, VCardText, VCardTitle, VChip, VImg, VSpacer } from "vuetify/components";
 import { mdiChevronRight } from "@mdi/js";
 
 import "@splidejs/vue-splide/css";

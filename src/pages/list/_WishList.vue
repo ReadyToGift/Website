@@ -119,6 +119,7 @@
 <script>
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { avatars, databases, tablesDB } from "@/appwrite";
+import { VAlert, VDivider, VSkeletonLoader, VSpacer, VSwitch } from "vuetify/components";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
@@ -139,6 +140,11 @@ export default {
         ListCard,
         ListItem,
         ModifyItem,
+        VSkeletonLoader,
+        VSwitch,
+        VAlert,
+        VDivider,
+        VSpacer,
         NotFound,
         PWAPrompt
     },

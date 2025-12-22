@@ -1,7 +1,4 @@
-import * as components from "vuetify/components";
-import * as directives from "vuetify/directives";
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
-import { VStepperVertical, VStepperVerticalActions, VStepperVerticalItem } from "vuetify/labs/VStepperVertical";
 import { $prefs } from "@/stores/prefs";
 import { createVuetify } from "vuetify";
 import { md3 } from "vuetify/blueprints";
@@ -118,13 +115,6 @@ const darkTheme = {
 
 export default createVuetify({
     blueprint: md3,
-    components: {
-        ...components,
-        VStepperVertical, 
-        VStepperVerticalActions, 
-        VStepperVerticalItem
-    },
-    directives,
     display: {
         mobileBreakpoint: "sm",
         thresholds: {

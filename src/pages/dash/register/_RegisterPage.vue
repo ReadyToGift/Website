@@ -50,10 +50,17 @@
 
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
+import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
 import { ID } from "appwrite";
 
 export default {
+    components: {
+        VForm,
+        VTextField,
+        VBtn,
+        VAlert
+    },
     data() {
         const successRedirect = window.location.origin + this.redirect;
         return {

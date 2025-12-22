@@ -81,6 +81,7 @@
 
 <script setup>
 import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
+import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VDialog, VSnackbar } from "vuetify/components";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
 import { ref } from "vue";

@@ -41,6 +41,7 @@
 
 <script setup>
 import { close as closeDialog, dialogs as dialogsStore } from "@/stores/dialogs";
+import { VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { computed } from "vue";
 import { useStore } from "@nanostores/vue";
 

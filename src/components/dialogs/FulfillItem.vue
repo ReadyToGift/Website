@@ -104,6 +104,7 @@
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION } from "astro:env/client";
 import { AppwriteException, ID } from "appwrite";
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VTextField } from "vuetify/components";
 import { databases } from "@/appwrite";
 
 import { user as userStore } from "@/stores/auth";
@@ -111,6 +112,15 @@ import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
+    components: {
+        VDialog,
+        VCard,
+        VCardText,
+        VCardActions,
+        VBtn,
+        VAlert,
+        VTextField
+    },
     props: {
         item: {
             type: Object,

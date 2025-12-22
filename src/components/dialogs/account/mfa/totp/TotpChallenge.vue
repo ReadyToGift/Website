@@ -83,6 +83,7 @@
 
 <script setup>
 import { mfaFactors, user } from "@/stores/auth";
+import { VAlert, VBtn, VCardActions, VCardText, VOtpInput, VSpacer } from "vuetify/components";
 import { account } from "@/appwrite";
 import { completeMFAchallenge } from "@/stores/mfa";
 import { create as createDialog } from "@/stores/dialogs";

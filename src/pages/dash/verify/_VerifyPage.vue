@@ -17,12 +17,16 @@
 </template>
 
 <script>
+import { VAlert } from "vuetify/components";
 import { mdiAlert, mdiInformation } from "@mdi/js";
 import { account } from "@/appwrite";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 export default {
+    components: {
+        VAlert
+    },
     data() {
         return {
             alert: false,

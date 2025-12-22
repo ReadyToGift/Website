@@ -121,6 +121,7 @@ import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_
 import { AppwriteException, ID, Permission, Role } from "appwrite";
 import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab, VTooltip } from "vuetify/components";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
 import { markRaw } from "vue";
@@ -134,6 +135,17 @@ import { usePolarStore } from "@/stores/polar";
 
 export default {
     title: "ListDialog",
+    components: {
+        ItemFields,
+        VBtn,
+        VAlert,
+        VCard,
+        VCardActions,
+        VCardText,
+        VDialog,
+        VFab,
+        VTooltip
+    },
     props: {
         currency: {
             type: String,
@@ -158,9 +170,6 @@ export default {
             type: Boolean,
             default: false
         }
-    },
-    components: {
-        ItemFields
     },
     data() {
         return {

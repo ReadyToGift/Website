@@ -17,6 +17,7 @@
 
 <script setup>
 import { mdiUndoVariant } from "@mdi/js";
+import { VIcon } from "vuetify/components";
 
 defineProps({
     previousValue: {

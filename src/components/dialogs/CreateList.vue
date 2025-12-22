@@ -87,6 +87,7 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, ID, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPlus } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
@@ -97,6 +98,15 @@ const user = useStore(userStore);
 
 export default {
     title: "ListDialog",
+    components: {
+        ListFields,
+        VAlert,
+        VDialog,
+        VCard,
+        VCardText,
+        VCardActions,
+        VBtn
+    },
     props: {
         disabled: {
             type: Boolean,
@@ -114,9 +124,6 @@ export default {
             type: String,
             default: "elevated"
         }
-    },
-    components: {
-        ListFields
     },
     data() {
         return {

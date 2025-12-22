@@ -153,6 +153,7 @@
 <script>
 import { avatars, storage } from "@/appwrite";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
+import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
 import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { convertPriority } from "@/utils";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
@@ -192,7 +193,12 @@ export default {
         FulfillItem,
         ModifyItem,
         MoveItem,
-        VueMarkdown
+        VueMarkdown,
+        VBtn,
+        VCard,
+        VBtnGroup,
+        VChip,
+        VImg
     },
     data() {
         return {

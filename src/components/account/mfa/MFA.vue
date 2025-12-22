@@ -41,6 +41,7 @@
 </template>
 
 <script setup>
+import { VList, VListItem, VSwitch, VTooltip } from "vuetify/components";
 import { account } from "@/appwrite";
 import { computed } from "vue";
 import { mdiShieldCheck } from "@mdi/js";

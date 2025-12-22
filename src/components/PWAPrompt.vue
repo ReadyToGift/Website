@@ -57,6 +57,7 @@
 <script setup>
 import { $prefs, updatePrefs } from "@/stores/prefs";
 import { appInstalled, deferredPrompt as deferredPromptStore, locallyDismissed as locallyDismissedStore } from "@/stores/pwa";
+import { VBtn, VCard, VCardText, VList, VListItem, VMenu } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
 import { mdiMenuDown } from "@mdi/js";
 import { ref } from "vue";

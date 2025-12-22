@@ -279,6 +279,7 @@ import { account, tablesDB } from "@/appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { computed, ref } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
+import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VDialog, VDivider, VIcon, VList, VMenu, VSelect, VSheet, VSkeletonLoader, VSpacer, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
 import { Query } from "appwrite";
 
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";

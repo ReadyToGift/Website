@@ -75,6 +75,7 @@
 
 <script setup>
 import { mdiAlert, mdiGithub } from "@mdi/js";
+import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
 import { createTOTPChallengeDialog } from "@/stores/mfa";
 import { LOGIN_METHODS } from "astro:env/client";
 import { shallowRef } from "vue";

@@ -19,6 +19,7 @@
 </template>
 
 <script setup>
+import { VBtn, VCardText } from "vuetify/components";
 
 const props = defineProps({
     recoveryCodes: {

@@ -100,6 +100,7 @@
 import { APPWRITE_DB, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role  } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
 import { databases } from "@/appwrite";
 import ListCard from "../ListCard.vue";
 
@@ -109,7 +110,14 @@ import { useStore } from "@nanostores/vue";
 export default {
     title: "ListDialog",
     components: {
-        ListCard
+        ListCard,
+        VDialog,
+        VBtn,
+        VCard,
+        VCardText,
+        VCardActions,
+        VAlert,
+        VSkeletonLoader
     },
     props: {
         item: {

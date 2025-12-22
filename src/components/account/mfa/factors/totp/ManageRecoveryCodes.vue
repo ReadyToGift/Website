@@ -9,6 +9,7 @@
 
 <script setup>
 import { markRaw } from "vue";
+import { VListItem } from "vuetify/components";
 
 import { createTOTPChallengeDialog, getRecoveryCodes,regenerateRecoveryCodes } from "@/stores/mfa";
 import { create as createDialog } from "@/stores/dialogs";

@@ -84,6 +84,7 @@
 <script setup>
 import { computed, shallowRef } from "vue";
 import { mdiAccount, mdiEye, mdiEyeOff, mdiPencil } from "@mdi/js";
+import { VBtn, VCard, VConfirmEdit, VDialog, VListItem, VListItemSubtitle, VListItemTitle, VSpacer, VTextField } from "vuetify/components";
 
 const dialogOpen = shallowRef(false);
 

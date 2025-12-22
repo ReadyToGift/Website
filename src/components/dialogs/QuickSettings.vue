@@ -109,6 +109,17 @@
 
 <script setup>
 import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
+import { 
+    VBtn, 
+    VCard, 
+    VCardActions, 
+    VDivider, 
+    VList, 
+    VListItem, 
+    VMenu, 
+    VSpacer, 
+    VSwitch 
+} from "vuetify/components";
 import { account } from "@/appwrite";
 import { ref } from "vue";
 

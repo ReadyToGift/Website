@@ -71,6 +71,7 @@
 
 <script setup>
 import { reactive, watch } from "vue";
+import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
 
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { AppwriteException } from "appwrite";
