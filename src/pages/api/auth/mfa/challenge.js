@@ -1,15 +1,19 @@
+import { createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
 import { AppwriteException } from "appwrite";
-import { createSessionClient } from "@/server/appwrite";
 import { sendLoginNotification } from "@/server/auth/login/login-email";
 
 
 export const prerender = false;
 
 export async function POST(req) {
-    const { request } = req;
+    const { request, cookies } = req;
     const { code, factor } = await request.json();
     if (!code || !factor) {
-        return new Response("Missing code or factor", { status: 400 });
+        return new Response(JSON.stringify({ message: "Missing code or factor" }), { status: 400 });
+    }
+
+    if (cookies.has(SESSION_COOKIE) === false) {
+        return new Response(JSON.stringify({ message: "No active session" }), { status: 401 });
     }
 
     try {
@@ -31,7 +35,7 @@ export async function POST(req) {
         const ip = request.headers.get("x-forwarded-for") || request.headers.get("remote-addr") || "";
 
         try {
-            await sendLoginNotification({ user, ip });
+            await sendLoginNotification({ userId: user.$id, ip });
         } catch (emailError) {
             console.error("Error sending login notification email:", emailError);
         }

@@ -2,88 +2,12 @@
 import VueLayout from "@/layouts/VueLayout.astro";
 import LoginPage from "./_LoginPage.vue";
 
-const { user } = Astro.locals;
-import { createAdminClient, createSessionClient, SESSION_COOKIE } from "@/server/appwrite";
-import { AppwriteException } from "appwrite";
-import { AppwriteException as AdminAppwriteException, ID } from "node-appwrite";
-import { sendLoginNotification } from "@/server/auth/login/login-email";
-
-if (user.account) {
-    return Astro.redirect("/dash/lists");
-}
-
 const params = new URLSearchParams(Astro.url.search);
 const redirect = params.get("redirect") || "/dash/lists";
 
-
-if (Astro.request.method === "POST") {
-    try {
-        const body = await Astro.request.json();
-        const { email, password } = body;
-
-        const { account, messaging } = createAdminClient();
-
-        const session = await account.createEmailPasswordSession({
-            email,
-            password,
-        });
-
-        Astro.cookies.set(SESSION_COOKIE, session.secret, {
-            path: "/",
-            expires: new Date(session.expire),
-            sameSite: "strict",
-            secure: true,
-            httpOnly: true,
-        });
-
-        console.log('User logged in, session created:', session.$id);
-
-        try {
-            const sessionClient = createSessionClient({ session: session.secret });
-            const user = await sessionClient.account.get();
-
-            const ip = Astro.request.headers.get("x-forwarded-for") || Astro.request.headers.get("remote-addr") || '';
-
-            try {
-                await sendLoginNotification({ user, ip });
-            } catch (emailError) {
-                console.error('Error sending login notification email:', emailError);
-            }
-            return new Response("OK", { status: 200 });
-        } catch (error) {
-            if (error instanceof AppwriteException) {
-                return new Response(error.response, {
-                    status: error.code || 400,
-                    headers: { "Content-Type": "application/json" },
-                });
-            }
-            
-            return new Response(JSON.stringify({ error: error.message }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-    } catch (error) {
-        if (error instanceof AdminAppwriteException) {
-            return new Response(error.response, {
-                status: error.code || 400,
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-        
-        console.log({error})
-
-        return new Response(JSON.stringify({ error: error.message }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        });
-    }
-}
-
 export const prerender = false;
 ---
-<VueLayout user={user}>
+<VueLayout>
     <LoginPage 
         client:only="vue"
         redirect={redirect}

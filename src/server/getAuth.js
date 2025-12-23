@@ -6,6 +6,7 @@ export const getAuth = async (context) => {
     let session = null;
     let mfaFactors = [];
     let prefs = {};
+    let error = null;
 
     if (!context.isPrerendered) {
         try {
@@ -20,10 +21,12 @@ export const getAuth = async (context) => {
             ]);
 
             prefs = account?.prefs || {};
-        } catch {} // eslint-disable-line no-empty
+        } catch (e) {
+            error = e;
+        }  
         const endTime = Date.now();
         console.log(`GetAuth took ${endTime - startTime}ms`);
     }
 
-    return { account, session, mfaFactors, prefs };
+    return { account, session, mfaFactors, prefs, error };
 };

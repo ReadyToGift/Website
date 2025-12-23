@@ -98,6 +98,7 @@ const usingRecoveryCode = shallowRef(false);
 const loading = shallowRef(false);
 
 const submit = async () => {
+    if (loading.value) return;
     loading.value = true;
     try {
         if (usingRecoveryCode.value) {
@@ -134,11 +135,7 @@ const submit = async () => {
             });
             emit("totp-removed");
         } else {
-            const response = await completeMFAchallenge(code.value, "totp");
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to complete TOTP challenge.");
-            }
+            await completeMFAchallenge(code.value, "totp");
             emit("success");
         }
     } catch (error) {

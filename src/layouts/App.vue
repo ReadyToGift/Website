@@ -4,7 +4,9 @@
     >
         <DashNav />
         <v-main>
-            <slot></slot>
+            <template v-if="!loading">
+                <slot></slot>
+            </template>
             <GlobalDialogs />
             <v-snackbar
                 v-model="showUpdatePrompt"
@@ -41,7 +43,7 @@
 <script setup>
 import "vuetify/styles";
 import "@/assets/main.scss";
-import { onMounted, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
 import { useTheme } from "vuetify";
 
@@ -56,10 +58,9 @@ import { $prefs } from "@/stores/prefs";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
 
-const prefs = useStore($prefs);
+const loading = ref(true);
 
-console.log("Initializing auth with user account and session.");
-await initAuth();
+const prefs = useStore($prefs);
 
 const vuetifyTheme = useTheme();
 
@@ -99,7 +100,10 @@ window.addEventListener("appinstalled", () => {
     console.log("App is installed!");
 });
 
-onMounted(() => {
+onMounted(async () => {
+    loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
+    await initAuth();
+    loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });
 </script>

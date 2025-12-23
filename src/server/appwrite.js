@@ -17,6 +17,9 @@ export function createAdminClient() {
         get account() {
             return new appwriteSdk.Account(client);
         },
+        get user() {
+            return new appwriteSdk.Users(client);
+        },
         get locale() {
             return new appwriteSdk.Locale(client);
         },
@@ -44,11 +47,18 @@ export function createSessionClient({ request, session }) {
     }
 
     if (request) {
-        // Get the session cookie from the request and set the session
-        const cookies = parseCookies(request.headers.get("cookie") ?? "");
-        session = cookies.get(SESSION_COOKIE);
+        // Try to get session from Authorization header first (for API routes)
+        const authHeader = request.headers.get("authorization");
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            session = authHeader.substring(7); // Remove "Bearer " prefix
+        } else {
+            // Fallback to cookie (for SSR pages)
+            const cookies = parseCookies(request.headers.get("cookie") ?? "");
+            session = cookies.get(SESSION_COOKIE);
+        }
+        
         if (!session) {
-            throw new Error("Session cookie not found");
+            throw new Error("Session not found in Authorization header or cookie");
         }
     }
 

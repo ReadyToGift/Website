@@ -76,8 +76,9 @@
 <script setup>
 import { mdiAlert, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
+import { account, client } from "@/appwrite";
 import { createTOTPChallengeDialog } from "@/stores/mfa";
-import { LOGIN_METHODS } from "astro:env/client";
+import { APPWRITE_PROJECT, LOGIN_METHODS } from "astro:env/client";
 import { shallowRef } from "vue";
 
 const props = defineProps({
@@ -90,6 +91,11 @@ const props = defineProps({
 const methods = LOGIN_METHODS.split(",").map((method) => method.trim());
 const error = shallowRef(null);
 const loading = shallowRef(false);
+
+fetch("/api/auth", {
+    method: "DELETE",
+    credentials: "include"
+});
 
 const methodsData = {
     github: {
@@ -109,51 +115,41 @@ const passwordLogin = async (event) => {
     loading.value = true;
 
     try {
-        const response = await fetch("", {
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password, redirect: props.redirect }),
-            method: "POST"
-        });
+        try {
+            await account.deleteSession("current");
+        } catch {} // eslint-disable-line no-empty
 
-        if (response.ok) {
-            window.location.href = props.redirect;
-        } else {
-            const errorData = await response.json();
+        const session = await account.createEmailPasswordSession(email, password);
+        console.log({ session });
 
-            if (errorData.type === "user_more_factors_required") {
-                const totpChallengeResp = await createTOTPChallengeDialog();
-                if (totpChallengeResp.action === "success") {
-                    window.location.href = props.redirect;
-                    return;
-                } else {
-                    error.value = {
-                        type: "error",
-                        icon: mdiAlert,
-                        title: "Login Failed",
-                        text: "TOTP verification failed."
-                    };
-                }
+        window.location.href = props.redirect;
+    } catch (err) {
+        console.error("Login error:", err);
+
+        if (err.type === "user_more_factors_required") {
+            const totpChallengeResp = await createTOTPChallengeDialog();
+            
+            if (totpChallengeResp.action === "success" || totpChallengeResp.action === "totp-removed") {
+                window.location.href = props.redirect;
             } else {
                 error.value = {
                     type: "error",
                     icon: mdiAlert,
                     title: "Login Failed",
-                    text: errorData.message || "An error occurred during login."
+                    text: "TOTP verification failed."
                 };
             }
+        } else {
+            error.value = {
+                type: "error",
+                icon: mdiAlert,
+                title: "Login Failed",
+                text: err.message || "An unexpected error occurred during login."
+            };
         }
-    } catch (error) {
-        console.error("Login error:", error);
-        error.value = {
-            type: "error",
-            icon: mdiAlert,
-            title: "Login Failed",
-            text: "An unexpected error occurred during login."
-        };
+    } finally {
+        loading.value = false;
     }
-    loading.value = false;
 };
 </script>
 

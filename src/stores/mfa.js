@@ -18,12 +18,14 @@ export const createTOTPChallengeDialog = () => {
 };
 
 export const completeMFAchallenge = async (code, factor = "totp") => {
-    return fetch("/api/auth/mfa/challenge", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ code, factor })
+    const challenge = await account.createMFAChallenge({
+        factor
+    });
+    const challengeId = challenge.$id;
+
+    await account.updateMFAChallenge({
+        challengeId,
+        otp: code
     });
 };
 

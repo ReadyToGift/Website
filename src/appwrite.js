@@ -8,6 +8,7 @@ import {
 const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
 
 if (APPWRITE_DEV_KEY) {
+    console.log("Setting dev key for Appwrite client");
     client.setDevKey(APPWRITE_DEV_KEY);
 }
 

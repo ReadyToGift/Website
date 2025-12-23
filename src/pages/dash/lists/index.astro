@@ -1,12 +1,8 @@
 ---
 import VueLayout from "@/layouts/VueLayout.astro";
 import UserLists from "./_UserLists.vue";
-import requireAuth from "@/server/requireAuth";
 
 const { user } = Astro.locals;
-
-const authRedirect = requireAuth(Astro);
-if (authRedirect) return authRedirect;
 
 const params = new URLSearchParams(Astro.url.search);
 

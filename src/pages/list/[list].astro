@@ -7,7 +7,6 @@ import { Permission, Role } from "node-appwrite";
 
 import { load as loadList } from "@/utils/list.js";
 
-const { user } = Astro.locals;
 const { list: listId } = Astro.params;
 
 const params = new URLSearchParams(Astro.url.search);
@@ -16,9 +15,9 @@ const { quickCreateURL } = Object.fromEntries(params.entries());
 export const prerender = false;
 ---
 
-<VueLayout user={user}>
+<VueLayout>
     <WishList
-        client:only="vue"
+        client:load
         listId={listId}
         quickCreateURLParam={quickCreateURL}
     />
