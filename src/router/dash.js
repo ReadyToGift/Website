@@ -1,6 +1,15 @@
 import { createRouter, createWebHistory } from "vue-router";
+import { getCurrentUser } from "@/stores/auth";
 
 const routes = [
+    {
+        path: "/",
+        redirect: "/dash/lists"
+    },
+    {
+        path: "/dash",
+        redirect: "/dash/lists"
+    },
     {
         path: "/dash/lists",
         name: "UserLists",
@@ -9,7 +18,8 @@ const routes = [
             title: route.query.title || null,
             text: route.query.text || null,
             url: route.query.url || null
-        })
+        }),
+        meta: { requiresAuth: true }
     },
     {
         path: "/dash/about",
@@ -19,12 +29,14 @@ const routes = [
     {
         path: "/dash/login",
         name: "Login",
-        component: () => import("../pages/dash/_views/LoginPage.vue")
+        component: () => import("../pages/dash/_views/LoginPage.vue"),
+        meta: { guestOnly: true }
     },
     {
         path: "/dash/register",
         name: "Register",
-        component: () => import("../pages/dash/_views/RegisterPage.vue")
+        component: () => import("../pages/dash/_views/RegisterPage.vue"),
+        meta: { guestOnly: true }
     },
     {
         path: "/dash/settings",
@@ -47,7 +59,8 @@ const routes = [
         component: () => import("../pages/dash/_views/recovery/StartRecovery.vue"),
         props: (route) => ({
             redirect: route.query.redirect || "/dash/lists"
-        })
+        }),
+        meta: { guestOnly: true }
     },
     {
         path: "/dash/recovery/complete",
@@ -56,7 +69,8 @@ const routes = [
         props: (route) => ({
             userId: route.query.userId,
             secret: route.query.secret
-        })
+        }),
+        meta: { guestOnly: true }
     },
     {
         path: "/list/:listId",
@@ -66,10 +80,6 @@ const routes = [
             listId: route.params.listId,
             quickCreateURLParam: route.query.quickCreateURL
         })
-    },
-    {
-        path: "/dash",
-        redirect: "/dash/lists"
     }
 ];
 
@@ -78,23 +88,20 @@ export const router = createRouter({
     routes
 });
 
-// Navigation guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     // Check if route requires auth
-    if (to.meta.requiresAuth) {
-        // Import user store to check auth status
-        import("@/stores/auth").then(({ user }) => {
-            if (!user.get()?.account) {
-                // Redirect to login with return path
-                next({
-                    path: "/dash/login",
-                    query: { redirect: to.fullPath }
-                });
-            } else {
-                next();
-            }
-        });
-    } else {
-        next();
-    }
+    if (to.meta.requiresAuth || to.meta.guestOnly) {
+        const currentUser = await getCurrentUser();
+
+        if (to.meta.requiresAuth && !currentUser) {
+            return next({
+                path: "/dash/login",
+                query: { redirect: to.fullPath }
+            });
+        } else if (to.meta.guestOnly && currentUser) {
+            const redirectPath = to.query.redirect;
+            return next({ path: redirectPath || "/dash/lists" });
+        }
+    } 
+    next();
 });

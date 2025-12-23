@@ -157,7 +157,7 @@ import {
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
 import { $prefs } from "@/stores/prefs";
-import { user } from "@/stores/auth";
+import { logOut as logOutUser, user } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 
@@ -206,10 +206,7 @@ export default {
         },
         async logout() {
             this.loadingLoginLogout = true;
-            await fetch("/api/auth", {
-                method: "DELETE",
-                credentials: "include"
-            });
+            await logOutUser();
             window.location.reload();
         }
     }

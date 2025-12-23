@@ -9,7 +9,7 @@
             text="Please verify your email address to create lists."
             class="mb-4"
             variant="tonal"
-            v-if="user.emailVerification === false"
+            v-if="user?.emailVerification === false"
         >
             <v-card-actions>
                 <v-btn

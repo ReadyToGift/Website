@@ -4,9 +4,7 @@
     >
         <DashNav />
         <v-main>
-            <template v-if="!loading">
-                <router-view/>
-            </template>
+            <router-view v-if="!loading && (!routeRequiresAuth || (routeRequiresAuth && !!user))" />
             <GlobalDialogs />
             <v-snackbar
                 v-model="showUpdatePrompt"
@@ -43,7 +41,7 @@
 <script setup>
 import "vuetify/styles";
 import "@/assets/main.scss";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
 import { useTheme } from "vuetify";
 
@@ -54,15 +52,22 @@ import { useStore } from "@nanostores/vue";
 
 import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
-import { $prefs } from "@/stores/prefs";
-import { init as initAuth } from "@/stores/auth";
-import { init as initCurrencies } from "@/stores/currency";
 import { useRouter } from "vue-router";
+
+import { init as initAuth, user as userStore } from "@/stores/auth";
+import { $prefs } from "@/stores/prefs";
+import { init as initCurrencies } from "@/stores/currency";
 
 const loading = ref(true);
 
 const prefs = useStore($prefs);
 const router = useRouter();
+const user = useStore(userStore);
+
+const routeRequiresAuth = computed(() => {
+    const currentRoute = router.currentRoute.value;
+    return currentRoute?.meta?.requiresAuth === true;
+});
 
 const vuetifyTheme = useTheme();
 
@@ -104,7 +109,7 @@ window.addEventListener("appinstalled", () => {
 
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
-    await initAuth(router);
+    await initAuth({ router });
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });

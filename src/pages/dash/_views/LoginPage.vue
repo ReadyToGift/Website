@@ -74,13 +74,14 @@
 </template>
 
 <script setup>
-import { mdiAlert, mdiGithub } from "@mdi/js";
+import { init as initAuth, logOut } from "@/stores/auth";
+import { mdiAlert, mdiCheckCircle, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
-import { account, client } from "@/appwrite";
+import { account } from "@/appwrite";
 import { createTOTPChallengeDialog } from "@/stores/mfa";
-import { useRouter } from "vue-router";
-import { APPWRITE_PROJECT, LOGIN_METHODS } from "astro:env/client";
+import { LOGIN_METHODS } from "astro:env/client";
 import { shallowRef } from "vue";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
     redirect: {
@@ -89,14 +90,11 @@ const props = defineProps({
     }
 });
 
+const router = useRouter();
+
 const methods = LOGIN_METHODS.split(",").map((method) => method.trim());
 const error = shallowRef(null);
 const loading = shallowRef(false);
-
-fetch("/api/auth", {
-    method: "DELETE",
-    credentials: "include"
-});
 
 const methodsData = {
     github: {
@@ -108,6 +106,24 @@ const methodsData = {
     }
 };
 
+const finaliseLogin = async () => {
+    const accountSession = await account.get();
+    console.log("Login successful:", accountSession);
+
+    await initAuth({ router, currentAccount: accountSession });
+            
+    console.log("Redirecting to:", props.redirect);
+            
+    error.value = {
+        type: "success",
+        icon: mdiCheckCircle,
+        title: "Login Successful",
+        text: "You have been logged in successfully."
+    };
+            
+    await router.push(props.redirect);
+};
+
 const passwordLogin = async (event) => {
     const form = event.target;
     const formData = new FormData(form);
@@ -116,14 +132,8 @@ const passwordLogin = async (event) => {
     loading.value = true;
 
     try {
-        try {
-            await account.deleteSession("current");
-        } catch {} // eslint-disable-line no-empty
-
-        const session = await account.createEmailPasswordSession(email, password);
-        console.log({ session });
-
-        router.push(props.redirect);
+        await account.createEmailPasswordSession(email, password);
+        await finaliseLogin();
     } catch (err) {
         console.error("Login error:", err);
 
@@ -131,7 +141,7 @@ const passwordLogin = async (event) => {
             const totpChallengeResp = await createTOTPChallengeDialog();
             
             if (totpChallengeResp.action === "success" || totpChallengeResp.action === "totp-removed") {
-                router.push(props.redirect);
+                await finaliseLogin();
             } else {
                 error.value = {
                     type: "error",

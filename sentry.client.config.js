@@ -3,6 +3,7 @@ import { SENTRY_DSN } from "astro:env/client";
 
 Sentry.init({
     dsn: SENTRY_DSN,
+    enabled: !import.meta.env.DEV,
     sendDefaultPii: true,
     replaysSessionSampleRate: 1.0,
     integrations: [

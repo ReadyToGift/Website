@@ -1,6 +1,5 @@
-import { avatars, client } from "@/appwrite";
+import { account, avatars } from "@/appwrite";
 import { atom } from "nanostores";
-import { authenticatedFetch } from "@/utils/api";
 import { createTOTPChallengeDialog } from "./mfa";
 import { loadPrefs } from "./prefs";
 import { persistentAtom } from "@nanostores/persistent";
@@ -8,6 +7,7 @@ import { persistentAtom } from "@nanostores/persistent";
 export const user = atom(null);
 export const mfaFactors = atom([]);
 export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
+export const authInitialized = atom(false);
 
 export const setUser = ({ user: userData }) => {
     user.set({
@@ -25,45 +25,68 @@ const redirectToLogin = (router) => {
     }
 };
 
-export const init = async (router = null) => {
+export const getCurrentUser = async () => {
     try {
-        const accountResp = await authenticatedFetch("/api/auth");
-        const { account, prefs, error, session } = await accountResp.json();
-        if (error) {
-            if (error.type === "user_more_factors_required") {
+        if (!authInitialized.get()) {
+            await init();
+        }
+        return user.get();
+    } catch (error) {
+        console.error("Error getting current user:", error);
+        return null;
+    }
+};
+
+export const init = async ({ router = null, currentAccount = null } = {}) => {
+    try {
+        try {
+            if (!currentAccount) {
+                currentAccount = await account.get();
+            }
+
+            const mfaFactorsList = await account.listMFAFactors();
+            mfaFactors.set(mfaFactorsList);
+
+            if (currentAccount.prefs) {
+                loadPrefs(currentAccount.prefs);
+            }
+
+            user.set({
+                ...currentAccount,
+                avatar: currentAccount?.name ? avatars.getInitials(currentAccount.name) : null
+            });
+        } catch (err) {
+            if (err.type === "user_more_factors_required") {
                 console.log("MFA required, initiating TOTP challenge dialog.");
                 const totpChallengeResp = await createTOTPChallengeDialog();
+                console.log({ totpChallengeResp });
                 if (totpChallengeResp.action !== "success") {
-                    await authenticatedFetch("/api/auth", { method: "DELETE" });
+                    await logOut();
                     return redirectToLogin(router);
                 }
                 console.log({ totpChallengeResp });
                 window.location.reload();
             }
-            return;
-        }
-
-        if (account) {
-            if (session) client.setSession(session);
-        
-            loadPrefs(prefs);
-        
-            if (account.mfaFactors) {
-                mfaFactors.set(account.mfaFactors);
-            }
-        
-            user.set({
-                ...account,
-                avatar: account?.name ? avatars.getInitials(account.name) : null
-            });
         }
     } catch (error) {
         console.error("Auth init error:", error);
         // Router guards will handle redirects for protected routes
     }
+
+    authInitialized.set(true);
 };
+
+export async function logOut() {
+    try {
+        await account.deleteSession({ sessionId: "current" });
+    } catch (error) {
+        console.error("Error deleting session during logout:", error);
+    }
+    user.set(null);
+}
 
 export default {
     init,
-    user
+    user,
+    logOut
 };
