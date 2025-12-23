@@ -1,7 +1,7 @@
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { Permission, Query, Role } from "appwrite";
 
-export const load = async ({
+export const get = async ({
     tablesDB,
     listId,
     sort = "price",

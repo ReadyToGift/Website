@@ -21,7 +21,7 @@
                 <v-list-item
                     :prepend-icon="mdiFormatListBulleted"
                     title="Lists"
-                    href="/dash/lists"
+                    to="/dash/lists"
                 />
             </v-list>
             <v-list
@@ -38,7 +38,7 @@
                     :key="history.id"
                     :title="history.title"
                     :subtitle="history.subtitle"
-                    :href="`/list/${history.id}`"
+                    :to="`/list/${history.id}`"
                     :prepend-avatar="history.avatar"
                 />
             </v-list>
@@ -86,7 +86,7 @@
         >
             <v-toolbar-title>
                 <v-btn
-                    href="/dash/lists"
+                    to="/dash/lists"
                     :prepend-icon="mdiGift"
                     color="on-primary-container"
                 >
@@ -96,7 +96,7 @@
 
             <template v-slot:append>
                 <v-btn
-                    href="/dash/lists"
+                    to="/dash/lists"
                     v-if="account"
                     :prepend-icon="mdiFormatListBulleted"
                     color="on-primary-container"
@@ -201,7 +201,7 @@ export default {
         logIn () {
             this.loadingLoginLogout = true;
             const currentPath = window.location.pathname + window.location.search;
-            window.location.href = `/dash/login?redirect=${encodeURIComponent(currentPath)}`;
+            this.$router.push({ path: "/dash/login", query: { redirect: currentPath } });
             this.loadingLoginLogout = false;
         },
         async logout() {

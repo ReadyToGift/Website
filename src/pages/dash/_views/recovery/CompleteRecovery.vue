@@ -110,7 +110,7 @@ export default {
                 this.loadingRecovery = false;
 
                 setTimeout(() => {
-                    window.location.href = "/dash/login";
+                    this.$router.push("/dash/login");
                 }, 2000);
             } catch (error) {
                 this.alert = {

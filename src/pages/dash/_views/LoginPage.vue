@@ -65,10 +65,10 @@
         </div>
         <p>
             Don't have an account?
-            <a :href="`/dash/register?redirect=${redirect}`">Register here</a>
+            <router-link :to="{ path: '/dash/register', query: { redirect } }">Register here</router-link>
         </p>
         <p v-if="methods.includes('password')">
-            <a :href="`/dash/recovery/start?redirect=${redirect}`">Forgot your password?</a>
+            <router-link :to="{ path: '/dash/recovery/start', query: { redirect } }">Forgot your password?</router-link>
         </p>
     </div>
 </template>
@@ -78,6 +78,7 @@ import { mdiAlert, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
 import { account, client } from "@/appwrite";
 import { createTOTPChallengeDialog } from "@/stores/mfa";
+import { useRouter } from "vue-router";
 import { APPWRITE_PROJECT, LOGIN_METHODS } from "astro:env/client";
 import { shallowRef } from "vue";
 
@@ -122,7 +123,7 @@ const passwordLogin = async (event) => {
         const session = await account.createEmailPasswordSession(email, password);
         console.log({ session });
 
-        window.location.href = props.redirect;
+        router.push(props.redirect);
     } catch (err) {
         console.error("Login error:", err);
 
@@ -130,7 +131,7 @@ const passwordLogin = async (event) => {
             const totpChallengeResp = await createTOTPChallengeDialog();
             
             if (totpChallengeResp.action === "success" || totpChallengeResp.action === "totp-removed") {
-                window.location.href = props.redirect;
+                router.push(props.redirect);
             } else {
                 error.value = {
                     type: "error",

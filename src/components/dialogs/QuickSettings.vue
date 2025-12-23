@@ -64,13 +64,13 @@
                 </v-list-item>
                 <v-list-item
                     :prepend-icon="mdiInformation"
-                    href="/dash/about"
+                    to="/dash/about"
                 >
                     About
                 </v-list-item>
                 <v-list-item
                     v-if="!!user"
-                    href="/dash/settings"
+                    to="/dash/settings"
                     :prepend-icon="mdiAccountCircle"
                 >
                     Account Settings
@@ -82,7 +82,7 @@
                     color="primary"
                     v-if="!user && !hide.includes('login')"
                     :loading="loadingLoginLogout"
-                    :href="`/dash/login?redirect=${redirectURL}`"
+                    :to="`/dash/login?redirect=${redirectURL}`"
                 >
                     Log In
                 </v-btn>
@@ -135,7 +135,7 @@ const user = useStore(authUser);
 const loadingLoginLogout = ref(false);
 const menu = ref(false);
 
-const props = defineProps({
+defineProps({
     hide: {
         default: () => ([]),
         type: Array

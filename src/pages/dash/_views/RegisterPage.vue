@@ -43,7 +43,7 @@
         </div>
         <p>
             Already have an account?
-            <a :href="`/dash/login?redirect=${redirect}`">Login here</a>
+            <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
         </p>
     </div>
 </template>
@@ -137,7 +137,7 @@ export default {
                     this.loadingRegistration = false;
 
                     setTimeout(() => {
-                        window.location.href = "/dash/login?redirect=" + this.redirect;
+                        this.$router.push({ path: "/dash/login", query: { redirect: this.redirect } });
                     }, 2000);
                 }
             } catch (error) {

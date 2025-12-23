@@ -29,7 +29,7 @@
                     @click="actionHandler(action, dialog.id)"
                     :color="action.color || 'primary'"
                     :variant="action.variant || 'text'"
-                    :href="action.href"
+                    :to="action.to"
                 >
                     {{ action.text }}
                 </v-btn>

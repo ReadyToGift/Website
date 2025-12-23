@@ -29,7 +29,7 @@
             />
             <p>
                 Remember your login?
-                <a :href="`/dash/login?redirect=${redirect}`">Login here</a>
+                <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
             </p>
         </div>
     </div>

@@ -273,7 +273,7 @@ export default {
             }
         },
         goToList() {
-            window.location.href = `/list/${this.selectedList.$id}`;
+            this.$router.push(`/list/${this.selectedList.$id}`);
             this.dialogOpen = false;
         },
         selectList(list) {

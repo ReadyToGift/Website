@@ -70,7 +70,7 @@ export default {
                 };
 
                 await this.auth.init();
-                window.location.href = "/dash/lists";
+                this.$router.push("/dash/lists");
             } catch (error) {
                 this.alert = {
                     text: error.message,

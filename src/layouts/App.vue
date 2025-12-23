@@ -5,7 +5,7 @@
         <DashNav />
         <v-main>
             <template v-if="!loading">
-                <slot></slot>
+                <router-view/>
             </template>
             <GlobalDialogs />
             <v-snackbar
@@ -57,10 +57,12 @@ import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/
 import { $prefs } from "@/stores/prefs";
 import { init as initAuth } from "@/stores/auth";
 import { init as initCurrencies } from "@/stores/currency";
+import { useRouter } from "vue-router";
 
 const loading = ref(true);
 
 const prefs = useStore($prefs);
+const router = useRouter();
 
 const vuetifyTheme = useTheme();
 
@@ -102,7 +104,7 @@ window.addEventListener("appinstalled", () => {
 
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
-    await initAuth();
+    await initAuth(router);
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });

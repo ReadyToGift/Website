@@ -165,7 +165,7 @@ const saveList = async () => {
                     action: "close",
                     color: "primary",
                     text: "Log In",
-                    href: "/dash/login?redirect=" + encodeURIComponent(window.location.pathname + window.location.search)
+                    to: `/dash/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
                 },
                 {
                     action: "close",

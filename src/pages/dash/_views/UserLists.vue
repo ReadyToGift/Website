@@ -285,6 +285,7 @@ import { Query } from "appwrite";
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 import auth from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
+import { useRouter } from "vue-router";
 import { useStore } from "@nanostores/vue";
 
 import CreateList from "@/components/dialogs/CreateList.vue";
@@ -297,6 +298,7 @@ import PWAPrompt from "@/components/PWAPrompt.vue";
 >>>>>>> 8c3063c (Add in PWA prompt)
 import validation from "@/utils/validation";
 
+const router = useRouter();
 const prefs = useStore($prefs);
 const user = useStore(auth.user);
 const polar = usePolarStore();
@@ -348,10 +350,10 @@ const createList = (data) => {
     }
     const urlSearchParams = new URLSearchParams(query).toString();
     if (urlSearchParams.length) {
-        window.location.href = `/list/${data.list.$id}?` + urlSearchParams;
+        router.push(`/list/${data.list.$id}?` + urlSearchParams);
         return;
     }
-    window.location.href = `/list/${data.list.$id}`;
+    router.push(`/list/${data.list.$id}`);
 };
 
 const getLists = async () => {
