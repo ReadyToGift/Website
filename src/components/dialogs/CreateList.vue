@@ -56,7 +56,7 @@
                         Please upgrade to create unlimited public lists, or make some of your existing lists private.
                         <br/>
                         <v-btn
-                            to="/dash/billing"
+                            to="/dash/settings/billing"
                             color="warning"
                             class="mt-4"
                         >

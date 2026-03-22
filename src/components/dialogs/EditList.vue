@@ -41,7 +41,7 @@
                         :text="alert.text"
                     />
                     <v-alert
-                        v-if="!editedList.private && polar.publicListLimitReached"
+                        v-if="!editedList.private && publicListLimitReached"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -52,7 +52,7 @@
                         Please upgrade to create unlimited public lists, or make some of your existing lists private.
                         <br/>
                         <v-btn
-                            to="/dash/billing"
+                            to="/dash/settings/billing"
                             color="warning"
                             class="mt-4"
                         >
@@ -71,10 +71,11 @@
                         @click="updateList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="!editedList.private && polar.publicListLimitReached"
+                        :disabled="!editedList.private && publicListLimitReached"
                     />
                 </v-card-actions>
             </v-card>
+            {{ publicListLimitReached }}
         </template>
     </v-dialog>
 </template>
@@ -83,11 +84,11 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
+import { polar as polarStore, publicListLimitReached } from "@/stores/polar";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { polar as polarStore } from "@/stores/polar";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
@@ -126,7 +127,8 @@ export default {
             mdiPencil,
             polar: useStore(polarStore),
             previousValues: {},
-            userLists: useStore(userListsStore)
+            userLists: useStore(userListsStore),
+            publicListLimitReached
         };
     },
     watch: {
