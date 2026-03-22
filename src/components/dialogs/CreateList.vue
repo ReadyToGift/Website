@@ -93,8 +93,8 @@ import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-import { useUserLists } from "@/stores/userLists";
-import { usePolarStore } from "@/stores/polar";
+import { userLists as userListsStore } from "@/stores/userLists";
+import { polar as polarStore } from "@/stores/polar";
 
 const user = useStore(userStore);
 
@@ -143,8 +143,8 @@ export default {
                 shortUrl: null,
                 title: ""
             },
-            polar: usePolarStore(),
-            userLists: useUserLists()
+            polar: useStore(polarStore),
+            userLists: useStore(userListsStore)
         };
     },
     watch: {

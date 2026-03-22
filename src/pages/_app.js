@@ -7,12 +7,12 @@ export default async function setup(app) {
     app.use(vuetify);
 
     if (import.meta.env.SSR) return;
-    
+
     // Check if we're on a SPA route and add router
     const path = window.location.pathname;
     if (path.startsWith("/dash") || path.startsWith("/list")) {
-        const { router } = await import("@/router/dash");
+        const { clientRouter } = await import("@/router");
         console.log("Setting up router");
-        app.use(router);
+        app.use(clientRouter);
     }
 }

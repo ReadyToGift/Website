@@ -131,7 +131,7 @@ import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill
 import { create as createDialog } from "@/stores/dialogs";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-import { usePolarStore } from "@/stores/polar";
+import { polar as polarStore } from "@/stores/polar";
 
 export default {
     title: "ListDialog",
@@ -196,7 +196,7 @@ export default {
                 title: "",
                 url: ""
             },
-            polar: usePolarStore(),
+            polar: useStore(polarStore),
             previousValues: {},
             uploadingFile: false,
             user: useStore(userStore)

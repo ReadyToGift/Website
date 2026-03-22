@@ -45,11 +45,13 @@ import { computed, onMounted, ref, watch } from "vue";
 import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
 import { useTheme } from "vuetify";
 
+import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
+
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
 import { useStore } from "@nanostores/vue";
-import { usePolarStore } from "@/stores/polar";
+import { init as initPolar, polar as polarStore } from "@/stores/polar";
 
 import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
@@ -58,11 +60,6 @@ import { useRouter } from "vue-router";
 import { init as initAuth, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
 import { init as initCurrencies } from "@/stores/currency";
-import { useAuthStore } from "@/stores/auth";
-import { useCurrencyStore } from "@/stores/currency";
-import { usePolarStore } from "@/stores/polar";
-import { usePWA } from "@/stores/pwa";
-import { useTheme } from "vuetify";
 
 const loading = ref(true);
 
@@ -74,7 +71,6 @@ const routeRequiresAuth = computed(() => {
     const currentRoute = router.currentRoute.value;
     return currentRoute?.meta?.requiresAuth === true;
 });
-const polarStore = usePolarStore();
 const vuetifyTheme = useTheme();
 
 await initCurrencies();
@@ -126,12 +122,8 @@ onMounted(async () => {
         document.head.appendChild(script);
     }
 
-    await currencyStore.init();
     console.log("Initializing polar store from App.vue");
-    if (auth.isLoggedIn) {
-        console.log("User is logged in, initializing polar store");
-        await polarStore.init();
-    }
+    // await initPolar();
 
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes

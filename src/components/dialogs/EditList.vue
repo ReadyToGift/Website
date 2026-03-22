@@ -87,14 +87,10 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/c
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
-import { usePolarStore } from "@/stores/polar";
-import { useUserLists } from "@/stores/userLists";
+import { polar as polarStore } from "@/stores/polar";
+import { userLists as userListsStore } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-import { usePolarStore } from "@/stores/polar";
-import { useUserLists } from "@/stores/userLists";
 
 export default {
     title: "ListDialog",
@@ -128,9 +124,9 @@ export default {
             loading: false,
             mdiAlert,
             mdiPencil,
-            polar: usePolarStore(),
+            polar: useStore(polarStore),
             previousValues: {},
-            userLists: useUserLists()
+            userLists: useStore(userListsStore)
         };
     },
     watch: {

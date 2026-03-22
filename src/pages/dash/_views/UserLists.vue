@@ -169,20 +169,10 @@
                         variant="tonal"
                         class="ml-4"
                     >
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 0ec2358 (Add private list limits)
                         {{ userLists.listCount.public }}
                         <template v-if="polar.publicListLimit">
                             / {{ polar.publicListLimit }}
                         </template>
-<<<<<<< HEAD
-=======
-                        {{ publicLists.length }} / 2
->>>>>>> f193702 (Add counts to lists)
-=======
->>>>>>> 0ec2358 (Add private list limits)
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -195,15 +185,7 @@
                         variant="tonal"
                         class="ml-4"
                     >
-<<<<<<< HEAD
-<<<<<<< HEAD
                         {{ userLists.listCount.private }}
-=======
-                        {{ privateLists.length }}
->>>>>>> f193702 (Add counts to lists)
-=======
-                        {{ userLists.listCount.private }}
->>>>>>> 0ec2358 (Add private list limits)
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -308,26 +290,16 @@ import { useStore } from "@nanostores/vue";
 
 import CreateList from "@/components/dialogs/CreateList.vue";
 import ListCard from "@/components/ListCard.vue";
-<<<<<<< HEAD
-import { usePolarStore } from "@/stores/polar";
-import { useUserLists } from "@/stores/userLists";
-=======
 import PWAPrompt from "@/components/PWAPrompt.vue";
-<<<<<<< HEAD
->>>>>>> 8c3063c (Add in PWA prompt)
+import { polar as polarStore } from "@/stores/polar";
+import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
 import validation from "@/utils/validation";
-=======
-import { useUserLists } from "@/stores/userLists";
->>>>>>> 0ec2358 (Add private list limits)
 
 const router = useRouter();
 const prefs = useStore($prefs);
 const user = useStore(auth.user);
-<<<<<<< HEAD
-const polar = usePolarStore();
-=======
-const userLists = useUserLists();
->>>>>>> 0ec2358 (Add private list limits)
+const polar = useStore(polarStore);
+const userLists = useStore(userListsStore);
 
 const props = defineProps({
     title: {
@@ -421,9 +393,9 @@ const getLists = async () => {
             (list) => !prefs.value.savedLists?.includes(list.$id)
         );
 
-        this.userLists.setCount({
-            private: this.privateLists.length,
-            public: this.publicLists.length
+        setListsCount({
+            private: privateLists.value.length,
+            public: publicLists.value.length
         });
 
         loading.value = false;

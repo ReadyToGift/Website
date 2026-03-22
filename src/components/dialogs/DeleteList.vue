@@ -64,8 +64,9 @@ import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiDelete } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
-import { clientRouter } from "@/pages/_clientRouter";
-import { useUserLists } from "@/stores/userLists";
+import { clientRouter } from "@/router";
+import { userLists as userListsStore } from "@/stores/userLists";
+import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
@@ -95,7 +96,7 @@ export default {
             loading: false,
             mdiAlert,
             mdiDelete,
-            userLists: useUserLists()
+            userLists: useStore(userListsStore)
         };
     },
     watch: {

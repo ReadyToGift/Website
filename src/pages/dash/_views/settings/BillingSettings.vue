@@ -92,32 +92,32 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, shallowRef } from "vue";
+import { onMounted, reactive, shallowRef, watch } from "vue";
 
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword, mdiInfinity } from "@mdi/js";
 import { AppwriteException } from "appwrite";
-import { useAuthStore } from "@/stores/auth";
-import { useDialogs } from "@/stores/dialogs";
-import { usePolarStore } from "@/stores/polar";
+import { useStore } from "@nanostores/vue";
+import { setUser, user as userStore } from "@/stores/auth";
+import { getProPricing, polar as polarStore } from "@/stores/polar";
+import { create as createDialog } from "@/stores/dialogs";
 
 import { account } from "@/appwrite";
 
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
 
-const auth = useAuthStore();
-const dialogs = useDialogs();
-const polar = usePolarStore();
+const polar = useStore(polarStore);
+const user = useStore(userStore);
 
 const proPrice = shallowRef({});
 
 const personalInfo = reactive({
     email: {
         passwordConfirmation: "",
-        value: auth.user?.email || ""
+        value: user.value?.email || ""
     },
     fullName: {
-        value: auth.user?.name || ""
+        value: user.value?.name || ""
     },
     password: {
         passwordConfirmation: "",
@@ -125,24 +125,25 @@ const personalInfo = reactive({
     }
 });
 
-auth.$subscribe((mutation) => {
-    if (!mutation?.events) return;
-    if (mutation.events.key !== "user") return;
-    const newUser = mutation.events.newValue;
-    if (newUser) {
-        personalInfo.email.value = newUser.email || "";
-        personalInfo.fullName.value = newUser.name || "";
-    }
-});
+watch(
+    () => user.value,
+    (newUser) => {
+        if (newUser) {
+            personalInfo.email.value = newUser.email || "";
+            personalInfo.fullName.value = newUser.name || "";
+        }
+    },
+    { immediate: true }
+);
 
 const saveName = async () => {
     const result = await account.updateName(personalInfo.fullName.value);
     if (result.$id) {
-        auth.setUser(result);
+        setUser({ user: result });
         personalInfo.fullName.passwordConfirmation = "";
         return true;
     } else {
-        dialogs.create({
+        createDialog({
             text: `There was an error updating your name: ${result.message}`,
             title: "Error Updating Name",
             type: "error"
@@ -155,9 +156,9 @@ const saveEmail = async () => {
     try {
         const result = await account.updateEmail(personalInfo.email.value, personalInfo.email.passwordConfirmation);
 
-        auth.setUser(result);
+        setUser({ user: result });
         await account.createEmailVerification({ url: "https://readyto.gift/dash/verify" });
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -173,7 +174,7 @@ const saveEmail = async () => {
         return true;
     } catch (error) {
         if (error instanceof AppwriteException) {
-            dialogs.create({
+            createDialog({
                 actions: [
                     {
                         action: "close",
@@ -187,7 +188,7 @@ const saveEmail = async () => {
             });
             return;
         }
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -211,7 +212,7 @@ const savePassword = async () => {
         });
         personalInfo.password.value = "";
         personalInfo.password.passwordConfirmation = "";
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -226,7 +227,7 @@ const savePassword = async () => {
         return true;
     } catch (error) {
         if (error instanceof AppwriteException) {
-            dialogs.create({
+            createDialog({
                 actions: [
                     {
                         action: "close",
@@ -240,7 +241,7 @@ const savePassword = async () => {
             });
             return false;
         }
-        dialogs.create({
+        createDialog({
             actions: [
                 {
                     action: "close",
@@ -258,7 +259,7 @@ const savePassword = async () => {
 
 const loadProPrice = async () => {
     try {
-        const price = await polar.getProPricing();
+        const price = await getProPricing();
         proPrice.value = price;
     } catch (error) {
         console.error("Failed to load Pro pricing:", error);

@@ -158,12 +158,8 @@
 import { mdiCheck, mdiClose, mdiGithub } from "@mdi/js";
 import { defineProps, shallowRef } from "vue";
 import { PolarEmbedCheckout } from "@polar-sh/checkout/embed";
-import { useAuthStore } from "@/stores/auth";
-import { usePolarStore } from "@/stores/polar";
+import { getProCheckout } from "@/stores/polar";
 import { load } from "cheerio";
-
-const authStore = useAuthStore();
-const polarStore = usePolarStore();
 
 const loadingCheckout = shallowRef(false);
 
@@ -171,7 +167,7 @@ const openCheckout = async () => {
     loadingCheckout.value = true;
     let checkout;
     try {
-        const checkoutUrl = await polarStore.getProCheckout();
+        const checkoutUrl = await getProCheckout();
         
 
         checkout = await PolarEmbedCheckout.create(checkoutUrl, authStore.userPrefs.darkMode ? "dark" : "light");

@@ -4,7 +4,9 @@ export const currencies = atom([]);
 
 export const init = async () => {
     if (import.meta.env.SSR) {
-        const getCurrencies = await import("@/pages/api/locale/currencies").then(mod => mod.getCurrencies);
+        const getCurrencies = await import("@/pages/api/locale/currencies").then(
+            (mod) => mod.getCurrencies
+        );
         currencies.set(await getCurrencies());
     } else {
         let response = await fetch("/api/locale/currencies");
@@ -15,7 +17,16 @@ export const init = async () => {
 
 export const getCurrency = (code) => {
     const currList = currencies.get();
-    return currList.find((currency) => currency.code === code);
+    const currency = currList.find((currency) => currency.code === code);
+
+    if (!currency) {
+        return {
+            code: "USD",
+            symbol: "$"
+        };
+    }
+
+    return currency;
 };
 
 export const formatter = (code) => {

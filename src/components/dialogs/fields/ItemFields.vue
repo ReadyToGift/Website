@@ -106,7 +106,7 @@
             step="0.01"
             placeholder="0"
             v-model="item.price"
-            :prefix="currencyStore.getCurrency(currency).symbol"
+            :prefix="getCurrency(currency).symbol"
             :prepend-icon="mdiCash"
             hide-details="auto"
             :base-color="previousValues.price && previousValues.price !== item.price ? 'primary' : undefined"
@@ -117,7 +117,7 @@
             <template #details>
                 <RevertPrompt
                     v-if="previousValues.price && previousValues.price !== item.price"
-                    :previous-value="currencyStore.getCurrency(currency).symbol + previousValues.price"
+                    :previous-value="getCurrency(currency).symbol + previousValues.price"
                     @revert="revertValue('price')"
                 />
             </template>
@@ -148,7 +148,7 @@
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
 import { ref, useTemplateRef } from "vue";
 import { VBtn, VFileInput, VForm, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
-import currencyStore from "@/stores/currency";
+import { getCurrency } from "@/stores/currency";
 import { priorityMap } from "@/utils";
 import RevertPrompt from "@/components/RevertPrompt.vue";
 import validation from "@/utils/validation";

@@ -126,14 +126,16 @@ import { mdiInformation  } from "@mdi/js";
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import NotFound from "../../404/_NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
+import { Query } from "appwrite";
 
 import { $prefs, addToHistory } from "@/stores/prefs";
 import { previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
+import { setCount as setListCount, userLists as userListsStore } from "@/stores/userLists";
+import { clientRouter } from "@/router";
 import { create as createDialog } from "@/stores/dialogs";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { get as getList } from "@/utils/list";
 import { useStore } from "@nanostores/vue";
-import { useUserLists } from "@/stores/userLists";
 
 export default {
     components: {
@@ -166,18 +168,8 @@ export default {
                 title: "",
                 url: ""
             },
-<<<<<<< HEAD
-<<<<<<< HEAD
             notFound: false,
-            userLists: useUserLists(),
-<<<<<<< HEAD
-=======
->>>>>>> dcca215 (Update 404 page redirection)
-=======
-            notFound: false,
->>>>>>> 5277936 (Load list on server)
-=======
->>>>>>> 0ec2358 (Add private list limits)
+            userLists: useStore(userListsStore),
             priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
@@ -475,9 +467,9 @@ export default {
                 });
             }
         },
-        async loadList() {
+        async loadList(listId) {
             try {
-                const listData = await getList({ listId: this.listId, tablesDB, user: this.user });
+                const listData = await getList({ listId, tablesDB, user: this.user });
                 if (listData && listData.list) {
                     const continueAnyway = await this.createAvoidSpoilersDialog(listData.list);
                     if (!continueAnyway) {
@@ -504,38 +496,24 @@ export default {
             this.loadList();
         }
     },
-<<<<<<< HEAD:src/pages/list/_WishList.vue
     async mounted() {
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
         const route = clientRouter.currentRoute.value;
         const { listId } = route.params;
         await this.loadList(listId);
 
-        if (this.loadedAsAuthor) {
-            this.auth.$subscribe(async (mutation, state) => {
-                if (!state.user && this.loadedAsAuthor) {
-                    console.log("Creating avoid spoilers dialog");
-                    await this.createAvoidSpoilersDialog(this.list);
-                    this.loadedAsAuthor = false;
-                }
-            });
-        }
-
-        if (this.auth.isLoggedIn) {
+        if (this.user) {
             const lists = await databases.listDocuments(
                 APPWRITE_DB,
                 APPWRITE_LIST_COLLECTION,
                 [
-                    Query.equal("author", this.auth.user.$id)
+                    Query.equal("author", this.user.$id)
                 ]
             );
 
             const publicLists = lists.documents.filter((list) => !list.private);
             const privateLists = lists.documents.filter((list) => list.private);
 
-            this.userLists.setCount({
+            setListCount({
                 private: privateLists.length,
                 public: publicLists.length
             });
@@ -549,50 +527,7 @@ export default {
                 await this.loadList(to.params.listId);
             }
         });
-=======
-        await this.loadList({ id: this.listId, listData: this.listData });
         this.quickCreateURL = this.quickCreateURLParam;
-        // show spoilers dialog, maybe before mounted or hide until shown
->>>>>>> 5277936 (Load list on server)
-=======
-        if (this.listData && this.listData.list) {
-            const continueAnyway = await this.createAvoidSpoilersDialog(this.listData.list);
-=======
-        const listData = await loadList({ listId: this.listId, tablesDB, user: this.user });
-        if (listData && listData.list) {
-            const continueAnyway = await this.createAvoidSpoilersDialog(listData.list);
->>>>>>> adb4b8a (Move loading lists to clientside)
-            if (!continueAnyway) {
-                return; // redirected to login
-            }
-        }
-        await this.setList({ listData });
-        this.quickCreateURL = this.quickCreateURLParam;
->>>>>>> 9b563e6 (Fix spoiler dialog)
-=======
-    mounted() {
-        this.loadList();
-<<<<<<< HEAD
->>>>>>> 9b89229 (Move to Vue SPA for interactive routes):src/pages/list/_views/WishList.vue
-=======
-        if (this.auth.isLoggedIn) {
-            const lists = await databases.listDocuments(
-                APPWRITE_DB,
-                APPWRITE_LIST_COLLECTION,
-                [
-                    Query.equal("author", this.auth.user.$id)
-                ]
-            );
-
-            const publicLists = lists.documents.filter((list) => !list.private);
-            const privateLists = lists.documents.filter((list) => list.private);
-
-            this.userLists.setCount({
-                private: privateLists.length,
-                public: publicLists.length
-            });
-        }
->>>>>>> 0ec2358 (Add private list limits)
     }
 };
 </script>

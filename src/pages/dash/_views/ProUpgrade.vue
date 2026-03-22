@@ -10,7 +10,7 @@
                     settings related to your profile.</p>
             </v-card-text>
         </v-card>
-        <v-btn @click="polarStore.getProCheckout">
+        <v-btn @click="handleUpgradeClick">
             Upgrade to Pro
         </v-btn>
         <PricingCards location="dash" />
@@ -19,7 +19,13 @@
 
 <script setup>
 import PricingCards from "@/components/PricingCards.vue";
-import { usePolarStore } from "@/stores/polar";
+import { getProCheckout } from "@/stores/polar";
 
-const polarStore = usePolarStore();
+const handleUpgradeClick = async () => {
+    try {
+        await getProCheckout();
+    } catch (e) {
+        console.error("Failed to start Pro checkout:", e);
+    }
+};
 </script>
