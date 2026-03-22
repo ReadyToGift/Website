@@ -24,6 +24,7 @@
                         :src="image.src"
                         height="400"
                         contain
+                        loading="lazy"
                     />
                 </SplideSlide>
 
@@ -53,6 +54,7 @@
                 <v-img
                     :src="image.src"
                     contain
+                    loading="lazy"
                 />
             </SplideSlide>
         </Splide>

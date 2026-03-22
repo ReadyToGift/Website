@@ -85,6 +85,9 @@
                 <img
                     :src="imageURL"
                     alt=""
+                    width="300"
+                    height="200"
+                    loading="lazy"
                     v-else
                 />
             </div>
