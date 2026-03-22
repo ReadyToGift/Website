@@ -65,6 +65,7 @@
                 <v-list-item
                     :prepend-icon="mdiInformation"
                     to="/dash/about"
+                    @click="closeMenu"
                 >
                     About
                 </v-list-item>
@@ -72,6 +73,7 @@
                     v-if="!!user"
                     to="/dash/settings"
                     :prepend-icon="mdiAccountCircle"
+                    @click="closeMenu"
                 >
                     Account Settings
                 </v-list-item>
@@ -83,6 +85,7 @@
                     v-if="!user && !hide.includes('login')"
                     :loading="loadingLoginLogout"
                     :to="`/dash/login?redirect=${redirectURL}`"
+                    @click="closeMenu"
                 >
                     Log In
                 </v-btn>
@@ -144,9 +147,13 @@ defineProps({
 
 const emit = defineEmits(["logout"]);
 
+const closeMenu = () => {
+    menu.value = false;
+};
+
 const updatePrefs = async () => {
     await updateUserPrefs(newUserPrefs.value);
-    menu.value = false;
+    closeMenu();
 };
 
 const redirectURL = encodeURIComponent(
