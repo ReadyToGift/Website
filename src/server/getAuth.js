@@ -14,7 +14,7 @@ export const getAuth = async (context) => {
             const sessionClient = createSessionClient({ request });
             const accountClient = sessionClient.account;
             session = sessionClient.session;
-    
+
             [account, mfaFactors] = await Promise.all([
                 accountClient.get(),
                 accountClient.listMFAFactors()
@@ -23,7 +23,7 @@ export const getAuth = async (context) => {
             prefs = account?.prefs || {};
         } catch (e) {
             error = e;
-        }  
+        }
         const endTime = Date.now();
         console.log(`GetAuth took ${endTime - startTime}ms`);
     }

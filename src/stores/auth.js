@@ -28,6 +28,7 @@ const redirectToLogin = (router) => {
 export const getCurrentUser = async () => {
     try {
         if (!authInitialized.get()) {
+            console.log("Auth initialized during getCurrentUser");
             await init();
         }
         return user.get();
@@ -38,6 +39,7 @@ export const getCurrentUser = async () => {
 };
 
 export const init = async ({ router = null, currentAccount = null } = {}) => {
+    console.log("Initialising auth");
     try {
         try {
             if (!currentAccount) {

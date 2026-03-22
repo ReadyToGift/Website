@@ -23,7 +23,7 @@
                 >
                     <v-card>
                         <v-card-text>
-                            A verification email has been sent to {{ auth.user.value.email }}. Please
+                            A verification email has been sent to {{ user.value.email }}. Please
                             check your inbox and spam folder, the link will be valid for 7 days.
                         </v-card-text>
 
@@ -120,38 +120,11 @@
                 <strong>URL:</strong> {{ quickCreateURL }}
             </v-card-text>
         </v-card>
-        <div
-            class="loaders"
-            v-if="loading"
-        >
-            <v-skeleton-loader type="list-item-two-line" />
-            <v-skeleton-loader type="list-item-two-line" />
-            <v-skeleton-loader type="list-item-two-line" />
-
-            <v-card
-                class="pa-0 mb-4"
-                variant="flat"
-                color="surface"
-            >
-                <v-card-item class="px-0">
-                    <template v-slot:title>
-                        <h2 class="mb-0">Saved lists</h2>
-                    </template>
-                    <template v-slot:prepend>
-                        <v-icon>{{ mdiStar }}</v-icon>
-                    </template>
-                </v-card-item>
-            </v-card>
-
-            <v-skeleton-loader type="list-item-two-line" />
-            <v-skeleton-loader type="list-item-two-line" />
-            <v-skeleton-loader type="list-item-two-line" />
-        </div>
 
 
         <v-sheet
             elevation="0"
-            v-else-if="!loading"
+            v-else
         >
             <v-tabs
                 color="primary"
@@ -168,6 +141,7 @@
                         rounded="pill"
                         variant="tonal"
                         class="ml-4"
+                        v-if="!loading"
                     >
                         {{ userLists.listCount.public }}
                         <template v-if="polar.publicListLimit">
@@ -210,64 +184,84 @@
                 <v-tabs-window-item
                     value="public"
                 >
-                    <v-list>
-                        <ListCard
-                            v-for="list in publicLists"
-                            :key="list.$id"
-                            :list="list"
-                            :quickCreateURL="quickCreateURL"
-                            :ownList="user && list.author === user.$id"
-                        />
-                    </v-list>
-                    <v-alert
-                        v-if="publicLists.length === 0"
-                        type="info"
-                        border="start"
-                        dense
-                    >
-                        There are no public lists available. Create a new list and make it
-                        public to share it with others!
-                    </v-alert>
-
+                    <template v-if="!loading">
+                        <v-list>
+                            <ListCard
+                                v-for="list in publicLists"
+                                :key="list.$id"
+                                :list="list"
+                                :quickCreateURL="quickCreateURL"
+                                :ownList="user && list.author === user.$id"
+                            />
+                        </v-list>
+                        <v-alert
+                            v-if="publicLists.length === 0"
+                            type="info"
+                            border="start"
+                            dense
+                        >
+                            There are no public lists available. Create a new list and make it
+                            public to share it with others!
+                        </v-alert>
+                    </template>
+                    <template v-else>
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                    </template>
                 </v-tabs-window-item>
                 <v-tabs-window-item value="private">
-                    <v-list>
-                        <ListCard
-                            v-for="list in privateLists"
-                            :key="list.$id"
-                            :list="list"
-                            :quickCreateURL="quickCreateURL"
-                            :ownList="user && list.author === user.$id"
-                        />
-                    </v-list>
-                    <v-alert
-                        v-if="privateLists.length === 0"
-                        type="info"
-                        border="start"
-                        dense
-                    >
-                        You have no private lists. Create one to keep it hidden from
-                        others!
-                    </v-alert>
+                    <template v-if="!loading">
+                        <v-list>
+                            <ListCard
+                                v-for="list in privateLists"
+                                :key="list.$id"
+                                :list="list"
+                                :quickCreateURL="quickCreateURL"
+                                :ownList="user && list.author === user.$id"
+                            />
+                        </v-list>
+                        <v-alert
+                            v-if="privateLists.length === 0"
+                            type="info"
+                            border="start"
+                            dense
+                        >
+                            You have no private lists. Create one to keep it hidden from
+                            others!
+                        </v-alert>
+                    </template>
+                    <template v-else>
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                    </template>
                 </v-tabs-window-item>
                 <v-tabs-window-item value="saved">
-                    <v-list>
-                        <ListCard
-                            v-for="list in savedLists"
-                            :key="list.$id"
-                            :list="list"
-                            :ownList="false"
-                        />
-                    </v-list>
-                    <v-alert
-                        v-if="savedLists.length === 0"
-                        type="info"
-                        border="start"
-                        dense
-                    >
-                        You have no saved lists. Save lists to access them quickly from
-                        here!
-                    </v-alert>
+                    <template v-if="!loading">
+                        <v-list>
+                            <ListCard
+                                v-for="list in savedLists"
+                                :key="list.$id"
+                                :list="list"
+                                :ownList="false"
+                            />
+                        </v-list>
+                        <v-alert
+                            v-if="savedLists.length === 0"
+                            type="info"
+                            border="start"
+                            dense
+                        >
+                            You have no saved lists. Save lists to access them quickly from
+                            here!
+                        </v-alert>
+                    </template>
+                    <template v-else>
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                        <v-skeleton-loader type="list-item-two-line" />
+                    </template>
                 </v-tabs-window-item>
             </v-tabs-window>
         </v-sheet>
@@ -277,27 +271,27 @@
 <script setup>
 import { account, tablesDB } from "@/appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
 import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VDialog, VDivider, VIcon, VList, VMenu, VSelect, VSheet, VSkeletonLoader, VSpacer, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
 import { Query } from "appwrite";
 
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
-import auth from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { useRouter } from "vue-router";
+import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
+import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
 import CreateList from "@/components/dialogs/CreateList.vue";
 import ListCard from "@/components/ListCard.vue";
-import PWAPrompt from "@/components/PWAPrompt.vue";
 import { polar as polarStore } from "@/stores/polar";
-import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
+import PWAPrompt from "@/components/PWAPrompt.vue";
 import validation from "@/utils/validation";
 
 const router = useRouter();
 const prefs = useStore($prefs);
-const user = useStore(auth.user);
+const user = useStore(userStore);
 const polar = useStore(polarStore);
 const userLists = useStore(userListsStore);
 
@@ -448,23 +442,25 @@ const verifyEmail = async () => {
     }
 };
 
-try {
-    await getLists();
-} catch (error) {
-    console.error("Failed to load lists:", error);
-}
-
-if (props.title || props.text || props.url) {
-    if (!props.url) {
-        if (props.text.match(validation.urlRegexGlobal)) {
-            quickCreateURL.value = props.text.match(validation.urlRegexGlobal)[0];
-        } else if (props.title.match(validation.urlRegexGlobal)) {
-            quickCreateURL.value = props.title.match(validation.urlRegexGlobal)[0];
-        }
-    } else {
-        quickCreateURL.value = props.url;
+onMounted(async () => {
+    try {
+        await getLists();
+    } catch (error) {
+        console.error("Failed to load lists:", error);
     }
-}
+
+    if (props.title || props.text || props.url) {
+        if (!props.url) {
+            if (props.text.match(validation.urlRegexGlobal)) {
+                quickCreateURL.value = props.text.match(validation.urlRegexGlobal)[0];
+            } else if (props.title.match(validation.urlRegexGlobal)) {
+                quickCreateURL.value = props.title.match(validation.urlRegexGlobal)[0];
+            }
+        } else {
+            quickCreateURL.value = props.url;
+        }
+    }
+});
 </script>
 
 <style lang="scss" scoped>

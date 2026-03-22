@@ -25,13 +25,13 @@
                     value="account"
                     class="pt-4"
                 >
-                    <!-- <AccountSettings /> -->
+                    <AccountSettings />
                 </v-tabs-window-item>
                 <v-tabs-window-item
                     value="billing"
                     class="pt-4"
                 >
-                    <!-- <BillingSettings /> -->
+                    <BillingSettings />
                 </v-tabs-window-item>
             </v-tabs-window>
         </v-sheet>
@@ -39,6 +39,7 @@
 </template>
 
 <script setup>
+import { VSheet, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
 import AccountSettings from "./settings/AccountSettings.vue";
 import BillingSettings from "./settings/BillingSettings.vue";
 import { shallowRef } from "vue";

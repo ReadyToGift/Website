@@ -111,7 +111,7 @@ window.addEventListener("appinstalled", () => {
 
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
-    await initAuth({ router });
+    // await initAuth({ router });
     if (UMAMI_URL && UMAMI_ID) {
         const script = document.createElement("script");
         script.src = `${UMAMI_URL}`;

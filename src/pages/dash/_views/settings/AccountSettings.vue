@@ -7,6 +7,8 @@
         </v-card-subtitle>
     </v-card>
 
+    {{ personalInfo }}
+
     <v-card
         class="mt-4"
         variant="tonal"
@@ -59,8 +61,8 @@
 </template>
 
 <script setup>
-import { reactive, watch } from "vue";
 import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
+import { reactive } from "vue";
 
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { AppwriteException } from "appwrite";
