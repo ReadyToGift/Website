@@ -16,9 +16,7 @@ export default async ({ req, res, error }) => {
 
         const checkout = await polar.checkouts.create({
             externalCustomerId: user,
-            products: [
-                process.env["POLAR_PRO_PRODUCT_ID"] ?? ""
-            ],
+            products: [process.env["POLAR_PRO_PRODUCT_ID"] ?? ""],
             successUrl: "https://readyto.gift/dash/upgrade?status=success",
             cancelUrl: "https://readyto.gift/dash/upgrade?status=cancel"
         });
