@@ -14,11 +14,14 @@ export default async ({ req, res, error }) => {
             });
         }
 
+        const websiteDomain = "http://localhost:4321";
+
         const checkout = await polar.checkouts.create({
+            embedOrigin: websiteDomain,
             externalCustomerId: user,
             products: [process.env["POLAR_PRO_PRODUCT_ID"] ?? ""],
-            successUrl: "https://readyto.gift/dash/upgrade?status=success",
-            cancelUrl: "https://readyto.gift/dash/upgrade?status=cancel"
+            successUrl: websiteDomain + "/dash/settings/billing?status=success",
+            cancelUrl: websiteDomain + "/dash/settings/billing?status=cancel"
         });
 
         return res.json({

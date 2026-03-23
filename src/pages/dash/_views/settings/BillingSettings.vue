@@ -78,9 +78,17 @@
                         </v-btn>
                     </td>
                     <td>
-                        <v-btn @click="proCheckout">
-                            Upgrade to Pro
-                        </v-btn>
+                        <a
+                            :href="checkoutURL"
+                            data-polar-checkout
+                            :data-polar-checkout-theme="prefs?.darkMode ? 'dark' : 'light'"
+                        >
+                            <v-btn
+                                :loading="proCheckoutLoading"
+                            >
+                                Upgrade to Pro
+                            </v-btn>
+                        </a>
                     </td>
                 </tr>
                 <tr>
@@ -97,7 +105,7 @@
 </template>
 
 <script setup>
-import { reactive, watch } from "vue";
+import { onMounted, reactive, shallowRef, watch } from "vue";
 
 import { AppwriteException } from "appwrite";
 import { useStore } from "@nanostores/vue";
@@ -107,13 +115,15 @@ import { create as createDialog } from "@/stores/dialogs";
 
 import { VBtn, VCard, VCardText, VCardTitle, VCol, VRow } from "vuetify/components";
 
-import { account } from "@/appwrite";
+import { $prefs } from "@/stores/prefs";
 
-import MFA from "@/components/account/mfa/MFA.vue";
-import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
+import { account } from "@/appwrite";
 
 const polar = useStore(polarStore);
 const user = useStore(userStore);
+const prefs = useStore($prefs);
+
+const proCheckoutLoading = shallowRef(false);
 
 const loadProPrice = async () => {
     try {
@@ -132,15 +142,13 @@ const loadProPrice = async () => {
 };
 
 const proPrice = await loadProPrice();
+const checkoutURL = shallowRef(null);
 
-const proCheckout = async () => {
-    // const checkoutURL = await getProCheckout();
-    // console.log(checkoutURL);
+onMounted(async () => {
+    proCheckoutLoading.value = true;
+    checkoutURL.value = await getProCheckout();
+    proCheckoutLoading.value = false;
 
-};
-fetch("/api/checkout/pro", {
-    method: "GET",
-    credentials: "include"
 });
 </script>
 
