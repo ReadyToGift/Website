@@ -67,7 +67,6 @@ if (!import.meta.env.SSR) {
     });
 
     clientRouter.beforeEach(async (to, from, next) => {
-        console.log("Before route");
         const currentUser = await getCurrentUser();
         if (to.meta && to.meta.requiresAuth) {
             if (!currentUser) {

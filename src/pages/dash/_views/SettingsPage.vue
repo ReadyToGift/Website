@@ -1,5 +1,6 @@
 <template>
     <div class="page-content">
+        <h1>Settings</h1>
         <v-sheet
             elevation="0"
         >

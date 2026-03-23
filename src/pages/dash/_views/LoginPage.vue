@@ -100,6 +100,7 @@ const methodsData = {
     github: {
         icon: mdiGithub,
         login: () => {
+            // TODO: Fix
             window.location.href = `/api/auth/oauth/github?redirect=${encodeURIComponent(props.redirect)}`;
         },
         name: "Github"

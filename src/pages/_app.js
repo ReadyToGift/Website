@@ -1,3 +1,4 @@
+import { init as initAuth } from "@/stores/auth";
 import vuetify from "@/plugins/vuetify";
 
 console.log("App initialized with Vuetify");
@@ -7,6 +8,8 @@ export default async function setup(app) {
     app.use(vuetify);
 
     if (import.meta.env.SSR) return;
+
+    await initAuth();
 
     // Check if we're on a SPA route and add router
     const path = window.location.pathname;

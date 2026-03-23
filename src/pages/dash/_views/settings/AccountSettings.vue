@@ -7,8 +7,6 @@
         </v-card-subtitle>
     </v-card>
 
-    {{ personalInfo }}
-
     <v-card
         class="mt-4"
         variant="tonal"

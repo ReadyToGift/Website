@@ -4,6 +4,9 @@
   "description": "",
   "main": "src/main.js",
   "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "format": "prettier --write ."
   },
