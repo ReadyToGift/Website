@@ -9,6 +9,31 @@ export const mfaFactors = atom([]);
 export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
 export const authInitialized = atom(false);
 
+let appwriteJwt = null;
+let appwriteJwtExp = null;
+
+export const getJwt = async () => {
+    if (!user.get()) return false;
+
+    if (appwriteJwt) {
+        const jwtExpired = new Date().getTime() > appwriteJwtExp;
+
+        if (!jwtExpired) return appwriteJwt;
+    }
+
+    try {
+        const jwtResp = await account.createJWT();
+        appwriteJwt = jwtResp.jwt;
+        appwriteJwtExp =  new Date().getTime + 15 * 60 * 1000;
+
+        return appwriteJwt;
+    } catch (err) {
+        console.log(err);
+    }
+    
+    return false;
+};
+
 export const setUser = ({ user: userData }) => {
     user.set({
         ...user.get(),

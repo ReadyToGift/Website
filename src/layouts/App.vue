@@ -122,8 +122,7 @@ onMounted(async () => {
         document.head.appendChild(script);
     }
 
-    console.log("Initializing polar store from App.vue");
-    // await initPolar();
+    await initPolar();
 
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes

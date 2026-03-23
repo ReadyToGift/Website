@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/server/appwrite";
 
-// These shouldn't change often, so we can prerender this endpoint
 export const prerender = true;
 
 export const getCurrencies = async () => {

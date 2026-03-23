@@ -10,17 +10,14 @@
     <v-card
         class="mt-4"
         variant="tonal"
-    >
-        <v-card-title>
-            Billing Information
-        </v-card-title>
-
-        
+    >   
         <table class="pricing">
             <thead>
-                <th></th>
-                <th>Free</th>
-                <th>Pro</th>
+                <tr>
+                    <th></th>
+                    <th>Free</th>
+                    <th>Pro</th>
+                </tr>
             </thead>
             <tbody>
                 <tr>
@@ -78,17 +75,12 @@
                         </v-btn>
                     </td>
                     <td>
-                        <a
-                            :href="checkoutURL"
-                            data-polar-checkout
-                            :data-polar-checkout-theme="prefs?.darkMode ? 'dark' : 'light'"
+                        <v-btn
+                            :loading="proCheckoutLoading"
+                            @click="proCheckout"
                         >
-                            <v-btn
-                                :loading="proCheckoutLoading"
-                            >
-                                Upgrade to Pro
-                            </v-btn>
-                        </a>
+                            Upgrade to Pro
+                        </v-btn>
                     </td>
                 </tr>
                 <tr>
@@ -131,10 +123,11 @@ const loadProPrice = async () => {
 
         const formattedPrice = new Intl.NumberFormat("en-US", {
             style: "currency",
-            currency: price.priceCurrency
+            currency: price.priceCurrency,
+            minimumFractionDigits: 0
         }).format(price.priceAmount / 100);
 
-        return formattedPrice + " / " + price.recurringInterval;
+        return formattedPrice + "/" + price.recurringInterval;
     } catch (error) {
         console.error("Failed to load Pro pricing:", error);
         return "Error fetching pricing";
@@ -142,14 +135,29 @@ const loadProPrice = async () => {
 };
 
 const proPrice = await loadProPrice();
-const checkoutURL = shallowRef(null);
 
-onMounted(async () => {
+const proCheckout = async () => {
     proCheckoutLoading.value = true;
-    checkoutURL.value = await getProCheckout();
-    proCheckoutLoading.value = false;
+    try {
+        const checkoutURL = await getProCheckout();
+        window.location.href = checkoutURL;
+    } catch (error) {
+        proCheckoutLoading.value = false;
+        console.error(error);
 
-});
+        createDialog({
+            title: "Error getting checkout",
+            text: "Please try again later",
+            actions: [
+                {
+                    action: "close",
+                    color: "primary",
+                    text: "OK"
+                }
+            ]
+        });
+    }
+};
 </script>
 
 <style lang="scss" scoped>
@@ -164,6 +172,12 @@ main {
             th, td {
                 font-size: 1.1rem;
                 padding: 0.5rem;
+            }
+
+            thead {
+                th {
+                    font-size: 1.5rem;
+                }
             }
 
             tbody {

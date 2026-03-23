@@ -1,5 +1,6 @@
 import { computed, map } from "nanostores";
-import { functions } from "@/appwrite";
+import { create as createDialog } from "./dialogs";
+import { getJwt } from "./auth";
 import { Polar } from "@polar-sh/sdk";
 import { userLists } from "./userLists";
 
@@ -27,55 +28,68 @@ export const init = async () => {
         return;
     }
 
-    const polarSession = await functions.createExecution({
-        functionId: "690fc8f4002cff45eddc",
-        async: false
-    });
+    const jwt = await getJwt();
+    if (!jwt) return console.error("Unable to get jwt for user.");
 
-    if (polarSession.status === "completed") {
-        const responseData = JSON.parse(polarSession.responseBody);
-        const session = responseData.customerSession;
-        polar.setKey("session", session);
-
-        const benefits = await polarClient.customerPortal.benefitGrants.list(
-            {
-                customerSession: session.token
-            },
-            {}
-        );
-
-        const benefitNames = benefits.result.items.map((b) => b.benefit.description);
-
+    try {
+        const polarResp = await fetch("/api/billing", {
+            headers: {
+                "Authorization": `Bearer ${jwt}`
+            }
+        });
+        const {
+            customerSession,
+            subscriptions,
+            benefitGrants
+        } = await polarResp.json();
+    
+        polar.setKey("session", customerSession);
+        polar.setKey("subscriptions", subscriptions);
+    
+        const benefitNames = benefitGrants.map((b) => b.benefit.description);
+    
         if (benefitNames.includes("Autofill")) {
             polar.setKey("enableAutofill", true);
         }
-
+    
         if (benefitNames.includes("Unlimited Public Lists")) {
             polar.setKey("publicListLimit", -1);
         }
-    } else {
-        console.error("Failed to retrieve Polar session");
+    } catch {
+        createDialog({
+            title: "Error loading billing information",
+            text: "Please try again later",
+            actions: [
+                {
+                    type: "primary",
+                    action: "close",
+                    text: "Okay"
+                }
+            ]
+        });
     }
 
     polar.setKey("sessionLoading", false);
 };
 
 export const getProCheckout = async () => {
-    const checkout = await functions.createExecution({
-        functionId: "690fc8f4002cff45eddd",
-        async: false
+    const jwt = await getJwt();
+    if (!jwt) return console.error("Unable to get jwt for user.");
+
+    const proCheckoutResp = await fetch("/api/billing/checkout/pro", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${jwt}`
+        }
     });
+    const proCheckout = await proCheckoutResp.json();
 
-    if (checkout.status === "completed") {
-        console.log("Polar Pro checkout URL:", checkout.responseBody);
-        return JSON.parse(checkout.responseBody).checkoutUrl;
-    }
+    return proCheckout.url;
 
-    throw new Error("Failed to retrieve Polar Pro checkout URL");
 };
 
 export const getProPricing = async () => {
-    const response = await fetch("/api/checkout/pro/price");
+    const response = await fetch("/api/billing/checkout/pro");
     const data = await response.json();
 
     if (data.success) {

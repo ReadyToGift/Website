@@ -26,6 +26,4 @@ if (response.total > 1) {
 }
 
 return Astro.redirect(`/list/${response.rows[0].$id}`);
-
-export const prerender = false;
 ---

@@ -3,7 +3,7 @@ import * as appwriteSdk from "node-appwrite";
 import { APPWRITE_DEV_KEY, APPWRITE_ENDPOINT, APPWRITE_PROJECT } from "astro:env/client";
 import { APPWRITE_KEY } from "astro:env/server";
 
-export const SESSION_COOKIE = "appwrite";
+import { extractJwt } from "./auth";
 
 // Admin client, used to create new accounts
 export function createAdminClient() {
@@ -32,8 +32,7 @@ export function createAdminClient() {
     };
 }
 
-// Session client, used to make requests on behalf of the logged in user
-export function createSessionClient({ request, session }) {
+export const createSessionClient = ({ request, jwt }) => {
     const client = new appwriteClient.Client()
         .setEndpoint(APPWRITE_ENDPOINT)
         .setProject(APPWRITE_PROJECT);
@@ -42,44 +41,20 @@ export function createSessionClient({ request, session }) {
         client.setDevKey(APPWRITE_DEV_KEY);
     }
 
-    if (!request && !session) {
-        throw new Error("Request or session must be provided");
+    if (!request && !jwt) {
+        throw new Error("Request or jwt must be provided");
     }
 
     if (request) {
-        // Try to get session from Authorization header first (for API routes)
-        const authHeader = request.headers.get("authorization");
-        if (authHeader && authHeader.startsWith("Bearer ")) {
-            session = authHeader.substring(7); // Remove "Bearer " prefix
-        } else {
-            // Fallback to cookie (for SSR pages)
-            const cookies = parseCookies(request.headers.get("cookie") ?? "");
-            session = cookies.get(SESSION_COOKIE);
-        }
-        
-        if (!session) {
-            throw new Error("Session not found in Authorization header or cookie");
-        }
+        jwt = extractJwt({ request });
     }
 
-    client.setSession(session);
+    client.setJWT(jwt);
 
-
-    // Return the services you need
     return {
         get account() {
             return new appwriteClient.Account(client);
         },
-        session: session
+        jwt: jwt
     };
-}
-
-// Helper function to parse cookies
-function parseCookies(cookies) {
-    const map = new Map();
-    for (const cookie of cookies.split(";")) {
-        const [name, value] = cookie.split("=");
-        map.set(name.trim(), value ?? null);
-    }
-    return map;
-}
+};
