@@ -9,24 +9,38 @@ export const mfaFactors = atom([]);
 export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
 export const authInitialized = atom(false);
 
-let appwriteJwt = null;
-let appwriteJwtExp = null;
+const dev = process.env.NODE_ENV === "development";
+
+
+// Store jwt in localStorage for dev only
+let appwriteJwtExp = dev ?
+    persistentAtom("appwriteJwtExp", "") : atom("");
+
+let appwriteJwt = dev ?
+    persistentAtom("appwriteJwt", "") : atom("");
+
+if (dev) {
+    if (appwriteJwt.get() && appwriteJwtExp.get() < new Date().getTime()) {
+        appwriteJwt.set("");
+        appwriteJwtExp.set("");
+    }
+}
 
 export const getJwt = async () => {
     if (!user.get()) return false;
 
-    if (appwriteJwt) {
-        const jwtExpired = new Date().getTime() > appwriteJwtExp;
+    if (appwriteJwt.get() && appwriteJwtExp.get()) {
+        const jwtExpired = new Date().getTime() > appwriteJwtExp.get();
 
-        if (!jwtExpired) return appwriteJwt;
+        if (!jwtExpired) return appwriteJwt.get();
     }
 
     try {
         const jwtResp = await account.createJWT();
-        appwriteJwt = jwtResp.jwt;
-        appwriteJwtExp =  new Date().getTime + 15 * 60 * 1000;
+        appwriteJwt.set(jwtResp.jwt);
+        appwriteJwtExp.set(new Date().getTime() + 15 * 60 * 1000);
 
-        return appwriteJwt;
+        return appwriteJwt.get();
     } catch (err) {
         console.log(err);
     }
@@ -106,8 +120,8 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
 export async function logOut() {
     try {
         await account.deleteSession({ sessionId: "current" });
-        appwriteJwt = null;
-        appwriteJwtExp = null;
+        appwriteJwt.set("");
+        appwriteJwtExp.set("");
     } catch (error) {
         console.error("Error deleting session during logout:", error);
     }

@@ -2,37 +2,27 @@ import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { createSessionClient } from "@/server/appwrite";
 import { Polar } from "@polar-sh/sdk";
 
+import { getCache, setCache } from "@/server/cache";
+
 const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
 });
 
-const prices = [
-    {
-        createdAt: "2025-11-30T12:19:01.090Z",
-        modifiedAt: null,
-        id: "415a0cde-ea2e-45a3-a1ff-7447897862f8",
-        source: "catalog",
-        amountType: "fixed",
-        isArchived: false,
-        productId: "44d4f00e-df0e-43f4-ae41-0ab4e76069e8",
-        type: "recurring",
-        recurringInterval: "year",
-        priceCurrency: "usd",
-        priceAmount: 1500
-    }
-];
-
 export const GET = async () => {
     try {
-        // TODO: Remove
-        // Hardcoded while developing on rubbish connection
-        // const result = await polar.products.get({
-        //     id: POLAR_PRO_PRODUCT_ID
-        // });
+        let prices = await getCache("proPrices");
 
-        // const prices = result.prices.filter((price) => !price.isArchived);
+        if (!prices) {
+            const result = await polar.products.get({
+                id: POLAR_PRO_PRODUCT_ID
+            });
 
-        if (prices.length === 0) {
+            prices = result.prices.filter((price) => !price.isArchived);
+
+            await setCache("proPrices", prices, 60 * 60 * 1000); // Cache for 1 hour
+        }
+
+        if (!prices || prices.length === 0) {
             return new Response(
                 JSON.stringify({
                     error: "No active prices found for Pro product"

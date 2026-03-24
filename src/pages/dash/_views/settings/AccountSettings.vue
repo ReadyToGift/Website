@@ -1,13 +1,5 @@
 <template>
     <v-card
-        variant="flat"
-    >
-        <v-card-subtitle>
-            Here you can manage your account details, change your password, and configure other settings related to your profile.
-        </v-card-subtitle>
-    </v-card>
-
-    <v-card
         class="mt-4"
         variant="tonal"
     >

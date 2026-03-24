@@ -1,7 +1,8 @@
+import { getCache, setCache } from "@/server/cache";
 import { createSessionClient } from "@/server/appwrite";
+import { extractJwt } from "@/server/auth";
 import { Polar } from "@polar-sh/sdk";
 import { POLAR_ACCESS_TOKEN } from "astro:env/server";
-import { getCache, setCache } from "@/server/cache";
 
 const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
@@ -9,33 +10,16 @@ const polar = new Polar({
 
 export const GET = async (context) => {
     try {
-        let sessionClient;
-        try {
-            sessionClient = createSessionClient(context);
-        } catch (err) {
-            console.error("Error creating session client", err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated"
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
-
         let account;
-
         try {
-            account = await getCache(`jwt:${sessionClient.jwt}`);
+            const jwt = extractJwt(context);
+            account = await getCache(`jwt:${jwt}`);
+
             if (!account ) {
+                let sessionClient = createSessionClient(context);
                 account = await sessionClient.account.get();
                 if (account) {
-                    await setCache(`jwt:${sessionClient.jwt}`, account, 5 * 60 * 1000);
+                    await setCache(`jwt:${jwt}`, account, 5 * 60 * 1000);
                 }
             }
         } catch (error) {
@@ -104,7 +88,7 @@ export const GET = async (context) => {
                 throw new Error("Error getting benefit grants", { cause: error });
             });
     
-            const benefitGrants = benefitsResp.result.items.filter((benefit) => benefit.isGranted);
+            benefitGrants = benefitsResp.result.items.filter((benefit) => benefit.isGranted);
 
             await setCache(`polarBenefitGrants:${account.$id}`, benefitGrants, 5 * 60 * 1000);
         }

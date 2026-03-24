@@ -15,17 +15,13 @@ if (REDIS_HOST) {
         .connect(() => console.log("Connected to Redis"));
 }
 
+await redisClient.flushAll();
+
 export const setCache = async (key, value, ttl) => {
     try {
         if (!cacheType) return;
         if (redisClient) {
             await redisClient.set(key, JSON.stringify({
-                data: value,
-                ttl,
-                exp: new Date().getTime() + ttl
-            }));
-
-            console.log(key, JSON.stringify({
                 data: value,
                 ttl,
                 exp: new Date().getTime() + ttl
@@ -55,8 +51,8 @@ export const getCache = async (key) => {
                 console.log(`${key} expired`);
             } else {
                 console.log(`Got ${key} from cache`);
+                return value.data;
             }
-            return value.data;
         }
 
     } catch (err) {

@@ -18,7 +18,8 @@ export const polar = map({
     session: null,
     publicListLimit: FREE_TIER_PUBLIC_LIST_LIMIT,
     enableAutofill: FREE_TIER_ENABLE_AUTOFILL,
-    pro: null
+    pro: null,
+    inactiveSubscription: null
 });
 
 export const init = async () => {
@@ -59,6 +60,9 @@ export const init = async () => {
 
         const activeSubscription = subscriptions.find((sub) => sub.status === "active");
         polar.setKey("pro", activeSubscription);
+
+        const inactiveSubscription = subscriptions.find((sub) => sub.status === "canceled");
+        polar.setKey("inactiveSubscription", inactiveSubscription);
 
         // TODO: Show old subscriptions
     } catch {

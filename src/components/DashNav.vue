@@ -23,6 +23,11 @@
                     title="Lists"
                     to="/dash/lists"
                 />
+                <v-list-item
+                    :prepend-icon="mdiCog"
+                    title="Settings"
+                    to="/dash/settings"
+                />
             </v-list>
             <v-list
                 v-if="prefs.history.length > 0"
@@ -53,7 +58,7 @@
                     <QuickSettings :hide="['login', 'logout']">
                         <template v-slot:activator="{ props }">
                             <v-list-item
-                                :prepend-icon="mdiCog"
+                                :prepend-icon="mdiTune"
                                 title="Settings"
                                 v-bind="props"
                             />

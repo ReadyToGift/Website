@@ -72,10 +72,10 @@
                 <v-list-item
                     v-if="!!user"
                     to="/dash/settings"
-                    :prepend-icon="mdiAccountCircle"
+                    :prepend-icon="mdiCog"
                     @click="closeMenu"
                 >
-                    Account Settings
+                    Settings
                 </v-list-item>
             </v-list>
             <v-card-actions>
@@ -111,7 +111,7 @@
 </template>
 
 <script setup>
-import { mdiAccountCircle, mdiCog, mdiInformation } from "@mdi/js";
+import { mdiCog, mdiInformation } from "@mdi/js";
 import { 
     VBtn, 
     VCard, 
