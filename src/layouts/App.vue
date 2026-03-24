@@ -59,7 +59,6 @@ import { useRouter } from "vue-router";
 
 import { init as initAuth, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
-import { init as initCurrencies } from "@/stores/currency";
 
 const loading = ref(true);
 
@@ -72,8 +71,6 @@ const routeRequiresAuth = computed(() => {
     return currentRoute?.meta?.requiresAuth === true;
 });
 const vuetifyTheme = useTheme();
-
-await initCurrencies();
 
 const showUpdatePrompt = useStore(showUpdatePromptStore);
 

@@ -5,7 +5,6 @@ import vue from "@astrojs/vue";
 
 import sentry from "@sentry/astro";
 import vercel from "@astrojs/vercel";
-import vuetify from "vite-plugin-vuetify";
 
 import node from "@astrojs/node";
 let adapter;
@@ -74,6 +73,16 @@ export default defineConfig({
                 context: "server",
                 access: "secret",
                 optional: true
+            }),
+            REDIS_HOST: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true
+            }),
+            FLUSH_CACHE_ON_START: envField.boolean({
+                context: "server",
+                access: "secret",
+                default: false // TODO: May need to be updated
             })
         }
     },

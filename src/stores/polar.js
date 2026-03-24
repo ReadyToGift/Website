@@ -17,7 +17,8 @@ export const polar = map({
     subscriptions: [],
     session: null,
     publicListLimit: FREE_TIER_PUBLIC_LIST_LIMIT,
-    enableAutofill: FREE_TIER_ENABLE_AUTOFILL
+    enableAutofill: FREE_TIER_ENABLE_AUTOFILL,
+    pro: null
 });
 
 export const init = async () => {
@@ -55,6 +56,11 @@ export const init = async () => {
         if (benefitNames.includes("Unlimited Public Lists")) {
             polar.setKey("publicListLimit", -1);
         }
+
+        const activeSubscription = subscriptions.find((sub) => sub.status === "active");
+        polar.setKey("pro", activeSubscription);
+
+        // TODO: Show old subscriptions
     } catch {
         createDialog({
             title: "Error loading billing information",
@@ -76,7 +82,7 @@ export const getProCheckout = async () => {
     const jwt = await getJwt();
     if (!jwt) return console.error("Unable to get jwt for user.");
 
-    const proCheckoutResp = await fetch("/api/billing/checkout/pro", {
+    const proCheckoutResp = await fetch("/api/billing/pro/checkout", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${jwt}`
@@ -89,7 +95,7 @@ export const getProCheckout = async () => {
 };
 
 export const getProPricing = async () => {
-    const response = await fetch("/api/billing/checkout/pro");
+    const response = await fetch("/api/billing/pro");
     const data = await response.json();
 
     if (data.success) {

@@ -106,6 +106,8 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
 export async function logOut() {
     try {
         await account.deleteSession({ sessionId: "current" });
+        appwriteJwt = null;
+        appwriteJwtExp = null;
     } catch (error) {
         console.error("Error deleting session during logout:", error);
     }

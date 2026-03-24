@@ -70,16 +70,28 @@
                         <v-btn
                             disabled
                             variant="outlined"
+                            v-if="!polar.pro"
                         >
                             Already on free
+                        </v-btn>
+                        <v-btn v-else>
+                            Downgrade
                         </v-btn>
                     </td>
                     <td>
                         <v-btn
                             :loading="proCheckoutLoading"
                             @click="proCheckout"
+                            v-if="!polar.pro"
                         >
                             Upgrade to Pro
+                        </v-btn>
+                        <v-btn
+                            disabled
+                            variant="outlined"
+                            v-else
+                        >
+                            Already on pro
                         </v-btn>
                     </td>
                 </tr>
@@ -93,6 +105,29 @@
                 </tr>
             </tbody>
         </table>
+    </v-card>
+    <v-card
+        class="mt-4"
+        variant="tonal"
+    > 
+        <v-card-title>
+            Manage your subscription
+        </v-card-title>
+        <v-card-text>
+            <h2>
+                {{ polar.pro.name }}
+            </h2>
+            <p>
+                Renews on {{ new Date(polar.pro.currentPeriodEnd) }} for {{ formatPrice(polar.pro.amount, polar.pro.currency) }}/{{ polar.pro.recurringInterval }}.
+                <span
+                    class="originalPrice"
+                    v-if="polar.pro.product.prices && polar.pro.product.prices[0].priceAmount > polar.pro.amount"
+                >
+                    {{ formatPrice(polar.pro.product.prices[0].priceAmount, polar.pro.product.prices[0].priceCurrency) }}
+                </span>
+            </p>
+        </v-card-text>
+        {{ polar.pro }}
     </v-card>
 </template>
 
@@ -117,15 +152,21 @@ const prefs = useStore($prefs);
 
 const proCheckoutLoading = shallowRef(false);
 
+const formatPrice = (price, currency) => {
+    const formattedPrice = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: currency,
+        minimumFractionDigits: 0
+    }).format(price / 100);
+
+    return formattedPrice;
+};
+
 const loadProPrice = async () => {
     try {
         const price = await getProPricing();
 
-        const formattedPrice = new Intl.NumberFormat("en-US", {
-            style: "currency",
-            currency: price.priceCurrency,
-            minimumFractionDigits: 0
-        }).format(price.priceAmount / 100);
+        const formattedPrice = formatPrice(price.priceAmount, price.priceCurrency);
 
         return formattedPrice + "/" + price.recurringInterval;
     } catch (error) {

@@ -1,0 +1,7 @@
+services:
+  redis:
+    container_name: readytogift-redis
+    image: redis:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:6379:6379"

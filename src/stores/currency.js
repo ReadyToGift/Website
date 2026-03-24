@@ -1,19 +1,7 @@
 import { atom } from "nanostores";
+import { currencies as currencyList } from "country-data-list";
 
-export const currencies = atom([]);
-
-export const init = async () => {
-    if (import.meta.env.SSR) {
-        const getCurrencies = await import("@/pages/api/locale/currencies").then(
-            (mod) => mod.getCurrencies
-        );
-        currencies.set(await getCurrencies());
-    } else {
-        let response = await fetch("/api/locale/currencies");
-        let data = await response.json();
-        currencies.set(data.currencies);
-    }
-};
+export const currencies = currencyList.all;
 
 export const getCurrency = (code) => {
     const currList = currencies.get();
@@ -40,7 +28,6 @@ export const formatter = (code) => {
 };
 
 export default {
-    init,
     getCurrency,
     formatter
 };
