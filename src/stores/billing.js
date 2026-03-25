@@ -1,4 +1,5 @@
 import { computed, map } from "nanostores";
+import { $prefs } from "./prefs";
 import { create as createDialog } from "./dialogs";
 import { getJwt } from "./auth";
 import { userLists } from "./userLists";
@@ -10,7 +11,7 @@ import {
 } from "astro:env/client";
 
 export const billing = map({
-    sessionLoading: false,
+    billingLoaded: false,
     subscriptions: [],
     session: null,
     pro: null,
@@ -24,11 +25,23 @@ export const limits = map({
     autofill: FREE_TIER_ENABLE_AUTOFILL
 });
 
-export const init = async () => {
-    billing.setKey("sessionLoading", true);
+export const freeLimits = map({
+    ...limits.get()
+});
 
+export const proLimits = map({
+    ...limits.get()
+});
+
+export const allLimits = map({
+    free: limits.get(),
+    pro: limits.get()
+});
+
+export const getBillingDetails = async () => {
     if (!ENABLE_BILLING) {
-        billing.setKey("sessionLoading", false);
+        console.log("Billing is disabled, using free limits");
+        billing.setKey("billingLoaded", true);
         return;
     }
 
@@ -74,7 +87,27 @@ export const init = async () => {
         });
     }
 
-    billing.setKey("sessionLoading", false);
+    billing.setKey("billingLoaded", true);
+};
+
+export const init = async () => {
+    const allLimitsResp = await fetch("/api/billing/limits");
+    const allLimitsData = await allLimitsResp.json();
+
+    let newLimits = $prefs.get().pro ? 
+        allLimitsData.pro :
+        allLimitsData.free;
+    
+    allLimits.setKey("free", allLimitsData.free);
+    
+    if (ENABLE_BILLING) {
+        allLimits.setKey("pro", allLimitsData.pro);
+    }
+
+    limits.setKey("publicLists", newLimits.publicLists);
+    limits.setKey("privateLists", newLimits.privateLists);
+    limits.setKey("itemsPerList", newLimits.itemsPerList);
+    limits.setKey("autofill", newLimits.autofill);
 };
 
 export const getProCheckout = async () => {

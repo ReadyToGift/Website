@@ -11,14 +11,22 @@
                 <v-tab
                     value="account"
                     to="/dash/settings/account"
+                    :disabled="!user"
                 >
                     Account
                 </v-tab>
                 <v-tab
                     value="billing"
                     to="/dash/settings/billing"
+                    :disabled="!user"
                 >
                     Billing
+                </v-tab>
+                <v-tab
+                    value="about"
+                    to="/dash/about"
+                >
+                    About
                 </v-tab>
             </v-tabs>
             <v-tabs-window v-model="tab">
@@ -34,6 +42,12 @@
                 >
                     <BillingSettings />
                 </v-tabs-window-item>
+                <v-tabs-window-item
+                    value="about"
+                    class="pt-4"
+                >
+                    <AboutPage />
+                </v-tabs-window-item>
             </v-tabs-window>
         </v-sheet>
     </div>
@@ -43,7 +57,12 @@
 import { VSheet, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
 import AccountSettings from "./settings/AccountSettings.vue";
 import BillingSettings from "./settings/BillingSettings.vue";
+import AboutPage from "./settings/AboutPage.vue";
 import { shallowRef } from "vue";
+import { user as userStore } from "@/stores/auth";
+import { useStore } from "@nanostores/vue";
+
+const user = useStore(userStore);
 
 const tab = shallowRef("account");
 </script>

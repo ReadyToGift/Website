@@ -17,6 +17,7 @@
             <v-list
                 density="compact"
                 nav
+                v-if="user"
             >
                 <v-list-item
                     :prepend-icon="mdiFormatListBulleted"
@@ -162,6 +163,7 @@ import {
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
 import { $prefs } from "@/stores/prefs";
+import { user as userStore } from "@/stores/auth";
 import { logOut as logOutUser, user } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
@@ -199,7 +201,8 @@ export default {
             mdiLogin,
             mdiLogout,
             mdiMenu,
-            mdiTune
+            mdiTune,
+            user: useStore(userStore)
         };
     },
     methods: {

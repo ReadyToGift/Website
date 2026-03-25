@@ -144,7 +144,7 @@
                         v-if="!loading"
                     >
                         {{ userLists.listCount.public }}
-                        <template v-if="limits.publicLists">
+                        <template v-if="limits.publicLists && limits.publicLists > 0">
                             / {{ limits.publicLists }}
                         </template>
                     </v-chip>
@@ -160,7 +160,7 @@
                         class="ml-4"
                     >
                         {{ userLists.listCount.private }}
-                        <template v-if="limits.privateLists">
+                        <template v-if="limits.privateLists && limits.privateLists > 0">
                             / {{ limits.privateLists }}
                         </template>
                     </v-chip>

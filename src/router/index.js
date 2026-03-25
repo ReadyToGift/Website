@@ -16,10 +16,6 @@ if (!import.meta.env.SSR) {
                 component: () => import("@/pages/list/_views/WishList.vue")
             },
             {
-                path: "/dash/about",
-                component: () => import("@/pages/dash/_views/AboutPage.vue")
-            },
-            {
                 path: "/dash/login",
                 component: () => import("@/pages/dash/_views/LoginPage.vue")
             },
@@ -41,6 +37,10 @@ if (!import.meta.env.SSR) {
                 path: "/dash/settings/billing",
                 component: () => import("@/pages/dash/_views/SettingsPage.vue"),
                 meta: { requiresAuth: true }
+            },
+            {
+                path: "/dash/about",
+                component: () => import("@/pages/dash/_views/SettingsPage.vue")
             },
             {
                 path: "/dash/recovery/start",
