@@ -41,6 +41,40 @@
                         :text="alert.text"
                     />
                     <v-alert
+                        v-if="editedList.private && privateListLimitReached"
+                        type="warning"
+                        border="start"
+                        class="mt-4 min-w-0 overflow-visible flex-shrink-1"
+                        elevation="2"
+                        variant="tonal"
+                    >
+                        You have reached your private list allowance.<br/><br/>
+                        Please make some of your other lists public, or delete some of your lists.<br />
+                        <template v-if="!prefs.pro">
+                            Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
+                            <br/>
+                            <v-btn
+                                to="/dash/settings/billing"
+                                color="warning"
+                                class="mt-4"
+                            >
+                                Upgrade
+                            </v-btn>
+                        </template>
+                        <template v-else>
+                            Alternatively, contact support if you'd like this limit raised.
+                            <br/>
+                            <v-btn
+                                to="/contact"
+                                color="warning"
+                                class="mt-4"
+                            >
+                                Contact
+                            </v-btn>
+                        </template>
+                        
+                    </v-alert>
+                    <v-alert
                         v-if="!editedList.private && publicListLimitReached"
                         type="warning"
                         border="start"
@@ -49,15 +83,29 @@
                         variant="tonal"
                     >
                         You have reached your public list allowance.<br/><br/>
-                        Please upgrade to create unlimited public lists, or make some of your existing lists private.
-                        <br/>
-                        <v-btn
-                            to="/dash/settings/billing"
-                            color="warning"
-                            class="mt-4"
-                        >
-                            Upgrade
-                        </v-btn>
+                        Please make some of your other lists private, or delete some of your lists.<br />
+                        <template v-if="!prefs.pro">
+                            Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
+                            <br/>
+                            <v-btn
+                                to="/dash/settings/billing"
+                                color="warning"
+                                class="mt-4"
+                            >
+                                Upgrade
+                            </v-btn>
+                        </template>
+                        <template v-else>
+                            Alternatively, contact support if you'd like this limit raised.
+                            <br/>
+                            <v-btn
+                                to="/contact"
+                                color="warning"
+                                class="mt-4"
+                            >
+                                Contact
+                            </v-btn>
+                        </template>
                     </v-alert>
                 </v-card-text>
                 <v-card-actions>
@@ -71,7 +119,7 @@
                         @click="updateList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="!editedList.private && publicListLimitReached"
+                        :disabled="(!editedList.private && publicListLimitReached) || (editedList.private && privateListLimitReached)"
                     />
                 </v-card-actions>
             </v-card>
@@ -80,14 +128,15 @@
 </template>
 
 <script>
+import { allLimits as allLimitsStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
+import { $prefs } from "@/stores/prefs";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { publicListLimitReached } from "@/stores/billing";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
@@ -126,7 +175,10 @@ export default {
             mdiPencil,
             previousValues: {},
             userLists: useStore(userListsStore),
-            publicListLimitReached
+            publicListLimitReached,
+            privateListLimitReached,
+            allLimits: useStore(allLimitsStore),
+            prefs: useStore($prefs)
         };
     },
     watch: {

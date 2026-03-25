@@ -35,7 +35,7 @@
         label="Currency"
         v-model="list.currency"
         :items="
-            currencies.get().map((currency) => ({
+            currencies.map((currency) => ({
                 title: currency.code,
                 value: currency.code
             }))

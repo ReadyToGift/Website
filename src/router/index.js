@@ -56,7 +56,7 @@ if (!import.meta.env.SSR) {
             },
             {
                 path: "/:pathMatch(.*)",
-                component: () => import("@/pages/dash/_views/NotFound.vue")
+                component: () => import("@/pages/404/_NotFound.vue")
             },
             {
                 path: "/dash/lists",

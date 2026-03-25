@@ -6,6 +6,8 @@ import { userLists } from "./userLists";
 import {
     ENABLE_BILLING,
     FREE_TIER_ENABLE_AUTOFILL,
+    FREE_TIER_ITEMS_PER_LIST,
+    FREE_TIER_PRIVATE_LIST_LIMIT,
     FREE_TIER_PUBLIC_LIST_LIMIT
 } from "astro:env/client";
 
@@ -19,17 +21,9 @@ export const billing = map({
 
 export const limits = map({
     publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
-    privateLists: -1,
-    itemsPerList: -1,
+    privateLists: FREE_TIER_PRIVATE_LIST_LIMIT,
+    itemsPerList: FREE_TIER_ITEMS_PER_LIST,
     autofill: FREE_TIER_ENABLE_AUTOFILL
-});
-
-export const freeLimits = map({
-    ...limits.get()
-});
-
-export const proLimits = map({
-    ...limits.get()
 });
 
 export const allLimits = map({
@@ -134,6 +128,14 @@ export const publicListLimitReached = computed([limits, userLists], (limitsState
     }
     return limitsState.publicLists <= (userListsState.listCount?.public || 0);
 });
+
+export const privateListLimitReached = computed([limits, userLists], (limitsState, userListsState) => {
+    if (limitsState.privateLists === -1) {
+        return false;
+    }
+    return limitsState.privateLists <= (userListsState.listCount?.private || 0);
+});
+
 
 export default {
     billing,

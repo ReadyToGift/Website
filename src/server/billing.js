@@ -21,20 +21,21 @@ export const getLimits = (benefitNames) => {
         if (desc.includes("autofill")) {
             limits.autofill = true;
         }
-    
+
+        // ensure that pro is never worse off than free
         const publicListMatch = desc.match(/(\d+)\s*public lists/);
         if (publicListMatch) {
-            limits.publicLists = publicListMatch[1] === "unlimited" ? -1 : parseInt(publicListMatch[1], 10);
+            limits.publicLists = publicListMatch[1] === "unlimited" ? -1 : Math.max(limits.publicLists, parseInt(publicListMatch[1], 10));
         }
     
         const privateListMatch = desc.match(/(\d+)\s*private lists/);
         if (privateListMatch) {
-            limits.privateLists = privateListMatch[1] === "unlimited" ? -1 : parseInt(privateListMatch[1], 10);
+            limits.privateLists = privateListMatch[1] === "unlimited" ? -1 : Math.max(limits.privateLists, parseInt(privateListMatch[1], 10));
         }
     
         const itemsPerListMatch = desc.match(/(\d+)\s*items per list/);
         if (itemsPerListMatch) {
-            limits.itemsPerList = itemsPerListMatch[1] === "unlimited" ? -1 : parseInt(itemsPerListMatch[1], 10);
+            limits.itemsPerList = itemsPerListMatch[1] === "unlimited" ? -1 : Math.max(limits.itemsPerList, parseInt(itemsPerListMatch[1], 10));
         }
     });
 
