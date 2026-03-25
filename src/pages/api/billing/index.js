@@ -1,22 +1,19 @@
 import { getCache, setCache } from "@/server/cache";
-import { createSessionClient } from "@/server/appwrite";
+import { createAdminClient, createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
-import { Polar } from "@polar-sh/sdk";
-import { POLAR_ACCESS_TOKEN } from "astro:env/server";
 
-const polar = new Polar({
-    accessToken: POLAR_ACCESS_TOKEN
-});
+import { getCustomerSession, getCustomerSubscriptions, getLimitsForCustomer } from "@/server/billing";
 
 export const GET = async (context) => {
     try {
         let account;
+        let sessionClient;
         try {
             const jwt = extractJwt(context);
             account = await getCache(`jwt:${jwt}`);
 
             if (!account ) {
-                let sessionClient = createSessionClient(context);
+                sessionClient = createSessionClient(context);
                 account = await sessionClient.account.get();
                 if (account) {
                     await setCache(`jwt:${jwt}`, account, 5 * 60 * 1000);
@@ -27,10 +24,10 @@ export const GET = async (context) => {
             
             return new Response(
                 JSON.stringify({
-                    message: "Unauthenticated"
+                    message: "Internal server error when getting account"
                 }),
                 {
-                    status: 401,
+                    status: 500,
                     headers: {
                         "Content-Type": "application/json"
                     }
@@ -38,67 +35,32 @@ export const GET = async (context) => {
             );
         }
 
-        const getCustomerSession = async () => {
-            let session = await getCache(`polarCustomerSession:${account.$id}`);
-
-            if (!session) {
-                session = await polar.customerSessions.create({
-                    externalCustomerId: account.$id
-                }).catch((error) => {
-                    console.log(error);
-                    throw new Error("Error getting customer session", { cause: error });
-                });
-                await setCache(`polarCustomerSession:${account.$id}`, session, 55 * 60 * 1000);
-            }
-
-            return session;
-        };
-
-        const getCustomerSubscriptions = async () => {
-            let subscriptions = await getCache(`polarSubscriptions:${account.$id}`);
-
-            if (!subscriptions) {
-                subscriptions = await polar.subscriptions.list({
-                    externalCustomerId: account.$id
-                }).catch((error) => {
-                    console.log(error);
-                    throw new Error("Error getting subscriptions", { cause: error });
-                });
-
-                subscriptions = subscriptions.result.items;
-                    
-                await setCache(`polarSubscriptions:${account.$id}`, subscriptions, 5 * 60 * 1000);
-            }
-
-            return subscriptions;
-        };
-
         const [customerSession, subscriptions] = await Promise.all([
-            getCustomerSession(),
-            getCustomerSubscriptions()
+            getCustomerSession({ externalCustomerId: account.$id }),
+            getCustomerSubscriptions({ externalCustomerId: account.$id })
         ]);
 
-        let benefitGrants = await getCache(`polarBenefitGrants:${account.$id}`);
+        const limits = await getLimitsForCustomer({ customerId: customerSession.customerId });
 
-        if (!benefitGrants) {
-            const benefitsResp = await polar.benefitGrants.list({
-                customerId: customerSession.customerId
-            }).catch((error) => {
-                console.log(error);
-                throw new Error("Error getting benefit grants", { cause: error });
-            });
-    
-            benefitGrants = benefitsResp.result.items.filter((benefit) => benefit.isGranted);
+        const hasPro = subscriptions.some(sub => sub.status === "active");
 
-            await setCache(`polarBenefitGrants:${account.$id}`, benefitGrants, 5 * 60 * 1000);
+        if (hasPro !== account.prefs.pro) {
+            try {
+                sessionClient.account.updatePrefs({
+                    ...account.prefs,
+                    pro: hasPro
+                });
+                console.log("Updated account prefs to match subscription status");
+            } catch (error) {
+                console.error("Error updating account prefs", error);
+            }
         }
-
 
         return new Response(
             JSON.stringify({
                 customerSession,
                 subscriptions,
-                benefitGrants
+                limits
             }),
             {
                 status: 200,

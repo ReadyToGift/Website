@@ -1,6 +1,5 @@
 <template>
     <v-card
-        class="mt-4"
         variant="tonal"
     >
         <v-card-title>
@@ -234,17 +233,6 @@ main {
         width: var(--section-width);
         margin: 0 auto;
         padding: 2rem 0;
-    }
-
-    .v-list {
-        max-width: 100%;
-        width: max-content;
-    }
-
-    @media screen and (max-width: 768px) {
-        .v-list {
-            width: 100%;
-        }
     }
 }
 </style>

@@ -1,6 +1,5 @@
 <template>
     <v-card
-        class="mt-4"
         variant="tonal"
     >   
         <table class="pricing">
@@ -28,7 +27,7 @@
                         >
                             <template
                                 v-slot:prepend
-                                v-if="proPriceLoading"
+                                v-if="proLoading"
                             >
                                 <v-progress-circular
                                     indeterminate
@@ -38,7 +37,7 @@
                                 />
                             </template>
                             <template
-                                v-if="proPriceLoading"
+                                v-if="proLoading"
                             >
                                 Loading
                             </template>
@@ -53,10 +52,29 @@
                         Public lists
                     </td>
                     <td>
-                        2
+                        <p class="value">
+                            2
+                        </p>
+                        <p class="name">
+                            Public Lists
+                        </p>
                     </td>
                     <td>
-                        20
+                        <p class="value">
+                            <template v-if="proPublicListLimit === null">
+                                <v-progress-circular
+                                    indeterminate
+                                    size="20"
+                                    width="2"
+                                />
+                            </template>
+                            <template v-else>
+                                {{ proPublicListLimit }}
+                            </template>
+                        </p>
+                        <p class="name">
+                            Public Lists
+                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -64,10 +82,29 @@
                         Private lists
                     </td>
                     <td>
-                        10
+                        <p class="value">
+                            10
+                        </p>
+                        <p class="name">
+                            Private Lists
+                        </p>
                     </td>
                     <td>
-                        50
+                        <p class="value">
+                            <template v-if="proPrivateListLimit === null">
+                                <v-progress-circular
+                                    indeterminate
+                                    size="20"
+                                    width="2"
+                                />
+                            </template>
+                            <template v-else>
+                                {{ proPrivateListLimit }}
+                            </template>
+                        </p>
+                        <p class="name">
+                            Private Lists
+                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -75,10 +112,29 @@
                         Items per list
                     </td>
                     <td>
-                        50
+                        <p class="value">
+                            50
+                        </p>
+                        <p class="name">
+                            Items per list
+                        </p>
                     </td>
                     <td>
-                        150
+                        <p class="value">
+                            <template v-if="proItemsPerListLimit === null">
+                                <v-progress-circular
+                                    indeterminate
+                                    size="20"
+                                    width="2"
+                                />
+                            </template>
+                            <template v-else>
+                                {{ proItemsPerListLimit }}
+                            </template>
+                        </p>
+                        <p class="name">
+                            Items per list
+                        </p>
                     </td>
                 </tr>
                 <tr>
@@ -86,13 +142,23 @@
                         Autofill
                     </td>
                     <td>
-                        ❌
+                        <p class="value">
+                            ❌
+                        </p>
+                        <p class="name">
+                            Autofill
+                        </p>
                     </td>
                     <td>
-                        ✅
+                        <p class="value">
+                            ✅
+                        </p>
+                        <p class="name">
+                            Autofill
+                        </p>
                     </td>
                 </tr>
-                <tr>
+                <tr class="buttons">
                     <td></td>
                     <td>
                         <v-btn
@@ -108,7 +174,7 @@
                     </td>
                     <td>
                         <v-btn
-                            :loading="proCheckoutLoading || proPriceLoading"
+                            :loading="proCheckoutLoading || proLoading"
                             @click="proCheckout"
                             v-if="!polar.pro"
                         >
@@ -128,7 +194,9 @@
                         class="disclaimer"
                         colspan="3"
                     >
-                        Please contact support if you had any questions, or if you require higher limits than those listed here.
+                        <p>
+                            Please contact support if you have any questions, or if you require higher limits than those listed here.
+                        </p>
                     </td>
                 </tr>
             </tbody>
@@ -180,7 +248,7 @@
 <script setup>
 import { onMounted, shallowRef } from "vue";
 
-import { getProCheckout, getProPricing, polar as polarStore } from "@/stores/polar";
+import { getLimits, getProCheckout, getProProduct, polar as polarStore } from "@/stores/polar";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
@@ -190,8 +258,12 @@ import { VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProgressCirc
 const polar = useStore(polarStore);
 
 const proCheckoutLoading = shallowRef(false);
-const proPriceLoading = shallowRef(false);
+
+const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
+const proPublicListLimit = shallowRef(null);
+const proPrivateListLimit = shallowRef(null);
+const proItemsPerListLimit = shallowRef(null);
 
 const formatPrice = (price, currency) => {
     const formattedPrice = new Intl.NumberFormat("en-US", {
@@ -204,18 +276,27 @@ const formatPrice = (price, currency) => {
 };
 
 const loadProPrice = async () => {
-    proPriceLoading.value = true;
+    proLoading.value = true;
     try {
-        const price = await getProPricing();
+        const proProduct = await getProProduct();
+
+        const price = proProduct.price;
 
         const formattedPrice = formatPrice(price.priceAmount, price.priceCurrency);
 
-        proPriceLoading.value = false;
+        proLoading.value = false;
         proPrice.value = formattedPrice + "/" + price.recurringInterval;
+
+        const limits = getLimits(proProduct.benefits);
+
+        proPublicListLimit.value = limits.publicLists;
+        proPrivateListLimit.value = limits.privateLists;
+        proItemsPerListLimit.value = limits.itemsPerList;
+
         return proPrice.value;
     } catch (error) {
         console.error("Failed to load Pro pricing:", error);
-        proPriceLoading.value = false;
+        proLoading.value = false;
         return "Error fetching pricing";
     }
 };
@@ -286,10 +367,8 @@ main {
                             font-weight: bold;
                             width: max-content;
                         }
-                        button {
-
-                        }
                         &.disclaimer {
+                            width: 100%;
                             text-align: left;
                             font-size: 0.9rem;
                             font-style: italic;
@@ -301,10 +380,6 @@ main {
         }
     }
 
-    .v-list {
-        max-width: 100%;
-        width: max-content;
-    }
     .subscription-details {
         .originalPrice {
             text-decoration: line-through;
@@ -314,8 +389,49 @@ main {
     }
 
     @media screen and (max-width: 768px) {
-        .v-list {
-            width: 100%;
+        .page-content .pricing {
+            display: flex;
+            flex-direction: column;
+            padding-top: 1rem;
+            thead {
+                tr {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    width: 100%;
+                    th:first-of-type {
+                        display: none;
+                    }
+                }
+            }
+            tbody { 
+                tr {
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    align-items: center;
+                    place-items: center;
+                    margin-top: 1rem;
+                    td {
+                        &:first-of-type {
+                            display: none;
+                        }
+                        .value {
+                            font-size: 1.5rem;
+                        }
+                        .name {
+                            font-weight: bold;
+                        }
+                    }
+                    &.buttons {
+                        td {
+                            grid-column: 1/3;
+                            padding-top: 1rem;
+                            &:not(:last-of-type) {
+                                display: none;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

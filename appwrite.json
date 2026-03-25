@@ -41,7 +41,9 @@
     "functions": [
         {
             "$id": "get-autofill-data",
-            "execute": ["users/verified"],
+            "execute": [
+                "users/verified"
+            ],
             "name": "get-autofill-data",
             "enabled": true,
             "logging": true,
@@ -69,7 +71,9 @@
                 "attributes.read",
                 "documents.read"
             ],
-            "events": ["databases.wishlist.tables.6679a593003489f76668.rows.*"],
+            "events": [
+                "databases.wishlist.tables.6679a593003489f76668.rows.*"
+            ],
             "schedule": "",
             "timeout": 900,
             "entrypoint": "src/main.js",
@@ -84,7 +88,10 @@
             "enabled": true,
             "logging": true,
             "runtime": "node-20.0",
-            "scopes": ["users.read", "avatars.read"],
+            "scopes": [
+                "users.read",
+                "avatars.read"
+            ],
             "events": [
                 "users.*.update.name",
                 "users.*.update.email",
@@ -97,38 +104,6 @@
             "commands": "npm install",
             "specification": "s-1vcpu-512mb",
             "path": "functions/polar-update-customers"
-        },
-        {
-            "$id": "690fc8f4002cff45eddc",
-            "execute": ["users"],
-            "name": "get-polar-customer-session",
-            "enabled": true,
-            "logging": true,
-            "runtime": "node-20.0",
-            "scopes": ["users.read"],
-            "events": [],
-            "schedule": "",
-            "timeout": 60,
-            "entrypoint": "src/get-customer-session.js",
-            "commands": "npm install",
-            "specification": "s-1vcpu-512mb",
-            "path": "functions/polar"
-        },
-        {
-            "$id": "690fc8f4002cff45eddd",
-            "execute": ["users"],
-            "name": "get-polar-checkout",
-            "enabled": true,
-            "logging": true,
-            "runtime": "node-20.0",
-            "scopes": ["users.read"],
-            "events": [],
-            "schedule": "",
-            "timeout": 60,
-            "entrypoint": "src/main.js",
-            "commands": "npm install",
-            "specification": "s-1vcpu-512mb",
-            "path": "functions/get-polar-checkout"
         }
     ],
     "tablesDB": [
@@ -141,7 +116,10 @@
     "tables": [
         {
             "$id": "6679a593003489f76668",
-            "$permissions": ["read(\"any\")", "create(\"users/verified\")"],
+            "$permissions": [
+                "read(\"any\")",
+                "create(\"users/verified\")"
+            ],
             "databaseId": "wishlist",
             "name": "lists",
             "enabled": true,
@@ -235,14 +213,21 @@
                     "key": "shortUrl",
                     "type": "unique",
                     "status": "available",
-                    "columns": ["shortUrl"],
-                    "orders": ["ASC"]
+                    "columns": [
+                        "shortUrl"
+                    ],
+                    "orders": [
+                        "ASC"
+                    ]
                 }
             ]
         },
         {
             "$id": "6679a9ff000f53308164",
-            "$permissions": ["create(\"users/verified\")", "read(\"any\")"],
+            "$permissions": [
+                "create(\"users/verified\")",
+                "read(\"any\")"
+            ],
             "databaseId": "wishlist",
             "name": "items",
             "enabled": true,
@@ -419,7 +404,9 @@
         },
         {
             "$id": "autofills",
-            "$permissions": ["create(\"users/verified\")"],
+            "$permissions": [
+                "create(\"users/verified\")"
+            ],
             "databaseId": "wishlist",
             "name": "autofills",
             "enabled": true,
@@ -448,7 +435,11 @@
                     "type": "string",
                     "required": false,
                     "array": false,
-                    "elements": ["processing", "failed", "completed"],
+                    "elements": [
+                        "processing",
+                        "failed",
+                        "completed"
+                    ],
                     "format": "enum",
                     "default": "processing"
                 },
@@ -494,12 +485,20 @@
     "buckets": [
         {
             "$id": "66866e74001d3e2f2629",
-            "$permissions": ["create(\"users/verified\")", "read(\"any\")"],
+            "$permissions": [
+                "create(\"users/verified\")",
+                "read(\"any\")"
+            ],
             "fileSecurity": true,
             "name": "images",
             "enabled": true,
             "maximumFileSize": 20000000,
-            "allowedFileExtensions": ["jpg", "png", "jpeg", "webp"],
+            "allowedFileExtensions": [
+                "jpg",
+                "png",
+                "jpeg",
+                "webp"
+            ],
             "compression": "gzip",
             "encryption": true,
             "antivirus": true

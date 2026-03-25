@@ -1,7 +1,6 @@
 import { computed, map } from "nanostores";
 import { create as createDialog } from "./dialogs";
 import { getJwt } from "./auth";
-import { Polar } from "@polar-sh/sdk";
 import { userLists } from "./userLists";
 
 import {
@@ -10,13 +9,13 @@ import {
     FREE_TIER_PUBLIC_LIST_LIMIT
 } from "astro:env/client";
 
-const polarClient = new Polar();
-
 export const polar = map({
     sessionLoading: false,
     subscriptions: [],
     session: null,
     publicListLimit: FREE_TIER_PUBLIC_LIST_LIMIT,
+    privateListLimit: -1,
+    itemsPerListLimit: -1,
     enableAutofill: FREE_TIER_ENABLE_AUTOFILL,
     pro: null,
     inactiveSubscription: null
@@ -42,29 +41,22 @@ export const init = async () => {
         const {
             customerSession,
             subscriptions,
-            benefitGrants
+            limits
         } = await polarResp.json();
     
         polar.setKey("session", customerSession);
         polar.setKey("subscriptions", subscriptions);
-    
-        const benefitNames = benefitGrants.map((b) => b.benefit.description);
-    
-        if (benefitNames.includes("Autofill")) {
-            polar.setKey("enableAutofill", true);
-        }
-    
-        if (benefitNames.includes("Unlimited Public Lists")) {
-            polar.setKey("publicListLimit", -1);
-        }
+
+        polar.setKey("publicListLimit", limits.publicLists);
+        polar.setKey("privateListLimit", limits.privateLists);
+        polar.setKey("itemsPerListLimit", limits.itemsPerList);
+        polar.setKey("enableAutofill", limits.autofill);
 
         const activeSubscription = subscriptions.find((sub) => sub.status === "active");
         polar.setKey("pro", activeSubscription);
 
         const inactiveSubscription = subscriptions.find((sub) => sub.status === "canceled");
         polar.setKey("inactiveSubscription", inactiveSubscription);
-
-        // TODO: Show old subscriptions
     } catch {
         createDialog({
             title: "Error loading billing information",
@@ -98,37 +90,15 @@ export const getProCheckout = async () => {
 
 };
 
-export const getProPricing = async () => {
+export const getProProduct = async () => {
     const response = await fetch("/api/billing/pro");
     const data = await response.json();
 
     if (data.success) {
-        return data.price;
+        return data;
     } else {
         throw new Error(data.error || "Failed to fetch Pro pricing");
     }
-};
-
-export const getSubscriptions = async () => {
-    const state = polar.get();
-    if (!state.session) {
-        throw new Error("Polar session not initialized");
-    }
-
-    const subscriptions = await polarClient.customerPortal.subscriptions.list(
-        {
-            customerSession: state.session.token
-        },
-        {}
-    );
-
-    if (subscriptions.result.pagination.totalCount === 0) {
-        polar.setKey("subscriptions", []);
-        polar.setKey("sessionLoading", false);
-        return;
-    }
-
-    polar.setKey("subscriptions", subscriptions.result.items);
 };
 
 export const publicListLimitReached = computed([polar, userLists], (polarState, userListsState) => {
@@ -142,7 +112,6 @@ export default {
     polar,
     init,
     getProCheckout,
-    getProPricing,
-    getSubscriptions,
+    getProProduct,
     publicListLimitReached
 };

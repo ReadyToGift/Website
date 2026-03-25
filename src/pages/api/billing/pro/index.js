@@ -10,17 +10,17 @@ const polar = new Polar({
 
 export const GET = async () => {
     try {
-        let prices = await getCache("proPrices");
+        let pro = await getCache("pro");
 
-        if (!prices) {
-            const result = await polar.products.get({
+        if (!pro) {
+            pro = await polar.products.get({
                 id: POLAR_PRO_PRODUCT_ID
             });
-
-            prices = result.prices.filter((price) => !price.isArchived);
-
-            await setCache("proPrices", prices, 60 * 60 * 1000); // Cache for 1 hour
+            
+            await setCache("pro", pro, 60 * 60 * 1000); // Cache for 1 hour
         }
+        
+        const prices = pro.prices.filter((price) => !price.isArchived);
 
         if (!prices || prices.length === 0) {
             return new Response(
@@ -39,7 +39,8 @@ export const GET = async () => {
         return new Response(
             JSON.stringify({
                 success: true,
-                price: prices[0]
+                price: prices[0],
+                benefits: pro.benefits.map((b) => b.description)
             }),
             {
                 status: 200,
