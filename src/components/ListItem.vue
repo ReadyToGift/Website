@@ -53,6 +53,7 @@
                     :item="item"
                     :list="list"
                     v-if="wishlistOwner && !item.communityList"
+                    @itemLimitReached="$emit('itemLimitReached')"
                     @removeItem="$emit('removeItem', $event)"
                 />
                 <DeleteItem

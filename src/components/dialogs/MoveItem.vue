@@ -104,6 +104,8 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader 
 import { databases } from "@/appwrite";
 import ListCard from "../ListCard.vue";
 
+import { allLimits as allLimitsStore, limits as limitsStore } from "@/stores/billing";
+import { create as createDialog } from "@/stores/dialogs";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
@@ -145,7 +147,9 @@ export default {
             mdiFileDocumentArrowRight,
             selectedList: null,
             success: false,
-            user: useStore(userStore)
+            user: useStore(userStore),
+            limits: useStore(limitsStore),
+            allLimits: useStore(allLimitsStore)
         };
     },
     watch: {
@@ -277,6 +281,29 @@ export default {
             this.dialogOpen = false;
         },
         selectList(list) {
+            if (list.itemCount + 1 >= this.limits.itemsPerList) {
+                this.selectedList = null;
+                createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "OK"
+                        },
+                        {
+                            to: "/dash/settings/billing",
+                            color: "secondary",
+                            closeAfterAction: true,
+                            text: "Upgrade"
+                        }
+                    ],
+                    text: `This list has reached its limit of ${this.limits.itemsPerList}.`,
+                    title: "You cannot add any more items into this list"
+                });
+                return;
+            } else {
+                this.alert = false;
+            }
             if (this.selectedList && this.selectedList.$id === list.$id) {
                 this.selectedList = null;
                 return;

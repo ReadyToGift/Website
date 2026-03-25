@@ -211,6 +211,12 @@ h6,
     font-family: $title-font-family !important;
 }
 
+.v-card-title {
+    word-break: break-word;
+    white-space: pre-wrap;
+    word-wrap: normal;
+}
+
 .user-item-markdown {
     color-scheme: dark;
     -ms-text-size-adjust: 100%;

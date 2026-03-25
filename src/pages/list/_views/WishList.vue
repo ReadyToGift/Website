@@ -89,6 +89,7 @@
                             :list="list"
                             :wishlistOwner="wishlistOwner"
                             :currency="list.currency"
+                            @itemLimitReached="itemLimitReachedDialog"
                             @removeItem="removeItem(item.$id)"
                             @editItem="editItem($event)"
                             @fulfillItem="fulfillItem($event)"
