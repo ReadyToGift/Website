@@ -147,8 +147,8 @@
                     </td>
                     <td>
                         <v-btn
-                            :loading="proCheckoutLoading || proLoading"
-                            @click="proCheckout"
+                            :loading="proCheckoutLoading"
+                            :href="proCheckoutURL || undefined"
                             v-if="!prefs.pro"
                         >
                             Upgrade to Pro
@@ -267,6 +267,7 @@ const allLimits = useStore(allLimitsStore);
 const prefs = useStore($prefs);
 
 const proCheckoutLoading = shallowRef(false);
+const proCheckoutURL = shallowRef("");
 
 const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
@@ -311,17 +312,11 @@ const formatDate = (timestamp) => {
     });
 };
 
-onMounted(async () => {
-    loadProPrice();
-    const billingDetailsResp = await getBillingDetails();
-    if (billingDetailsResp === false) billingDetailsFailure.value = true;
-});
-
-const proCheckout = async () => {
+const getProCheckoutURL = async () => {
     proCheckoutLoading.value = true;
     try {
-        const checkoutURL = await getProCheckout();
-        window.location.href = checkoutURL;
+        proCheckoutURL.value = await getProCheckout();
+        proCheckoutLoading.value = false;
     } catch (error) {
         proCheckoutLoading.value = false;
         console.error(error);
@@ -339,6 +334,14 @@ const proCheckout = async () => {
         });
     }
 };
+
+onMounted(async () => {
+    loadProPrice();
+    getProCheckoutURL();
+    const billingDetailsResp = await getBillingDetails();
+    if (billingDetailsResp === false) billingDetailsFailure.value = true;
+});
+
 </script>
 
 <style lang="scss" scoped>
