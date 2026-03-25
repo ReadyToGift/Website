@@ -1,5 +1,5 @@
 import { getCache, setCache } from "@/server/cache";
-import { createAdminClient, createSessionClient } from "@/server/appwrite";
+import { createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
 
 import { getCustomerSession, getCustomerSubscriptions, getLimitsForCustomer } from "@/server/billing";

@@ -164,7 +164,7 @@
                         <v-btn
                             disabled
                             variant="outlined"
-                            v-if="!polar.pro"
+                            v-if="!billing.pro"
                         >
                             Already on free
                         </v-btn>
@@ -176,7 +176,7 @@
                         <v-btn
                             :loading="proCheckoutLoading || proLoading"
                             @click="proCheckout"
-                            v-if="!polar.pro"
+                            v-if="!billing.pro"
                         >
                             Upgrade to Pro
                         </v-btn>
@@ -205,38 +205,38 @@
     <v-card
         class="mt-4 subscription-details"
         variant="tonal"
-        v-if="polar.pro || polar.inactiveSubscription"
+        v-if="billing.pro || billing.inactiveSubscription"
     > 
         <v-card-title>
-            Manage {{ polar.pro ? polar.pro.product.name : polar.inactiveSubscription.product.name }}
+            Manage {{ billing.pro ? billing.pro.product.name : billing.inactiveSubscription.product.name }}
         </v-card-title>
         <v-card-subtitle>
-            <template v-if="polar.pro && polar.pro.status === 'active'">
-                <template v-if="polar.pro.cancelAtPeriodEnd">
-                    Cancels on {{ formatDate(polar.pro.currentPeriodEnd) }}
+            <template v-if="billing.pro && billing.pro.status === 'active'">
+                <template v-if="billing.pro.cancelAtPeriodEnd">
+                    Cancels on {{ formatDate(billing.pro.currentPeriodEnd) }}
                 </template>
                 <template v-else>
-                    Renews on {{ formatDate(polar.pro.currentPeriodEnd) }} for
+                    Renews on {{ formatDate(billing.pro.currentPeriodEnd) }} for
                     <v-chip
                         rounded="pill"
                         size="small"
-                    >{{ formatPrice(polar.pro.amount, polar.pro.currency) }}/{{ polar.pro.recurringInterval }}
+                    >{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurringInterval }}
                         <span
                             class="originalPrice"
-                            v-if="polar.pro.product.prices && polar.pro.product.prices[0].priceAmount > polar.pro.amount"
+                            v-if="billing.pro.product.prices && billing.pro.product.prices[0].priceAmount > billing.pro.amount"
                         >
-                            {{ formatPrice(polar.pro.product.prices[0].priceAmount, polar.pro.product.prices[0].priceCurrency) }}/{{ polar.pro.product.prices[0].recurringInterval }}
+                            {{ formatPrice(billing.pro.product.prices[0].priceAmount, billing.pro.product.prices[0].priceCurrency) }}/{{ billing.pro.product.prices[0].recurringInterval }}
                         </span>
                     </v-chip>
                 </template>
             </template>
-            <template v-else-if="polar.inactiveSubscription">
-                Ended on {{ formatDate(polar.inactiveSubscription.endedAt) }}.
+            <template v-else-if="billing.inactiveSubscription">
+                Ended on {{ formatDate(billing.inactiveSubscription.endedAt) }}.
             </template>
         </v-card-subtitle>
         <v-card-text>
             <v-btn
-                :href="polar.session.customerPortalUrl"
+                :href="billing.session.customerPortalUrl"
                 target="_blank"
             >
                 Open billing portal
@@ -248,14 +248,14 @@
 <script setup>
 import { onMounted, shallowRef } from "vue";
 
-import { getLimits, getProCheckout, getProProduct, polar as polarStore } from "@/stores/polar";
+import { billing as billingStore, getLimits, getProCheckout, getProProduct } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
 import { VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProgressCircular } from "vuetify/components";
 
 
-const polar = useStore(polarStore);
+const billing = useStore(billingStore);
 
 const proCheckoutLoading = shallowRef(false);
 

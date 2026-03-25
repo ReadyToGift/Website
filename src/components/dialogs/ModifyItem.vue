@@ -76,16 +76,16 @@
                                     text="Auto-fill"
                                     :prepend-icon="mdiRobot"
                                     variant="tonal"
-                                    :disabled="!(modifiedItem.url && polar.enableAutofill)"
+                                    :disabled="!(modifiedItem.url && limits.autofill)"
                                     @click="autofill"
                                 />
                             </span>
                         </template>
                         <span>
-                            <template v-if="polar.enableAutofill && !modifiedItem.url">
+                            <template v-if="limits.autofill && !modifiedItem.url">
                                 Please enter a URL to use the auto-fill feature.
                             </template>
-                            <template v-else-if="!polar.enableAutofill">
+                            <template v-else-if="!limits.autofill">
                                 Auto-fill feature is not available on the free plan. Please upgrade to use this feature.
                             </template>
                         </span>
@@ -129,9 +129,9 @@ import mime from "mime-types";
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
 
 import { create as createDialog } from "@/stores/dialogs";
+import { limits as limitsStore } from "@/stores/billing";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-import { polar as polarStore } from "@/stores/polar";
 
 export default {
     title: "ListDialog",
@@ -196,7 +196,7 @@ export default {
                 title: "",
                 url: ""
             },
-            polar: useStore(polarStore),
+            limits: useStore(limitsStore),
             previousValues: {},
             uploadingFile: false,
             user: useStore(userStore)

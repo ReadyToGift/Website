@@ -19,7 +19,7 @@
 
 <script setup>
 import PricingCards from "@/components/PricingCards.vue";
-import { getProCheckout } from "@/stores/polar";
+import { getProCheckout } from "@/stores/billing";
 
 const handleUpgradeClick = async () => {
     try {

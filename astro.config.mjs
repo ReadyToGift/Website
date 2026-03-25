@@ -62,7 +62,7 @@ export default defineConfig({
                 access: "public",
                 default: true
             }),
-            ENABLE_POLAR: envField.boolean({ context: "client", access: "public", default: false }),
+            ENABLE_BILLING: envField.boolean({ context: "client", access: "public", default: false }),
 
             POLAR_ACCESS_TOKEN: envField.string({
                 context: "server",

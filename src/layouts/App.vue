@@ -50,15 +50,15 @@ import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
+import { init as initBilling } from "@/stores/billing";
 import { useStore } from "@nanostores/vue";
-import { init as initPolar, polar as polarStore } from "@/stores/polar";
 
 import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
 import { useRouter } from "vue-router";
 
-import { init as initAuth, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
+import { user as userStore } from "@/stores/auth";
 
 const loading = ref(true);
 
@@ -119,7 +119,7 @@ onMounted(async () => {
         document.head.appendChild(script);
     }
 
-    await initPolar();
+    await initBilling();
 
     loading.value = false;
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes

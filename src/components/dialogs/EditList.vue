@@ -75,7 +75,6 @@
                     />
                 </v-card-actions>
             </v-card>
-            {{ publicListLimitReached }}
         </template>
     </v-dialog>
 </template>
@@ -84,11 +83,11 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
-import { polar as polarStore, publicListLimitReached } from "@/stores/polar";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
+import { publicListLimitReached } from "@/stores/billing";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
@@ -125,7 +124,6 @@ export default {
             loading: false,
             mdiAlert,
             mdiPencil,
-            polar: useStore(polarStore),
             previousValues: {},
             userLists: useStore(userListsStore),
             publicListLimitReached

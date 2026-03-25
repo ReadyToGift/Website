@@ -45,7 +45,7 @@
                         :text="alert.text"
                     />
                     <v-alert
-                        v-if="!newList.private && polar.publicListLimitReached"
+                        v-if="!newList.private && publicListLimitReached"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -75,7 +75,7 @@
                         @click="createList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="!newList.private && polar.publicListLimitReached"
+                        :disabled="!newList.private && publicListLimitReached"
                     />
                 </v-card-actions>
             </v-card>
@@ -91,10 +91,10 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/c
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
+import { publicListLimitReached } from "@/stores/billing";
+import { userLists as userListsStore } from "@/stores/userLists";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-import { userLists as userListsStore } from "@/stores/userLists";
-import { polar as polarStore } from "@/stores/polar";
 
 const user = useStore(userStore);
 
@@ -143,7 +143,7 @@ export default {
                 shortUrl: null,
                 title: ""
             },
-            polar: useStore(polarStore),
+            publicListLimitReached,
             userLists: useStore(userListsStore)
         };
     },

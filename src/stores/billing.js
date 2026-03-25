@@ -4,28 +4,31 @@ import { getJwt } from "./auth";
 import { userLists } from "./userLists";
 
 import {
-    ENABLE_POLAR,
+    ENABLE_BILLING,
     FREE_TIER_ENABLE_AUTOFILL,
     FREE_TIER_PUBLIC_LIST_LIMIT
 } from "astro:env/client";
 
-export const polar = map({
+export const billing = map({
     sessionLoading: false,
     subscriptions: [],
     session: null,
-    publicListLimit: FREE_TIER_PUBLIC_LIST_LIMIT,
-    privateListLimit: -1,
-    itemsPerListLimit: -1,
-    enableAutofill: FREE_TIER_ENABLE_AUTOFILL,
     pro: null,
     inactiveSubscription: null
 });
 
-export const init = async () => {
-    polar.setKey("sessionLoading", true);
+export const limits = map({
+    publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
+    privateLists: -1,
+    itemsPerList: -1,
+    autofill: FREE_TIER_ENABLE_AUTOFILL
+});
 
-    if (!ENABLE_POLAR) {
-        polar.setKey("sessionLoading", false);
+export const init = async () => {
+    billing.setKey("sessionLoading", true);
+
+    if (!ENABLE_BILLING) {
+        billing.setKey("sessionLoading", false);
         return;
     }
 
@@ -33,7 +36,7 @@ export const init = async () => {
     if (!jwt) return console.error("Unable to get jwt for user.");
 
     try {
-        const polarResp = await fetch("/api/billing", {
+        const billingResp = await fetch("/api/billing", {
             headers: {
                 "Authorization": `Bearer ${jwt}`
             }
@@ -41,22 +44,22 @@ export const init = async () => {
         const {
             customerSession,
             subscriptions,
-            limits
-        } = await polarResp.json();
+            limits: newLimits
+        } = await billingResp.json();
     
-        polar.setKey("session", customerSession);
-        polar.setKey("subscriptions", subscriptions);
+        billing.setKey("session", customerSession);
+        billing.setKey("subscriptions", subscriptions);
 
-        polar.setKey("publicListLimit", limits.publicLists);
-        polar.setKey("privateListLimit", limits.privateLists);
-        polar.setKey("itemsPerListLimit", limits.itemsPerList);
-        polar.setKey("enableAutofill", limits.autofill);
+        limits.setKey("publicListLimit", newLimits.publicLists);
+        limits.setKey("privateListLimit", newLimits.privateLists);
+        limits.setKey("itemsPerListLimit", newLimits.itemsPerList);
+        limits.setKey("enableAutofill", newLimits.autofill);
 
         const activeSubscription = subscriptions.find((sub) => sub.status === "active");
-        polar.setKey("pro", activeSubscription);
+        billing.setKey("pro", activeSubscription);
 
         const inactiveSubscription = subscriptions.find((sub) => sub.status === "canceled");
-        polar.setKey("inactiveSubscription", inactiveSubscription);
+        billing.setKey("inactiveSubscription", inactiveSubscription);
     } catch {
         createDialog({
             title: "Error loading billing information",
@@ -71,7 +74,7 @@ export const init = async () => {
         });
     }
 
-    polar.setKey("sessionLoading", false);
+    billing.setKey("sessionLoading", false);
 };
 
 export const getProCheckout = async () => {
@@ -101,15 +104,16 @@ export const getProProduct = async () => {
     }
 };
 
-export const publicListLimitReached = computed([polar, userLists], (polarState, userListsState) => {
-    if (polarState.publicListLimit === -1) {
+export const publicListLimitReached = computed([limits, userLists], (limitsState, userListsState) => {
+    if (limitsState.publicLists === -1) {
         return false;
     }
-    return polarState.publicListLimit <= (userListsState.listCount?.public || 0);
+    return limitsState.publicLists <= (userListsState.listCount?.public || 0);
 });
 
 export default {
-    polar,
+    billing,
+    limits,
     init,
     getProCheckout,
     getProProduct,

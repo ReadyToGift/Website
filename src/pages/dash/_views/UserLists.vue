@@ -144,8 +144,8 @@
                         v-if="!loading"
                     >
                         {{ userLists.listCount.public }}
-                        <template v-if="polar.publicListLimit">
-                            / {{ polar.publicListLimit }}
+                        <template v-if="limits.publicLists">
+                            / {{ limits.publicLists }}
                         </template>
                     </v-chip>
                 </v-tab>
@@ -160,6 +160,9 @@
                         class="ml-4"
                     >
                         {{ userLists.listCount.private }}
+                        <template v-if="limits.privateLists">
+                            / {{ limits.privateLists }}
+                        </template>
                     </v-chip>
                 </v-tab>
                 <v-tab
@@ -284,15 +287,15 @@ import { useStore } from "@nanostores/vue";
 
 import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
 import CreateList from "@/components/dialogs/CreateList.vue";
+import { limits as limitsStore } from "@/stores/billing";
 import ListCard from "@/components/ListCard.vue";
-import { polar as polarStore } from "@/stores/polar";
 import PWAPrompt from "@/components/PWAPrompt.vue";
 import validation from "@/utils/validation";
 
 const router = useRouter();
 const prefs = useStore($prefs);
 const user = useStore(userStore);
-const polar = useStore(polarStore);
+const limits = useStore(limitsStore);
 const userLists = useStore(userListsStore);
 
 const props = defineProps({
