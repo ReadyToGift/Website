@@ -74,46 +74,60 @@
         <template
             v-slot:subtitle
         >
-            <div class="chips mt-4">
-                <v-chip
-                    v-if="!props.ownList && props.type !== 'selectable'"
-                    :prepend-avatar="userAvatar(list.authorName)"
-                    variant="tonal"
-                    color="primary"
-                    rounded
-                >
-                    {{ list.authorName }}
-                </v-chip>
-                <v-chip
-                    :prepend-icon="mdiFileDocumentMultiple"
-                    variant="tonal"
-                    rounded
-                    v-if="list.itemCount !== null"
-                >
-                    {{ list.itemCount }} items
-                </v-chip>
-                <v-chip
-                    :prepend-icon="mdiUpdate"
-                    variant="tonal"
-                    rounded
-                >
-                    {{ new Date(list.$updatedAt).toLocaleString() }}
-                </v-chip>
-                <v-chip
-                    :prepend-icon="mdiInvoiceList"
-                    variant="tonal"
-                    rounded
-                    v-if="prefs.showTotalPrice && list.items && list.items.length > 0"
-                >
-                    {{
-                        currencyFormatter(props.list.currency).format(
-                            list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
-                                (
-                                    !ownList || (ownList && spoilSurprises) ? communityItems.reduce((sum, item) => sum + (item.price || 0), 0) : 0
-                                )
-                        )
-                    }}
-                </v-chip>
+            <div class="chips-row mt-4">
+
+                <div class="chips">
+                    <v-chip
+                        v-if="!props.ownList && props.type !== 'selectable'"
+                        :prepend-avatar="userAvatar(list.authorName)"
+                        variant="tonal"
+                        color="primary"
+                        rounded
+                    >
+                        {{ list.authorName }}
+                    </v-chip>
+                    <v-chip
+                        :prepend-icon="mdiFileDocumentMultiple"
+                        variant="tonal"
+                        rounded
+                        class="list-limit-chip"
+                        v-if="list.itemCount !== null"
+                    >
+                        {{ ownList }}
+                        {{ list.itemCount }} {{ ownList && limits.itemsPerList > 0 ? "/" + limits.itemsPerList : '' }} items
+                        <div class="progress">
+                            <v-progress-linear
+                                :max="limits.itemsPerList"
+                                :model-value="50"
+                                :buffer-value="limits.itemsPerList"
+                                color="primary"
+                                v-if="ownList"
+                            />
+                        </div>
+                    </v-chip>
+                    <v-chip
+                        :prepend-icon="mdiUpdate"
+                        variant="tonal"
+                        rounded
+                    >
+                        {{ new Date(list.$updatedAt).toLocaleString() }}
+                    </v-chip>
+                    <v-chip
+                        :prepend-icon="mdiInvoiceList"
+                        variant="tonal"
+                        rounded
+                        v-if="prefs.showTotalPrice && list.items && list.items.length > 0"
+                    >
+                        {{
+                            currencyFormatter(props.list.currency).format(
+                                list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
+                                    (
+                                        !ownList || (ownList && spoilSurprises) ? communityItems.reduce((sum, item) => sum + (item.price || 0), 0) : 0
+                                    )
+                            )
+                        }}
+                    </v-chip>
+                </div>
             </div>
         </template>
 
@@ -167,18 +181,20 @@
 
 <script setup>
 import { mdiAlert, mdiDotsVertical, mdiEarth, mdiFileDocumentMultiple, mdiInvoiceList, mdiLock, mdiUpdate } from "@mdi/js";
-import { VAlert, VCard, VCardText, VChip, VFab, VIcon, VSpeedDial } from "vuetify/components";
+import { VAlert, VCard, VCardText, VChip, VFab, VIcon, VProgressLinear, VSpeedDial } from "vuetify/components";
 import { $prefs } from "@/stores/prefs";
 import { avatars } from "@/appwrite";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import DeleteList from "./dialogs/DeleteList.vue";
 import EditList from "./dialogs/EditList.vue";
+import { limits as limitsStore } from "@/stores/billing";
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 const prefs = useStore($prefs);
 const user = useStore(userStore);
+const limits = useStore(limitsStore);
 
 import VueMarkdown from "vue-markdown-render";
 
@@ -241,6 +257,19 @@ const userAvatar = (name) => {
         display: flex;
         flex-wrap: wrap;
         gap: 0.5rem;
+    }
+}
+
+.list-limit-chip {
+    position: relative;
+    .progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+
+        .v-progress-linear {
+            width: 100%;
+        }
     }
 }
 

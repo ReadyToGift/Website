@@ -1,11 +1,9 @@
-import { atom } from "nanostores";
 import { currencies as currencyList } from "country-data-list";
 
 export const currencies = currencyList.all;
 
 export const getCurrency = (code) => {
-    const currList = currencies.get();
-    const currency = currList.find((currency) => currency.code === code);
+    const currency = currencies.find((currency) => currency.code === code);
 
     if (!currency) {
         return {

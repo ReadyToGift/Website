@@ -1,11 +1,36 @@
 <template>
     <div
-        class="page-content"
+        class="page-content loading"
         v-if="!list && !newItem.notFound"
     >
-        <v-skeleton-loader type="card" />
-        <v-skeleton-loader type="card" />
-        <v-skeleton-loader type="card" />
+        <v-card
+            variant="tonal"
+            class="mb-5"
+            width="80%"
+        >
+            <v-card-title>
+                Loading
+                <v-progress-circular
+                    indeterminate
+                    size="20"
+                    width="2"
+                    class="ml-2"
+                    rounded
+                />
+            </v-card-title>
+            <v-card-subtitle>
+                {{ loading.status }}
+            </v-card-subtitle>
+            <v-card-text>
+                <v-progress-linear
+                    height="5"
+                    color="primary"
+                    :max="loading.max"
+                    :model-value="Math.min(loading.value + 0.25, loading.max)"
+                    :buffer-value="loading.bufferValue"
+                />
+            </v-card-text>
+        </v-card>
     </div>
     <template v-else-if="!newItem.notFound">
         <div
@@ -117,9 +142,9 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { avatars, databases, tablesDB } from "@/appwrite";
-import { VAlert, VDivider, VSkeletonLoader, VSpacer, VSwitch } from "vuetify/components";
+import { VAlert, VCard, VCardSubtitle, VCardText, VCardTitle, VDivider, VProgressCircular, VProgressLinear, VSpacer, VSwitch } from "vuetify/components";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
@@ -134,7 +159,6 @@ import { setCount as setListCount, userLists as userListsStore } from "@/stores/
 import { clientRouter } from "@/router";
 import { create as createDialog } from "@/stores/dialogs";
 import { formatter as currencyFormatter } from "@/stores/currency";
-import { get as getList } from "@/utils/list";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -142,11 +166,16 @@ export default {
         ListCard,
         ListItem,
         ModifyItem,
-        VSkeletonLoader,
         VSwitch,
         VAlert,
         VDivider,
         VSpacer,
+        VCard,
+        VCardText,
+        VCardTitle,
+        VCardSubtitle,
+        VProgressLinear,
+        VProgressCircular,
         NotFound,
         PWAPrompt
     },
@@ -159,6 +188,12 @@ export default {
             fulfillments: [],
             list: false,
             loadedAsAuthor: false,
+            loading: {
+                value: 0,
+                bufferValue: 0,
+                max: 3,
+                status: "Loading list"
+            },
             mdiInformation,
             newItem: {
                 description: "",
@@ -433,6 +468,101 @@ export default {
             }
             return true;
         },
+        async getList ({ tablesDB, listId, sort = "price", user }) {
+            this.loading = {
+                ...this.loading,
+                status: "Getting list",
+                value: 0,
+                bufferValue: 1
+            };
+            let list = await tablesDB.getRow({
+                databaseId: APPWRITE_DB,
+                tableId: APPWRITE_LIST_COLLECTION,
+                rowId: listId,
+                queries: [Query.select(["*", "items.*"])]
+            });
+
+            this.loading = {
+                ...this.loading,
+                status: "Getting community items",
+                value: 1,
+                bufferValue: 2
+            };
+
+            console.log("Loading community items");
+            const communityItems = (
+                await tablesDB.listRows({
+                    databaseId: APPWRITE_DB,
+                    tableId: APPWRITE_ITEM_COLLECTION,
+                    queries: [Query.equal("communityList", list.$id)]
+                })
+            ).rows;
+
+            this.loading = {
+                ...this.loading,
+                status: "Getting fulfillments",
+                value: 2,
+                bufferValue: 3
+            };
+
+            const loadedAsAuthor = user && list.author === user.$id;
+
+            let fulfillments = [];
+
+            if (list.items && list.items.length) {
+                console.log("Loading fulfillments");
+                fulfillments = (
+                    await tablesDB.listRows({
+                        databaseId: APPWRITE_DB,
+                        tableId: APPWRITE_FULFILLMENT_COLLECTION,
+                        queries: [
+                            Query.equal(
+                                "item",
+                                list.items.map((item) => item.$id)
+                            ),
+                            Query.select(["*", "item.*"]),
+                            Query.limit(list.items.length)
+                        ]
+                    })
+                ).rows;
+            }
+
+            this.loading = {
+                ...this.loading,
+                status: "Finishing up",
+                value: 2,
+                bufferValue: 3
+            };
+
+            list.items = list.items
+                .sort((a, b) => {
+                    if (sort === "price") {
+                        return a.price - b.price;
+                    }
+                    return a.title.localeCompare(b.title);
+                })
+                .map((item) => {
+                    item.fulfillment = fulfillments.find((fulfillment) => {
+                        return fulfillment.item.$id === item.$id;
+                    });
+
+                    return item;
+                });
+            
+            this.loading = {
+                ...this.loading,
+                status: "Getting community items",
+                value: 3,
+                bufferValue: 3
+            };
+
+            return {
+                list,
+                loadedAsAuthor,
+                fulfillments,
+                communityItems
+            };
+        },
         async setList({ listData }) {
             try {
                 this.list = listData.list;
@@ -469,7 +599,7 @@ export default {
         },
         async loadList(listId) {
             try {
-                const listData = await getList({ listId, tablesDB, user: this.user });
+                const listData = await this.getList({ listId, tablesDB, user: this.user });
                 if (listData && listData.list) {
                     const continueAnyway = await this.createAvoidSpoilersDialog(listData.list);
                     if (!continueAnyway) {
@@ -538,6 +668,12 @@ main {
         width: var(--section-width);
         margin: 0 auto;
         padding: 2rem 0;
+        &.loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
         .list-header {
             padding: 1rem;
             h1 {
