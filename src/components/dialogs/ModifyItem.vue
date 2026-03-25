@@ -158,6 +158,10 @@ export default {
             type: Object,
             default: () => ({})
         },
+        itemLimitReached: {
+            type: Boolean,
+            default: false
+        },
         quickCreateURL: {
             type: String,
             default: ""
@@ -206,6 +210,10 @@ export default {
         async dialogOpen(open) {
             this.errors = {};
             if (open === true) {
+                if (this.itemLimitReached) {
+                    this.dialogOpen = false;
+                    this.$emit("itemLimitReached");
+                }
                 this.listId = this.list.$id;
 
                 if (this.item) {

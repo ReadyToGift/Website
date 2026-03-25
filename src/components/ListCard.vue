@@ -93,12 +93,12 @@
                         class="list-limit-chip"
                         v-if="list.itemCount !== null"
                     >
-                        {{ ownList }}
-                        {{ list.itemCount }} {{ ownList && limits.itemsPerList > 0 ? "/" + limits.itemsPerList : '' }} items
+                        {{ list.itemCount }}{{ ownList && limits.itemsPerList > 0 ? "/" + limits.itemsPerList : '' }} items
                         <div class="progress">
                             <v-progress-linear
                                 :max="limits.itemsPerList"
-                                :model-value="50"
+                                :model-value="list.itemCount"
+                                height="2"
                                 :buffer-value="limits.itemsPerList"
                                 color="primary"
                                 v-if="ownList"
@@ -137,6 +137,8 @@
                 :currency="list.currency"
                 :wishlistOwner="ownList"
                 :listSaved="props.listSaved"
+                :itemLimitReached="itemLimitReached"
+                @itemLimitReached="emit('itemLimitReached')"
                 @quickCreate="(data) => emit('quickCreate', data)"
                 @newItem="(data) => emit('newItem', data)"
                 @updateList="(data) => emit('updateList', data)"
@@ -156,6 +158,8 @@
                     :currency="list.currency"
                     :wishlistOwner="ownList"
                     :listSaved="props.listSaved"
+                    :itemLimitReached="itemLimitReached"
+                    @itemLimitReached="emit('itemLimitReached')"
                     @quickCreate="(data) => emit('quickCreate', data)"
                     @newItem="(data) => emit('newItem', data)"
                     @updateList="(data) => emit('updateList', data)"
@@ -221,6 +225,10 @@ const props = defineProps({
         default: false,
         type: Boolean
     },
+    itemLimitReached: {
+        default: false,
+        type: Boolean
+    },
     ownList: {
         default: false,
         type: Boolean
@@ -266,6 +274,8 @@ const userAvatar = (name) => {
         position: absolute;
         bottom: 0;
         left: 0;
+        width: 100%;
+        height: max-content;
 
         .v-progress-linear {
             width: 100%;

@@ -100,7 +100,7 @@ const shareButtonSnackbarOpen = ref(false);
 
 const menuOpen = ref(false);
 
-const emit = defineEmits(["newItem", "updateList", "quickCreate"]);
+const emit = defineEmits(["newItem", "updateList", "quickCreate", "itemLimitReached"]);
 
 const props = defineProps({
     class: {
@@ -116,6 +116,10 @@ const props = defineProps({
         type: Object
     },
     listSaved: {
+        default: false,
+        type: Boolean
+    },
+    itemLimitReached: {
         default: false,
         type: Boolean
     },
@@ -236,6 +240,10 @@ const saveList = async () => {
 };
 
 const quickCreate = async () => {
+    if (props.itemLimitReached) {
+        emit("itemLimitReached");
+        return;
+    }
     try {
         const clipboardContents = await navigator.clipboard.readText();
 

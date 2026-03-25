@@ -45,6 +45,8 @@
                 :list-saved="listSaved"
                 :quickCreateURL="quickCreateURL"
                 :own-list="wishlistOwner"
+                :itemLimitReached="itemLimitReached"
+                @itemLimitReached="itemLimitReachedDialog"
                 @quickCreate="quickCreate"
                 @updateList="updateList"
                 @newItem="addItem"
@@ -131,6 +133,8 @@
                 :currency="list.currency"
                 :quickCreateURL="quickCreateURL"
                 :wishlistOwner="wishlistOwner"
+                :itemLimitReached="itemLimitReached"
+                @itemLimitReached="itemLimitReachedDialog"
                 @unsetQuickCreateURL="resetQuickCreateURL"
                 @newItem="addItem"
                 @updateList="updateList"
@@ -159,6 +163,7 @@ import { setCount as setListCount, userLists as userListsStore } from "@/stores/
 import { clientRouter } from "@/router";
 import { create as createDialog } from "@/stores/dialogs";
 import { formatter as currencyFormatter } from "@/stores/currency";
+import { limits as limitsStore } from "@/stores/billing";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -187,6 +192,7 @@ export default {
             createDialog,
             fulfillments: [],
             list: false,
+            limits: useStore(limitsStore),
             loadedAsAuthor: false,
             loading: {
                 value: 0,
@@ -225,6 +231,9 @@ export default {
         }
     },
     computed: {
+        itemLimitReached() {
+            return this.wishlistOwner && this.list.itemCount >= this.limits.itemsPerList;
+        },
         itemsByPriceGroups() {
             if (!this.list) return [];
             const items = [
@@ -322,7 +331,56 @@ export default {
                 window.history.replaceState({}, document.title, newURL);
             }
         },
+        itemLimitReachedDialog() {
+            if (this.prefs.pro) {
+                createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "Okay",
+                            variant: "elevated"
+                        },
+                        {
+                            to: "/contact",
+                            closeAfterAction: true,
+                            color: "secondary",
+                            text: "Contact"
+                        }
+                    ],
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
+                    Please remove some items, or contact support if you'd like this limit raised.`,
+                    title: "Item limit reached",
+                    variant: "warning"
+                });
+            } else {
+                createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "Okay",
+                            variant: "elevated"
+                        },
+                        {
+                            to: "/dash/settings/billing",
+                            closeAfterAction: true,
+                            color: "secondary",
+                            text: "Upgrade"
+                        }
+                    ],
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
+                    Please remove some items, or upgrade your plan.`,
+                    title: "Item limit reached",
+                    variant: "warning"
+                });
+            }
+        },
         quickCreate(url) {
+            if (this.itemLimitReached) {
+                this.itemLimitReachedDialog();
+                return;
+            }
             this.quickCreateURL = url;
         },
         async updateList(data) {

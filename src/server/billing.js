@@ -1,4 +1,4 @@
-import { FREE_TIER_ENABLE_AUTOFILL, FREE_TIER_PUBLIC_LIST_LIMIT } from "astro:env/client";
+import { FREE_TIER_ENABLE_AUTOFILL, FREE_TIER_ITEMS_PER_LIST, FREE_TIER_PRIVATE_LIST_LIMIT, FREE_TIER_PUBLIC_LIST_LIMIT } from "astro:env/client";
 import { getCache, setCache } from "@/server/cache";
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { Polar } from "@polar-sh/sdk";
@@ -10,8 +10,8 @@ const polar = new Polar({
 export const getLimits = (benefitNames) => {
     const limits = {
         publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
-        privateLists: -1,
-        itemsPerList: -1,
+        privateLists: FREE_TIER_PRIVATE_LIST_LIMIT,
+        itemsPerList: FREE_TIER_ITEMS_PER_LIST,
         autofill: FREE_TIER_ENABLE_AUTOFILL
     };
     

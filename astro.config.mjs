@@ -57,6 +57,16 @@ export default defineConfig({
                 access: "public",
                 default: -1
             }),
+            FREE_TIER_PRIVATE_LIST_LIMIT: envField.number({
+                context: "client",
+                access: "public",
+                default: -1 
+            }),
+            FREE_TIER_ITEMS_PER_LIST: envField.number({
+                context: "client",
+                access: "public",
+                default: -1
+            }),
             FREE_TIER_ENABLE_AUTOFILL: envField.boolean({
                 context: "client",
                 access: "public",
