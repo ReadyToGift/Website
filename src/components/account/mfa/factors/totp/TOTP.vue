@@ -2,7 +2,23 @@
     <v-list-item :prepend-icon="mdiClockCheck">
         <v-list-item-title> Time-based One-Time Password (TOTP) </v-list-item-title>
         <template #append>
-            <v-dialog v-model="dialogOpen">
+            <v-btn
+                :disabled="true"
+                v-if="loading"
+            >
+                Loading
+                <template v-slot:append>
+                    <v-progress-circular
+                        indeterminate
+                        size="16"
+                        width="2"
+                    />
+                </template>
+            </v-btn>
+            <v-dialog
+                v-model="dialogOpen"
+                v-else
+            >
                 <template v-slot:activator>
                     <v-btn
                         :icon="mdiPlusThick"
@@ -223,7 +239,7 @@ import {
     mdiShieldKey,
     mdiTrashCan
 } from "@mdi/js";
-import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VCardTitle, VDialog, VIcon, VList, VListItem, VListItemTitle, VMenu, VOtpInput, VSnackbar, VSpacer, VTextField, VTimeline } from "vuetify/components";
+import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VCardTitle, VDialog, VIcon, VList, VListItem, VListItemTitle, VMenu, VOtpInput, VProgressCircular, VSnackbar, VSpacer, VTextField, VTimeline } from "vuetify/components";
 import { useStore } from "@nanostores/vue";
 
 import { createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";
@@ -236,6 +252,13 @@ import RecoveryCodes from "./RecoveryCodes.vue";
 
 const mfaFactors = useStore(mfaFactorsStore);
 const user = useStore(userStore);
+
+const props = defineProps({
+    loading: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const dialogOpen = shallowRef(false);
 const menuOpen = shallowRef(false);

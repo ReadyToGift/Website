@@ -34,25 +34,27 @@
         </v-list-item>
         <v-list-item>
             <v-list>
-                <TOTPFactor />
+                <TOTPFactor :loading="loadingMFAFactors" />
             </v-list>
         </v-list-item>
     </v-list>
 </template>
 
 <script setup>
+import { computed, onMounted, shallowRef } from "vue";
 import { VList, VListItem, VSwitch, VTooltip } from "vuetify/components";
 import { account } from "@/appwrite";
-import { computed } from "vue";
 import { mdiShieldCheck } from "@mdi/js";
 import TOTPFactor from "./factors/totp/TOTP.vue";
 
-import { mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
+import { getMFAFactors, mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
 const user = useStore(userStore);
 const mfaFactors = useStore(mfaFactorsStore);
+
+const loadingMFAFactors = shallowRef(true);
 
 const hasAuthenticator = computed(() => mfaFactors.value.totp);
 
@@ -91,6 +93,11 @@ const toggleMFA = async () => {
         });
     }
 };
+
+onMounted(async () => {
+    await getMFAFactors();
+    loadingMFAFactors.value = false;
+});
 </script>
 
 <style lang="scss">

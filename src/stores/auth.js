@@ -77,6 +77,12 @@ export const getCurrentUser = async () => {
     }
 };
 
+export const getMFAFactors = async () => {
+    const mfaFactorsList = await account.listMFAFactors();
+    mfaFactors.set(mfaFactorsList);
+    return mfaFactorsList;
+};
+
 export const init = async ({ router = null, currentAccount = null } = {}) => {
     console.log("Initialising auth");
     try {
@@ -84,9 +90,6 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
             if (!currentAccount) {
                 currentAccount = await account.get();
             }
-
-            const mfaFactorsList = await account.listMFAFactors();
-            mfaFactors.set(mfaFactorsList);
 
             if (currentAccount.prefs) {
                 loadPrefs(currentAccount.prefs);
