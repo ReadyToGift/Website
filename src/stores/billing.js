@@ -1,6 +1,5 @@
 import { computed, map } from "nanostores";
 import { $prefs } from "./prefs";
-import { create as createDialog } from "./dialogs";
 import { getJwt } from "./auth";
 import { userLists } from "./userLists";
 
@@ -73,21 +72,13 @@ export const getBillingDetails = async () => {
 
         const inactiveSubscription = subscriptions.find((sub) => sub.status === "canceled");
         billing.setKey("inactiveSubscription", inactiveSubscription);
+        billing.setKey("billingLoaded", true);
+        return true;
     } catch {
-        createDialog({
-            title: "Error loading billing information",
-            text: "Please try again later",
-            actions: [
-                {
-                    type: "primary",
-                    action: "close",
-                    text: "Okay"
-                }
-            ]
-        });
-    }
+        billing.setKey("billingLoaded", true);
 
-    billing.setKey("billingLoaded", true);
+        return false;
+    }
 };
 
 export const init = async () => {

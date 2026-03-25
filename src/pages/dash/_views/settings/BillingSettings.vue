@@ -137,7 +137,7 @@
                         <v-btn
                             disabled
                             variant="outlined"
-                            v-if="!billing.pro"
+                            v-if="!prefs.pro"
                         >
                             Already on free
                         </v-btn>
@@ -149,7 +149,7 @@
                         <v-btn
                             :loading="proCheckoutLoading || proLoading"
                             @click="proCheckout"
-                            v-if="!billing.pro"
+                            v-if="!prefs.pro"
                         >
                             Upgrade to Pro
                         </v-btn>
@@ -178,7 +178,7 @@
     <v-card
         class="mt-4 subscription-details"
         variant="tonal"
-        v-if="!billing.billingLoaded || billing.pro || billing.inactiveSubscription"
+        v-if="(!billing.billingLoaded || billing.pro || billing.inactiveSubscription) && !billingDetailsFailure"
     > 
         <v-card-title>
             Manage
@@ -235,6 +235,17 @@
             </v-skeleton-loader>
         </v-card-text>
     </v-card>
+    <v-alert
+        v-if="billingDetailsFailure"
+        type="error"
+        variant="tonal"
+        border="start"
+        class="mt-4 min-w-0 overflow-visible flex-shrink-1"
+        elevation="2"
+        :icon="mdiAlert"
+        title="Error loading billing details"
+        text="Please try again later"
+    />
 </template>
 
 <script setup>
@@ -246,7 +257,9 @@ import { allLimits as allLimitsStore } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
-import { VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProgressCircular, VSkeletonLoader } from "vuetify/components";
+import { mdiAlert } from "@mdi/js";
+
+import { VAlert, VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProgressCircular, VSkeletonLoader } from "vuetify/components";
 
 
 const billing = useStore(billingStore);
@@ -257,6 +270,7 @@ const proCheckoutLoading = shallowRef(false);
 
 const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
+const billingDetailsFailure = shallowRef(false);
 
 const formatPrice = (price, currency) => {
     const formattedPrice = new Intl.NumberFormat("en-US", {
@@ -297,9 +311,10 @@ const formatDate = (timestamp) => {
     });
 };
 
-onMounted(() => {
+onMounted(async () => {
     loadProPrice();
-    getBillingDetails();
+    const billingDetailsResp = await getBillingDetails();
+    if (billingDetailsResp === false) billingDetailsFailure.value = true;
 });
 
 const proCheckout = async () => {
