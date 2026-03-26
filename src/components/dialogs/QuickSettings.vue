@@ -63,6 +63,12 @@
                     </v-list>
                 </v-list-item>
                 <v-list-item
+                    :prepend-icon="mdiInformation"
+                    to="/dash/about"
+                >
+                    About
+                </v-list-item>
+                <v-list-item
                     v-if="!!user && $vuetify.display.mobile"
                     to="/dash/settings"
                     :prepend-icon="mdiCog"

@@ -48,6 +48,24 @@
                     :prepend-avatar="history.avatar"
                 />
             </v-list>
+            <v-list
+                v-if="auth.userPrefs.history.length > 0"
+            >
+                <v-divider />
+                <v-list-item
+                    :prepend-icon="mdiClock"
+                    title="Recently Viewed"
+                    disabled
+                />
+                <v-list-item
+                    v-for="history in auth.userPrefs.history"
+                    :key="history.id"
+                    :title="history.title"
+                    :subtitle="history.subtitle"
+                    :to="`/list/${history.id}`"
+                    :prepend-avatar="history.avatar"
+                />
+            </v-list>
             <template v-slot:append>
                 <v-list>
                     <v-list-item

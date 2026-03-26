@@ -267,4 +267,8 @@ const quickCreate = async () => {
         console.error("Clipboard read error:", error);
     }
 };
+
+if (props.quickCreateQueryURL) {
+    quickCreateURL.value = props.quickCreateQueryURL;
+}
 </script>
