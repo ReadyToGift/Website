@@ -76,23 +76,27 @@ export const getBillingDetails = async () => {
 };
 
 export const init = async () => {
-    const allLimitsResp = await fetch("/api/billing/limits");
-    const allLimitsData = await allLimitsResp.json();
-
-    let newLimits = $prefs.get().pro ? 
-        allLimitsData.pro :
-        allLimitsData.free;
+    try {
+        const allLimitsResp = await fetch("/api/billing/limits");
+        const allLimitsData = await allLimitsResp.json();
     
-    allLimits.setKey("free", allLimitsData.free);
+        let newLimits = $prefs.get().pro ? 
+            allLimitsData.pro :
+            allLimitsData.free;
+        
+        allLimits.setKey("free", allLimitsData.free);
+        
+        if (ENABLE_BILLING) {
+            allLimits.setKey("pro", allLimitsData.pro);
+        }
     
-    if (ENABLE_BILLING) {
-        allLimits.setKey("pro", allLimitsData.pro);
+        limits.setKey("publicLists", newLimits.publicLists);
+        limits.setKey("privateLists", newLimits.privateLists);
+        limits.setKey("itemsPerList", newLimits.itemsPerList);
+        limits.setKey("autofill", newLimits.autofill);
+    } catch (error) {
+        console.log(error);
     }
-
-    limits.setKey("publicLists", newLimits.publicLists);
-    limits.setKey("privateLists", newLimits.privateLists);
-    limits.setKey("itemsPerList", newLimits.itemsPerList);
-    limits.setKey("autofill", newLimits.autofill);
 };
 
 export const getProCheckout = async () => {

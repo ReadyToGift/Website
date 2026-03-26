@@ -48,24 +48,6 @@
                     :prepend-avatar="history.avatar"
                 />
             </v-list>
-            <v-list
-                v-if="auth.userPrefs.history.length > 0"
-            >
-                <v-divider />
-                <v-list-item
-                    :prepend-icon="mdiClock"
-                    title="Recently Viewed"
-                    disabled
-                />
-                <v-list-item
-                    v-for="history in auth.userPrefs.history"
-                    :key="history.id"
-                    :title="history.title"
-                    :subtitle="history.subtitle"
-                    :to="`/list/${history.id}`"
-                    :prepend-avatar="history.avatar"
-                />
-            </v-list>
             <template v-slot:append>
                 <v-list>
                     <v-list-item
@@ -180,9 +162,9 @@ import {
 } from "vuetify/components";
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
+import { logOut as logOutUser, user } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
 import { user as userStore } from "@/stores/auth";
-import { logOut as logOutUser, user } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 

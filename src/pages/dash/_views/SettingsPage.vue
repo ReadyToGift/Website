@@ -55,9 +55,9 @@
 
 <script setup>
 import { VSheet, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
+import AboutPage from "./settings/AboutPage.vue";
 import AccountSettings from "./settings/AccountSettings.vue";
 import BillingSettings from "./settings/BillingSettings.vue";
-import AboutPage from "./settings/AboutPage.vue";
 import { shallowRef } from "vue";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
