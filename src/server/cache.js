@@ -13,9 +13,10 @@ if (REDIS_HOST) {
     })
         .on("error", (err) => console.log("Redis Client Error", err))
         .connect(() => console.log("Connected to Redis"));
+    
+    await redisClient.flushAll();
 }
 
-await redisClient.flushAll();
 
 export const setCache = async (key, value, ttl) => {
     try {

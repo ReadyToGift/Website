@@ -44,7 +44,7 @@ export const getLimits = (benefitNames) => {
 
 export const getLimitsForCustomer = async ({ customerId }) => {
     const benefitGrants = await getBenefitGrants({ customerId });
-    const benefitNames = benefitGrants.map((benefit) => benefit.name);
+    const benefitNames = benefitGrants.map((benefit) => benefit.benefit.description);
     return getLimits(benefitNames);
 };
 
@@ -61,7 +61,7 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
         
         subscriptions = subscriptions.result.items;
         
-        await setCache(`polarSubscriptions:${externalCustomerId}`, subscriptions, 5 * 60 * 1000);
+        await setCache(`polarSubscriptions:${externalCustomerId}`, subscriptions, 1 * 60 * 1000);
     }
     
     return subscriptions;
@@ -96,7 +96,7 @@ export const getBenefitGrants = async ({ customerId }) => {
         
         benefitGrants = benefitsResp.result.items.filter((benefit) => benefit.isGranted);
     
-        await setCache(`polarBenefitGrants:${customerId}`, benefitGrants, 5 * 60 * 1000);
+        await setCache(`polarBenefitGrants:${customerId}`, benefitGrants, 1 * 60 * 1000);
     }
 
     return benefitGrants;
@@ -113,7 +113,7 @@ export const getProProduct = async () => {
             throw new Error("Error getting product", { cause: error });
         });
 
-        await setCache(`polarProduct:${POLAR_PRO_PRODUCT_ID}`, productResp, 24 * 60 * 60 * 1000);
+        await setCache(`polarProduct:${POLAR_PRO_PRODUCT_ID}`, productResp, 15 * 60 * 1000);
         return productResp;
     }
 
