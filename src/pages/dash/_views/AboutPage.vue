@@ -10,10 +10,10 @@
             <v-card-text>
                 <v-list>
                     <v-list-item :prepend-icon="mdiInformationOutline">
-                        <strong>Version:</strong> {{ versionStore.loadCommit || 'Unknown' }}
+                        <strong>Version:</strong> {{ loadCommit.value || 'Unknown' }}
                     </v-list-item>
                     <v-list-item :prepend-icon="mdiCalendarClock">
-                        <strong>Build Date:</strong> {{ versionStore.loadBuildDate || 'Unknown' }}
+                        <strong>Build Date:</strong> {{ loadBuildDate.value || 'Unknown' }}
                     </v-list-item>
                 </v-list>
             </v-card-text>
@@ -23,8 +23,7 @@
 
 <script setup>
 import { mdiCalendarClock, mdiInformationOutline } from "@mdi/js";
-import { useVersion } from "@/stores/version";
-const versionStore = useVersion();
+import { loadBuildDate, loadCommit } from "@/stores/version";
 </script>
 
 <style lang="scss" scoped>

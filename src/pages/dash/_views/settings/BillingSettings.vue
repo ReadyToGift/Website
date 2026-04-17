@@ -141,7 +141,12 @@
                         >
                             Already on free
                         </v-btn>
-                        <v-btn v-else>
+                        <v-btn
+                            :loading="!billing.billingLoaded"
+                            :href="billing.session ? billing.session.customerPortalUrl : ''"
+                            target="_blank"
+                            v-else
+                        >
                             Downgrade
                         </v-btn>
                     </td>
@@ -203,17 +208,14 @@
                     </template>
                     <template v-else>
                         Renews on {{ formatDate(billing.pro.currentPeriodEnd) }} for
-                        <v-chip
-                            rounded="pill"
-                            size="small"
-                        >{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurringInterval }}
+                        <strong>{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurringInterval }}
                             <span
                                 class="originalPrice"
                                 v-if="billing.pro.product.prices && billing.pro.product.prices[0].priceAmount > billing.pro.amount"
                             >
                                 {{ formatPrice(billing.pro.product.prices[0].priceAmount, billing.pro.product.prices[0].priceCurrency) }}/{{ billing.pro.product.prices[0].recurringInterval }}
                             </span>
-                        </v-chip>
+                        </strong>
                     </template>
                 </template>
                 <template v-else-if="billing.inactiveSubscription">
