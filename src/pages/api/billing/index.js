@@ -12,12 +12,10 @@ export const GET = async (context) => {
             const jwt = extractJwt(context);
             account = await getCache(`jwt:${jwt}`);
 
-            if (!account ) {
-                sessionClient = createSessionClient(context);
-                account = await sessionClient.account.get();
-                if (account) {
-                    await setCache(`jwt:${jwt}`, account, 5 * 60 * 1000);
-                }
+            sessionClient = createSessionClient(context);
+            account = await sessionClient.account.get();
+            if (account) {
+                await setCache(`jwt:${jwt}`, account, 5 * 60 * 1000);
             }
         } catch (error) {
             console.error("Error getting account", error);

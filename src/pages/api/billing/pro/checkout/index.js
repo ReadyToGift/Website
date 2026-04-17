@@ -48,7 +48,7 @@ export const POST = async (context) => {
                 products: [
                     POLAR_PRO_PRODUCT_ID
                 ],
-                successUrl: websiteDomain + "/dash/settings/billing?status=success",
+                successUrl: websiteDomain + "/api/billing/pro/checkout/success",
                 cancelUrl: websiteDomain + "/dash/settings/billing?status=cancel"
             });
         } catch (err) {
