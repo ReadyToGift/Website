@@ -354,8 +354,6 @@ export const DELETE = async (context) => {
             );
         }
 
-        console.log({ list });
-
         if (list.author !== account.$id) {
             return new Response(
                 JSON.stringify({
@@ -526,8 +524,6 @@ export const PUT = async (context) => {
                         Query.notEqual("$id", listId)
                     ]
                 });
-
-                console.log(conflictingDocuments);
 
                 if (conflictingDocuments.total > 0) {
                     return new Response(

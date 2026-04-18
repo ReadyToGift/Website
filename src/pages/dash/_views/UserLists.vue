@@ -141,6 +141,7 @@
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
+                        :size="$vuetify.display.mobile ? 'x-small' : 'default'"
                         v-if="!loading"
                     >
                         {{ userLists.listCount.public }}
@@ -158,6 +159,7 @@
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
+                        :size="$vuetify.display.mobile ? 'x-small' : 'default'"
                         v-if="!loading"
                     >
                         {{ userLists.listCount.private }}
@@ -176,6 +178,7 @@
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
+                        :size="$vuetify.display.mobile ? 'x-small' : 'default'"
                         v-if="!loading"
                     >
                         {{ savedLists.length }}

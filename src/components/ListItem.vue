@@ -252,41 +252,9 @@ export default {
     },
     methods: {
         getWebsiteHostname(url) {
-            const toTitleCase = (str) => {
-                return str.replace(
-                    /\w\S*/g,
-                    (text) => text.charAt(0).toUpperCase() + text.substring(1).toLowerCase()
-                );
-            };
-
-            const publicSuffixes = [
-                "co.uk", "org.uk", "gov.uk", "ac.uk", "net.uk", "sch.uk", // United Kingdom
-                "com.au", "net.au", "org.au", "edu.au", "gov.au", // Australia
-                "co.nz", "net.nz", "org.nz", "govt.nz", // New Zealand
-                "co.in", "net.in", "org.in", "gov.in", "ac.in", // India
-                "com.sg", "net.sg", "org.sg", "gov.sg", "edu.sg", // Singapore
-                "com.my", "net.my", "org.my", "gov.my", "edu.my", // Malaysia
-                "co.za", "net.za", "org.za", "gov.za", // South Africa
-                "co.jp", "ac.jp", "ne.jp", "or.jp", // Japan
-                "com.br", "net.br", "org.br", "gov.br", "edu.br", // Brazil
-                "com.mx", "org.mx", "gob.mx", // Mexico
-                "co.kr", "or.kr", "ac.kr", "go.kr", // South Korea
-                "com.tr", "net.tr", "org.tr", "edu.tr", "gov.tr" // Turkey
-            ];
-
-
             const { hostname } = new URL(url);
-            const parts = hostname.split(".");
 
-            // Handle domains with public suffixes
-            for (let i = 0; i < publicSuffixes.length; i++) {
-                if (hostname.endsWith(publicSuffixes[i])) {
-                    return toTitleCase(parts[parts.length - 3]);  // Get the part before the suffix
-                }
-            }
-
-            const website = parts.length > 2 ? parts[parts.length - 2] : parts[0];
-            return toTitleCase(website);
+            return hostname.replace(/^www\./, "").toLowerCase();
         },
         userAvatar(name) {
             try {
@@ -351,6 +319,8 @@ export default {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
+        gap: 0.5rem 1rem;
+        flex-wrap: wrap;
         align-items: center;
         width: 100%;
 
@@ -382,7 +352,10 @@ export default {
             .item-image {
                 img {
                     max-height: 100%;
-                    max-width: 100%;
+                    width: 100%;
+                    object-fit: contain;
+                    object-position: left center;
+                    
                 }
             }
         }
