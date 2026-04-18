@@ -186,7 +186,6 @@ export default {
                 this.editedList = {
                     currency: this.list.currency,
                     description: this.list.description,
-                    itemCount: this.list.items.length,
                     private: this.list.private,
                     shortUrl: this.list.shortUrl,
                     title: this.list.title

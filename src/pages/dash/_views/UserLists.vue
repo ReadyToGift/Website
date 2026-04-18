@@ -140,7 +140,7 @@
                     <v-chip
                         rounded="pill"
                         variant="tonal"
-                        class="ml-4"
+                        :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
                         v-if="!loading"
                     >
                         {{ userLists.listCount.public }}
@@ -157,7 +157,7 @@
                     <v-chip
                         rounded="pill"
                         variant="tonal"
-                        class="ml-4"
+                        :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
                         v-if="!loading"
                     >
                         {{ userLists.listCount.private }}
@@ -175,7 +175,7 @@
                     <v-chip
                         rounded="pill"
                         variant="tonal"
-                        class="ml-4"
+                        :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-4'"
                         v-if="!loading"
                     >
                         {{ savedLists.length }}
@@ -479,6 +479,16 @@ main {
         h2 {
             word-break: break-word;
             white-space: pre-wrap;
+        }
+
+        @media screen and (max-width: 768px){
+            .v-tab.v-tab.v-btn {
+                height: auto;
+            }
+
+            .v-slide-group {
+                height: max-content;
+            }
         }
     }
 }

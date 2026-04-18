@@ -117,10 +117,10 @@ export const POST = async (context) => {
 
         let limits, publicListCount, privateListCount;
         try {
-            const userListResp = await getUserLimits({ account, adminClient });
-            limits = userListResp.limits;
-            publicListCount = userListResp.publicListCount;
-            privateListCount = userListResp.privateListCount;
+            const userLimitsResp = await getUserLimits({ account, adminClient });
+            limits = userLimitsResp.limits;
+            publicListCount = userLimitsResp.publicListCount;
+            privateListCount = userLimitsResp.privateListCount;
         } catch (err) {
             console.log(err);
 
@@ -384,6 +384,49 @@ export const DELETE = async (context) => {
             // List <=> Items are set to cascade delete in Appwrite console
         });
 
+        let communityItems;
+
+        try {
+            const communityItemsResp = await adminClient.tablesDB.listRows({
+                databaseId: APPWRITE_DB,
+                tableId: APPWRITE_ITEM_COLLECTION,
+                queries: [
+                    Query.equal("communityList", listId)
+                ]
+            });
+
+            communityItems = communityItemsResp.rows;
+        } catch (err) {
+            console.log(err);
+
+            return new Response(
+                JSON.stringify({
+                    message: "Error getting community items"
+                }),
+                {
+                    status: 500,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
+        communityItems.map(async (item) => {
+            try {
+                if (item.imageID) {
+                    await adminClient.storage.deleteFile({
+                        bucketId: APPWRITE_IMAGE_BUCKET,
+                        fileId: item.imageID
+                    });
+
+                    console.log(`Deleted community item image ${item.imageID}`);
+                }
+            } catch (err) {
+                console.log(err);
+            }
+        });
+
         try {
             await adminClient.tablesDB.deleteRow({
                 databaseId: APPWRITE_DB,
@@ -634,6 +677,58 @@ export const PUT = async (context) => {
                         }
                     }
                 );
+            }
+
+            if (updatingToPrivate) {
+                let communityItems;
+
+                try {
+                    const communityItemsResp = await adminClient.tablesDB.listRows({
+                        databaseId: APPWRITE_DB,
+                        tableId: APPWRITE_ITEM_COLLECTION,
+                        queries: [
+                            Query.equal("communityList", listId)
+                        ]
+                    });
+
+                    communityItems = communityItemsResp.rows;
+                } catch (err) {
+                    console.log(err);
+
+                    return new Response(
+                        JSON.stringify({
+                            message: "Error getting community items"
+                        }),
+                        {
+                            status: 500,
+                            headers: {
+                                "Content-Type": "application/json"
+                            }
+                        }
+                    );
+                }
+
+                communityItems.map(async (item) => {
+                    try {
+                        if (item.imageID) {
+                            await adminClient.storage.deleteFile({
+                                bucketId: APPWRITE_IMAGE_BUCKET,
+                                fileId: item.imageID
+                            });
+
+                            console.log(`Deleted community item image ${item.imageID}`);
+                        }
+                        await adminClient.tablesDB.deleteRow({
+                            databaseId: APPWRITE_DB,
+                            tableId: APPWRITE_ITEM_COLLECTION,
+                            rowId: item.$id
+                        });
+
+                        console.log(`Deleted community item ${item.$id}`);
+                    } catch (err) {
+                        console.log(err);
+                    }
+                });
             }
         }
 

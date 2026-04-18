@@ -55,11 +55,10 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION } from "astro:env/client";
-import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiDelete } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
+import { getJwt } from "@/stores/auth";
 export default {
     title: "ListDialog",
     components: {
@@ -95,18 +94,45 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                if (this.item.imageID) {
-                    await storage.deleteFile(
-                        APPWRITE_IMAGE_BUCKET,
-                        this.item.imageID
-                    );
+                const jwt = await getJwt();
+                if (!jwt) {
+                    this.alert = {
+                        text: "You must be logged in to delete an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
                 }
-                await databases.deleteDocument(
-                    APPWRITE_DB,
-                    APPWRITE_ITEM_COLLECTION,
-                    this.item.$id
-                );
+
+                const response = await fetch("/api/content/items", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`
+                    },
+                    body: JSON.stringify({
+                        itemId: this.item.$id
+                    })
+                });
+
+                let responseBody = {};
+
+                try {
+                    responseBody = await response.json();
+                } catch (err) {
+                    // Ignore parse errors and fallback to generic message.
+                }
+
+                if (!response.ok) {
+                    this.alert = {
+                        text: responseBody.message || "An error occurred while deleting the item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
             } catch (e) {
+                console.log(e);
                 if (e instanceof AppwriteException) {
                     this.alert = {
                         text: e.message,

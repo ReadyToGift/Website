@@ -349,7 +349,7 @@ export default {
                             text: "Contact"
                         }
                     ],
-                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list<br />
                     Please remove some items, or contact support if you'd like this limit raised.`,
                     title: "Item limit reached",
                     variant: "warning"
@@ -370,7 +370,7 @@ export default {
                             text: "Upgrade"
                         }
                     ],
-                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list<br />
                     Please remove some items, or upgrade your plan.`,
                     title: "Item limit reached",
                     variant: "warning"
@@ -398,6 +398,7 @@ export default {
                 this.communityItems.push(data.item);
             } else {
                 this.list.items.push(data.item);
+                this.list.itemCount = this.list.items.length;
             }
             this.showFulfilled = true;
             this.$nextTick(() => {
@@ -442,17 +443,7 @@ export default {
                 return;
             } else {
                 this.list.items = this.list.items.filter((item) => item.$id !== id);
-
-                const updatedList = await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    this.list.$id,
-                    {
-                        itemCount: this.list.items.length
-                    }
-                );
-
-                this.updateList({ list: updatedList });
+                this.list.itemCount = this.list.items.length;
             }
         },
         fulfillItem(data) {

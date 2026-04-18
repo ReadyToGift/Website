@@ -121,8 +121,8 @@ const finaliseLogin = async () => {
         title: "Login Successful",
         text: "You have been logged in successfully."
     };
-            
-    await router.push(props.redirect);
+
+    await router.push({ path: props.redirect });
 };
 
 const passwordLogin = async (event) => {

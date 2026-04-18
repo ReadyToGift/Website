@@ -171,7 +171,7 @@
                 type="info"
                 elevation="2"
                 :icon="mdiAlert"
-                class="m-4 mb-8"
+                :class="['m-4', 'mb-8', $vuetify.display.mobile ? 'mt-4': '']"
                 color="primary"
             >
                 <a

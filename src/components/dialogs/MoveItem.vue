@@ -97,16 +97,16 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { AppwriteException, Permission, Query, Role  } from "appwrite";
+import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { AppwriteException, Query } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
 import { databases } from "@/appwrite";
 import ListCard from "../ListCard.vue";
 
 import { allLimits as allLimitsStore, limits as limitsStore } from "@/stores/billing";
+import { getJwt, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
-import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -211,51 +211,42 @@ export default {
         async moveToList() {
             this.loadingMove = true;
 
-            let permissions = [
-                Permission.delete(Role.user(this.user.$id)),
-                Permission.update(Role.user(this.user.$id))
-            ];
+            const jwt = await getJwt();
 
-            let privateListPermissions = [
-                ...permissions,
-                Permission.read(Role.user(this.user.$id))
-            ];
-
-            let publicListPermissions = [
-                ...permissions,
-                Permission.read(Role.any())
-            ];
+            if (!jwt) {
+                this.alert = {
+                    text: "You must be logged in to move an item.",
+                    title: "Error"
+                };
+                this.loadingMove = false;
+                return;
+            }
 
             try {
-                await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_ITEM_COLLECTION,
-                    this.item.$id,
-                    {
-                        list: this.selectedList.$id
+                const moveItemResp = await fetch("/api/content/items", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`
                     },
-                    this.selectedList.private
-                        ? privateListPermissions
-                        : publicListPermissions
-                );
+                    body: JSON.stringify({
+                        itemId: this.item.$id,
+                        updateData: {
+                            list: this.selectedList.$id
+                        }
+                    })
+                });
 
-                await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    this.list.$id,
-                    {
-                        itemCount: this.list.items.length - 1
-                    }
-                );
+                const moveItemData = await moveItemResp.json();
 
-                await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    this.selectedList.$id,
-                    {
-                        itemCount: this.selectedList.items.length + 1
-                    }
-                );
+                if (!moveItemResp.ok) {
+                    this.alert = {
+                        text: moveItemData.message || "An unknown error occurred.",
+                        title: "Error"
+                    };
+                    this.loadingMove = false;
+                    return;
+                }
 
                 this.loadingMove = false;
                 this.success = true;

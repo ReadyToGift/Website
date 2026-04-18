@@ -117,19 +117,19 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, ID, Permission, Role } from "appwrite";
-import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab, VTooltip } from "vuetify/components";
+import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
+import { create as createDialog } from "@/stores/dialogs";
+import { getJwt } from "@/stores/auth";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
+import { limits as limitsStore } from "@/stores/billing";
 import { markRaw } from "vue";
 import mime from "mime-types";
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
-
-import { create as createDialog } from "@/stores/dialogs";
-import { limits as limitsStore } from "@/stores/billing";
+import { storage } from "@/appwrite";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
@@ -388,6 +388,17 @@ export default {
                 this.loading = false;
                 return;
             }
+
+            const jwt = await getJwt();
+            if (!jwt) {
+                this.alert = {
+                    text: "You must be logged in to create an item.",
+                    title: "Error"
+                };
+                this.loading = false;
+                return;
+            }
+
             try {
                 let permissions = [
                     Permission.delete(Role.user(this.user.$id)),
@@ -421,26 +432,42 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                result = await databases.createDocument(
-                    APPWRITE_DB,
-                    APPWRITE_ITEM_COLLECTION,
-                    this.itemID,
-                    {
-                        communityList: this.wishlistOwner ? null : this.listId,
-                        contributorId: this.wishlistOwner ? null : this.user.$id,
-                        contributorName: this.wishlistOwner ? null : this.user.name,
-                        description: this.modifiedItem.description || null,
-                        displayPrice: this.modifiedItem.displayPrice,
-                        image: this.modifiedItem.image || null,
-                        imageID: this.modifiedItem.imageID || null,
-                        list: this.wishlistOwner ? this.listId : null,
-                        price: parseFloat(this.modifiedItem.price) || 0,
-                        priority: this.modifiedItem.priority,
-                        title: this.modifiedItem.title,
-                        url: this.modifiedItem.url || null
+                const createResp = await fetch("/api/content/items", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`
                     },
-                    permissions
-                );
+                    body: JSON.stringify({
+                        itemData: {
+                            communityList: this.wishlistOwner ? null : this.listId,
+                            contributorId: this.wishlistOwner ? null : this.user.$id,
+                            contributorName: this.wishlistOwner ? null : this.user.name,
+                            description: this.modifiedItem.description || null,
+                            displayPrice: this.modifiedItem.displayPrice,
+                            image: this.modifiedItem.image || null,
+                            imageID: this.modifiedItem.imageID || null,
+                            list: this.listId,
+                            price: parseFloat(this.modifiedItem.price) || 0,
+                            priority: this.modifiedItem.priority,
+                            title: this.modifiedItem.title,
+                            url: this.modifiedItem.url || null
+                        }
+                    })
+                });
+
+                const createRespData = await createResp.json();
+
+                if (!createResp.ok) {
+                    this.alert = {
+                        text: createRespData.message || "An unknown error occurred.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                result = createRespData.item;
             } catch (e) {
                 if (e instanceof AppwriteException) {
                     this.alert = {
@@ -462,37 +489,6 @@ export default {
                 item: result
             });
 
-            try {
-                if (this.wishlistOwner) {
-                    const updatedList = await databases.updateDocument(
-                        APPWRITE_DB,
-                        APPWRITE_LIST_COLLECTION,
-                        this.listId,
-                        {
-                            itemCount: this.list.items.length
-                        }
-                    );
-
-                    this.$emit("updateList", {
-                        list: updatedList
-                    });
-                }
-            } catch (e) {
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
-                this.loading = false;
-                return;
-            }
-
             this.modifiedItem = {
                 description: "",
                 displayPrice: true,
@@ -511,6 +507,17 @@ export default {
             let result;
             this.alert = false;
             this.loading = true;
+
+            const jwt = await getJwt();
+            if (!jwt) {
+                this.alert = {
+                    text: "You must be logged in to edit an item.",
+                    title: "Error"
+                };
+                this.loading = false;
+                return;
+            }
+
             let permissions = [
                 Permission.delete(Role.user(this.user.$id)),
                 Permission.update(Role.user(this.user.$id))
@@ -563,22 +570,39 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                result = await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_ITEM_COLLECTION,
-                    this.item.$id,
-                    {
-                        description: this.modifiedItem.description || null,
-                        displayPrice: this.modifiedItem.displayPrice,
-                        image: this.modifiedItem.image || null,
-                        imageID: this.modifiedItem.imageID || null,
-                        price: parseFloat(this.modifiedItem.price) || 0,
-                        priority: this.modifiedItem.priority,
-                        title: this.modifiedItem.title,
-                        url: this.modifiedItem.url || null
+                const updateResp = await fetch("/api/content/items", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`
                     },
-                    permissions
-                );
+                    body: JSON.stringify({
+                        itemId: this.item.$id,
+                        updateData: {
+                            description: this.modifiedItem.description || null,
+                            displayPrice: this.modifiedItem.displayPrice,
+                            image: this.modifiedItem.image || null,
+                            imageID: this.modifiedItem.imageID || null,
+                            price: parseFloat(this.modifiedItem.price) || 0,
+                            priority: this.modifiedItem.priority,
+                            title: this.modifiedItem.title,
+                            url: this.modifiedItem.url || null
+                        }
+                    })
+                });
+
+                const updateRespData = await updateResp.json();
+
+                if (!updateResp.ok) {
+                    this.alert = {
+                        text: updateRespData.message || "An unknown error occurred.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                result = updateRespData.item;
             } catch (e) {
                 if (e instanceof AppwriteException) {
                     this.alert = {
