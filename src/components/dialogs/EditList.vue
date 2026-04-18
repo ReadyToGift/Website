@@ -41,7 +41,7 @@
                         :text="alert.text"
                     />
                     <v-alert
-                        v-if="editedList.private && privateListLimitReached"
+                        v-if="editedList.private && privateListLimitReached.value"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -75,7 +75,7 @@
                         
                     </v-alert>
                     <v-alert
-                        v-if="!editedList.private && publicListLimitReached"
+                        v-if="!editedList.private && publicListLimitReached.value"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -119,7 +119,7 @@
                         @click="updateList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="(!editedList.private && publicListLimitReached) || (editedList.private && privateListLimitReached)"
+                        :disabled="(!editedList.private && publicListLimitReached.value) || (editedList.private && privateListLimitReached.value)"
                     />
                 </v-card-actions>
             </v-card>
@@ -137,8 +137,8 @@ import { $prefs } from "@/stores/prefs";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { userLists as userListsStore } from "@/stores/userLists";
-import { user as userStore } from "@/stores/auth";
+import { adjustCount } from "@/stores/userLists";
+import { getJwt, user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -174,7 +174,6 @@ export default {
             mdiAlert,
             mdiPencil,
             previousValues: {},
-            userLists: useStore(userListsStore),
             publicListLimitReached,
             privateListLimitReached,
             allLimits: useStore(allLimitsStore),
@@ -237,90 +236,50 @@ export default {
                 }
             }
 
-            if (this.editedList.shortUrl) {
-                try {
-                    const conflictingDocuments = await databases.listDocuments(
-                        APPWRITE_DB,
-                        APPWRITE_LIST_COLLECTION,
-                        [
-                            Query.equal("shortUrl", this.editedList.shortUrl),
-                            Query.notEqual("$id", this.listId)
-                        ]
-                    );
-
-                    if (conflictingDocuments.total !== 0) {
-                        this.alert = {
-                            text: "Short URL already in use.",
-                            title: "Error"
-                        };
-                        this.loading = false;
-                        return;
-                    }
-                } catch (e) {
-                    if (e instanceof AppwriteException) {
-                        this.alert = {
-                            text: e.message,
-                            title: "Error"
-                        };
-                    } else {
-                        this.alert = {
-                            text: "An unknown error occurred.",
-                            title: "Error"
-                        };
-                    }
-                    this.loading = false;
-                    return;
-                }
+            const jwt = await getJwt();
+            if (!jwt) {
+                this.alert = {
+                    text: "You must be logged in to edit a list.",
+                    title: "Error"
+                };
+                this.loading = false;
+                return;
             }
 
-            let listResponse;
+            const editedListResponse = await fetch("/api/content/lists", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwt}`
+                },
+                body: JSON.stringify({
+                    listId: this.listId,
+                    updateData: this.editedList
+                })
+            });
 
-            try {
-                let permissions = [
-                    Permission.delete(Role.user(this.user.$id)),
-                    Permission.update(Role.user(this.user.$id))
-                ];
+            const listResponse = await editedListResponse.json();
 
-                if (this.editedList.private) {
-                    permissions.push(Permission.read(Role.user(this.user.$id)));
-                } else {
-                    permissions.push(Permission.read(Role.any()));
-                }
-                listResponse = await databases.updateDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    this.listId,
-                    this.editedList,
-                    permissions
-                );
-            } catch (e) {
-                console.log(e);
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+            if (!editedListResponse.ok) {
+                this.alert = {
+                    text: listResponse.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }
 
             this.$emit("updateList", {
-                list: listResponse
+                list: listResponse.list
             });
 
             if (this.previousValues.private !== this.editedList.private) {
                 if (this.editedList.private) {
-                    this.userLists.adjustCount(true, 1);
-                    this.userLists.adjustCount(false, -1);
+                    adjustCount(true, 1);
+                    adjustCount(false, -1);
                 } else {
-                    this.userLists.adjustCount(false, 1);
-                    this.userLists.adjustCount(true, -1);
+                    adjustCount(false, 1);
+                    adjustCount(true, -1);
                 }
             }
 

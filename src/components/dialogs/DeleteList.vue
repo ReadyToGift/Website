@@ -59,14 +59,14 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { databases, storage } from "@/appwrite";
 import { mdiAlert, mdiDelete } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
+import { adjustCount } from "@/stores/userLists";
 import { AppwriteException } from "appwrite";
 import { clientRouter } from "@/router";
-import { userLists as userListsStore } from "@/stores/userLists";
 import { useStore } from "@nanostores/vue";
+
+import { getJwt } from "@/stores/auth";
 
 export default {
     title: "ListDialog",
@@ -95,8 +95,7 @@ export default {
             listId: null,
             loading: false,
             mdiAlert,
-            mdiDelete,
-            userLists: useStore(userListsStore)
+            mdiDelete
         };
     },
     watch: {
@@ -111,31 +110,46 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                await Promise.all(
-                    this.list.items.map(async (item) => {
-                        if (item.imageID) {
-                            await storage.deleteFile(
-                                APPWRITE_IMAGE_BUCKET,
-                                item.imageID
-                            );
-                        }
-                        // List <=> Items are set to cascade delete in Appwrite console
+                const jwt = await getJwt();
+                if (!jwt) {
+                    this.alert = {
+                        text: "You must be logged in to delete a list.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                const deleteListResponse = await fetch("/api/content/lists", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`
+                    },
+                    body: JSON.stringify({
+                        listId: this.list.$id
                     })
-                );
+                });
 
-                await databases.deleteDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    this.list.$id
-                );
+                const deleteListData = await deleteListResponse.json();
 
-                this.userLists.adjustCount(this.list.private, -1);
+                if (!deleteListResponse.ok) {
+                    this.alert = {
+                        text: deleteListData.message || "An error occurred while deleting the list.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                adjustCount(this.list.private, -1);
 
                 clientRouter.push("/dash/lists");
 
                 this.dialogOpen = false;
                 this.loading = false;
             } catch (e) {
+                console.log(e);
                 if (e instanceof AppwriteException) {
                     this.alert = {
                         text: e.message,

@@ -45,7 +45,7 @@
                         :text="alert.text"
                     />
                     <v-alert
-                        v-if="newList.private && privateListLimitReached"
+                        v-if="newList.private && privateListLimitReached.value"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -79,7 +79,7 @@
                         
                     </v-alert>
                     <v-alert
-                        v-if="!newList.private && publicListLimitReached"
+                        v-if="!newList.private && publicListLimitReached.value"
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
@@ -123,7 +123,7 @@
                         @click="createList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="(!newList.private && publicListLimitReached) || (newList.private && privateListLimitReached)"
+                        :disabled="(!newList.private && publicListLimitReached.value) || (newList.private && privateListLimitReached.value)"
                     />
                 </v-card-actions>
             </v-card>
@@ -132,20 +132,15 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { AppwriteException, ID, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPlus } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
 import { allLimits as allLimitsStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
 import { $prefs } from "@/stores/prefs";
+import { getJwt } from "@/stores/auth";
 import { userLists as userListsStore } from "@/stores/userLists";
-import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
-
-const user = useStore(userStore);
 
 
 export default {
@@ -219,7 +214,6 @@ export default {
     },
     methods: {
         async createList() {
-            let list;
             this.alert = false;
             this.loading = true;
             if (this.newList.title === "") {
@@ -231,85 +225,40 @@ export default {
                 return;
             }
 
-            if (this.newList.shortUrl) {
-                try {
-                    const conflictingDocuments = await databases.listDocuments(
-                        APPWRITE_DB,
-                        APPWRITE_LIST_COLLECTION,
-                        [Query.equal("shortUrl", this.newList.shortUrl)]
-                    );
+            const jwt = await getJwt();
 
-                    if (conflictingDocuments.total !== 0) {
-                        this.alert = {
-                            text: "Short URL already in use.",
-                            title: "Error"
-                        };
-                        this.loading = false;
-                        return;
-                    }
-                } catch (e) {
-                    if (e instanceof AppwriteException) {
-                        this.alert = {
-                            text: e.message,
-                            title: "Error"
-                        };
-                    } else {
-                        this.alert = {
-                            text: "An unknown error occurred.",
-                            title: "Error"
-                        };
-                    }
-                    this.loading = false;
-                    return;
-                }
-            }
-
-            try {
-                let permissions = [
-                    Permission.delete(Role.user(user.value.$id)),
-                    Permission.update(Role.user(user.value.$id))
-                ];
-
-                if (this.newList.private) {
-                    permissions.push(
-                        Permission.read(Role.user(user.value.$id))
-                    );
-                } else {
-                    permissions.push(
-                        Permission.read(Role.any())
-                    );
-                }
-
-                list = await databases.createDocument(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    ID.unique(),
-                    {
-                        ...this.newList,
-                        author: user.value.$id,
-                        authorName: user.value.name,
-                        itemCount: 0
-                    },
-                    permissions
-                );
-            } catch (e) {
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+            if (!jwt) {
+                this.alert = {
+                    text: "You must be logged in to create a list.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }
 
+            const createListResp = await fetch("/api/content/lists", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwt}`
+                },
+                body: JSON.stringify({
+                    ...this.newList
+                })
+            });
+
+            const createListData = await createListResp.json();
+
+            if (!createListResp.ok) {
+                this.alert = {
+                    text: createListData.message || "An unknown error occurred.",
+                    title: "Error"
+                };
+                this.loading = false;
+                return;
+            }
             this.$emit("createList", {
-                list
+                list: createListData.list
             });
 
             this.newList = {

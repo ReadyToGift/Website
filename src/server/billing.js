@@ -42,6 +42,17 @@ export const getLimits = (benefitNames) => {
     return limits;
 };
 
+export const getCustomerId = async ({ externalCustomerId }) => {
+    const customer = await polar.customers.getExternal({
+        externalId: externalCustomerId
+    }).catch((error) => {
+        console.log(error);
+        throw new Error("Error getting customer", { cause: error });
+    });
+
+    return customer.id;
+};
+
 export const getLimitsForCustomer = async ({ customerId }) => {
     const benefitGrants = await getBenefitGrants({ customerId });
     const benefitNames = benefitGrants.map((benefit) => benefit.benefit.description);

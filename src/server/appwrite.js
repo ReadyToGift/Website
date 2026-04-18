@@ -28,6 +28,9 @@ export function createAdminClient() {
         },
         get messaging() {
             return new appwriteSdk.Messaging(client);
+        },
+        get storage() {
+            return new appwriteSdk.Storage(client);
         }
     };
 }
@@ -57,4 +60,36 @@ export const createSessionClient = ({ request, jwt }) => {
         },
         jwt: jwt
     };
+};
+
+
+export const requireAuth = async (context) => {
+    let sessionClient;
+    try {
+        sessionClient = createSessionClient(context);
+    } catch (err) {
+        console.log(err);
+
+        return new Response(
+            JSON.stringify({
+                message: "Unauthenticated"
+            }),
+            {
+                status: 401,
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+
+    const account = await sessionClient.account.get();
+
+    if (!account) {
+        return new Response(null, {
+            status: 401
+        });
+    };
+
+    return { sessionClient, account };
 };

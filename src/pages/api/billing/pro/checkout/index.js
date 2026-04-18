@@ -6,7 +6,6 @@ const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
 });
 
-// TODO: Add cache invalidation on checkout
 
 export const POST = async (context) => {
     try {
