@@ -1,5 +1,4 @@
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
-import { createSessionClient } from "@/server/appwrite";
 import { Polar } from "@polar-sh/sdk";
 
 import { getCache, setCache } from "@/server/cache";

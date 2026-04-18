@@ -31,7 +31,7 @@
                 />
             </v-list>
             <v-list
-                v-if="prefs.history.length > 0"
+                v-if="prefs.history && prefs.history.length > 0"
             >
                 <v-divider />
                 <v-list-item
@@ -167,6 +167,8 @@ import { $prefs } from "@/stores/prefs";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
+const prefs = useStore($prefs);
+
 
 export default {
     components: {
@@ -190,7 +192,7 @@ export default {
         return {
             account: useStore(user),
             loadingLoginLogout: false,
-            prefs: useStore($prefs),
+            prefs,
             mdiAccountCircle,
             mdiClock,
             mdiCog,

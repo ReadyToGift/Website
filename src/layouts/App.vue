@@ -57,8 +57,8 @@ import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
 import { useRouter } from "vue-router";
 
+import { init as initAuth, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
-import { user as userStore } from "@/stores/auth";
 
 const loading = ref(true);
 
@@ -80,7 +80,7 @@ const refreshApp = () => {
 
 const setThemeColor = () => {
     try {
-        vuetifyTheme.change(prefs.value.darkMode ? "dark" : "light");
+        vuetifyTheme.change(prefs.darkMode ? "dark" : "light");
     } catch (error) {
         console.error("Failed to set theme color:", error);
     }
@@ -89,7 +89,7 @@ const setThemeColor = () => {
 setThemeColor();
 
 watch(
-    () => prefs.value.darkMode,
+    () => prefs.darkMode,
     () => {
         setThemeColor();
     }
@@ -108,7 +108,7 @@ window.addEventListener("appinstalled", () => {
 
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
-    // await initAuth({ router });
+    await initAuth({ router });
     if (UMAMI_URL && UMAMI_ID) {
         const script = document.createElement("script");
         script.src = `${UMAMI_URL}`;

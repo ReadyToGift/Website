@@ -30,10 +30,11 @@ export const loadPrefs = (prefs) => {
 
 export const updatePrefs = async (updatedPrefs) => {
     const userAccount = user.get();
+    const newPrefs = Object.assign({}, $prefs.get(), updatedPrefs);
     if (userAccount) {
-        await account.updatePrefs(updatedPrefs);
+        await account.updatePrefs(newPrefs);
     }
-    $prefs.set(Object.assign({}, $prefs.get(), updatedPrefs));
+    $prefs.set(newPrefs);
 };
 
 export const addToHistory = (item) => {

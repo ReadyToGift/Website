@@ -253,9 +253,8 @@
 <script setup>
 import { onMounted, shallowRef } from "vue";
 
-import { billing as billingStore, getBillingDetails, getProCheckout, getProProduct } from "@/stores/billing";
-import { $prefs } from "@/stores/prefs";
-import { allLimits as allLimitsStore } from "@/stores/billing";
+import { $prefs, updatePrefs } from "@/stores/prefs";
+import { allLimits as allLimitsStore, billing as billingStore, getBillingDetails, getProCheckout, getProProduct, init as initBilling } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
@@ -274,6 +273,9 @@ const proCheckoutURL = shallowRef("");
 const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
 const billingDetailsFailure = shallowRef(false);
+
+const queryParams = new URLSearchParams(window.location.search);
+const status = queryParams.get("status");
 
 const formatPrice = (price, currency) => {
     const formattedPrice = new Intl.NumberFormat("en-US", {
@@ -342,6 +344,38 @@ onMounted(async () => {
     getProCheckoutURL();
     const billingDetailsResp = await getBillingDetails();
     if (billingDetailsResp === false) billingDetailsFailure.value = true;
+
+
+    if (status === "success") {
+        await updatePrefs({
+            pro: true
+        });
+        await initBilling();
+        createDialog({
+            title: "Subscription updated",
+            text: "Your subscription has been updated successfully.",
+            fullscreen: false,
+            actions: [
+                {
+                    action: "close",
+                    color: "primary",
+                    text: "OK"
+                }
+            ]
+        });
+    } else if (status === "canceled") {
+        createDialog({
+            title: "Subscription update canceled",
+            text: "Your subscription update was canceled. No changes have been made to your subscription.",
+            actions: [
+                {
+                    action: "close",
+                    color: "primary",
+                    text: "OK"
+                }
+            ]
+        });
+    }
 });
 
 </script>
@@ -395,7 +429,6 @@ main {
         .originalPrice {
             text-decoration: line-through;
             opacity: 0.7;
-            margin-left: 0.5rem;
         }
     }
 
