@@ -1,69 +1,29 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "node-appwrite";
 import { createAdminClient, requireAuth } from "@/server/appwrite";
-import { getCustomerId, getLimitsForCustomer } from "@/server/billing";
+import { getUserLimits } from "@/server/billing";
 
-export const getUserLimits = async ({ account, adminClient }) => {
+const getListUsage = async ({ account, adminClient }) => {
+    const { limits } = await getUserLimits({ account, adminClient });
+
+    let userLists;
+
     try {
-        let limits;
+        const listsResp = await adminClient.tablesDB.listRows({
+            databaseId: APPWRITE_DB,
+            tableId: APPWRITE_LIST_COLLECTION,
+            queries: [
+                Query.equal("author", account.$id)
+            ]
+        });
 
-        try {
-            const customerId = await getCustomerId({ externalCustomerId: account.$id });
-            limits = await getLimitsForCustomer({ customerId });
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error getting customer limits"
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
-
-        let userLists;
-
-        try {
-            const listsResp = await adminClient.tablesDB.listRows({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                queries: [
-                    Query.equal("author", account.$id)
-                ]
-            });
-
-            userLists = listsResp.rows;
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error getting user lists"
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
-
-        const publicListCount = userLists.filter(list => !list.private).length;
-        const privateListCount = userLists.filter(list => list.private).length;
-
-        return { limits, publicListCount, privateListCount };
+        userLists = listsResp.rows;
     } catch (err) {
         console.log(err);
 
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Error getting user lists"
             }),
             {
                 status: 500,
@@ -73,6 +33,11 @@ export const getUserLimits = async ({ account, adminClient }) => {
             }
         );
     }
+
+    const publicListCount = userLists.filter(list => !list.private).length;
+    const privateListCount = userLists.filter(list => list.private).length;
+
+    return { limits, publicListCount, privateListCount };
 };
 
 export const POST = async (context) => {
@@ -117,7 +82,7 @@ export const POST = async (context) => {
 
         let limits, publicListCount, privateListCount;
         try {
-            const userLimitsResp = await getUserLimits({ account, adminClient });
+            const userLimitsResp = await getListUsage({ account, adminClient });
             limits = userLimitsResp.limits;
             publicListCount = userLimitsResp.publicListCount;
             privateListCount = userLimitsResp.privateListCount;

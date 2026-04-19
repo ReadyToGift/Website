@@ -55,19 +55,23 @@
 
 
 <script setup>
-import { client, databases, functions } from "@/appwrite";
+// import { client, databases, functions } from "@/appwrite";
 import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
 import { VCardText, VCardTitle, VChip, VIcon, VTimeline, VTimelineItem } from "vuetify/components";
-import { APPWRITE_DB } from "astro:env/client";
+// import { APPWRITE_DB } from "astro:env/client";
+import { getJwt } from "@/stores/auth";
+import { SSE } from "sse.js";
 
 const totalAttempts = shallowRef(0);
 const currentAttempt = shallowRef(0);
 const attemptStatus = shallowRef("");
 const outputData = shallowRef(null);
 const status = shallowRef("");
+const completed = shallowRef(false);
 
 const autofillSubscription = shallowRef(null);
+const autofillSSE = shallowRef(null);
 
 const currentStep = computed(() => {
     if (attemptStatus.value) {
@@ -130,84 +134,73 @@ const emit = defineEmits(["complete", "error"]);
 const autofill = async () => {
     try {
         pollingFallback = null;
-        const result = await functions.createExecution(
-            "get-autofill-data",
-            JSON.stringify({
-                currency: props.currency,
-                itemID: props.itemID,
-                url: props.url
-            }),
-            true
-        );
 
-        const executionID = result.$id;
+        const jwt = await getJwt();
 
-        if (result.status !== "failed") {
-            // Fall back to manual polling incase socket fails, or completes before socket connects
-            pollingFallback = setInterval(async () => {
-                try {
-                    const pollResult = await databases.getDocument(
-                        APPWRITE_DB,
-                        "autofills",
-                        executionID
-                    );
-
-                    switch (pollResult.status) {
-                    case "failed":
-                        clearInterval(pollingFallback);
-                        emit("error", "All autofill attempts have failed. Please try again later or fill in the details manually.");
-                        break;
-                    case "completed":
-                        clearInterval(pollingFallback);
-                        setTimeout(() => {
-                            emit("complete", pollResult.outputData);
-                        }, 500);
-                        break;
-                    }
-                } catch (err) {
-                    if (err.message === "AppwriteException: Document with the requested ID could not be found.") throw err;
-                }
-            }, 5000);
-
-            autofillSubscription.value = client.subscribe([
-                "executions",
-                `databases.wishlist.collections.autofills.documents.${executionID}` // try without, then with just
-            ], (response) => {
-                clearInterval(pollingFallback); // Clear the recheck timeout on receiving an update
-                if (response.channels.includes("rows")) {
-
-                    currentAttempt.value = response.payload.attempt;
-                    totalAttempts.value = response.payload.totalAttempts;
-                    attemptStatus.value = response.payload.attemptStatus;
-                    outputData.value = response.payload.outputData;
-                    status.value = response.payload.status;
-
-                    if (status.value === "failed") {
-                        emit("error", "All autofill attempts have failed. Please try again later or fill in the details manually.");
-                    }
-
-                    if (status.value === "completed") {
-                        autofillSubscription.value(); // Unsubscribe from the subscription
-                        setTimeout(() => {
-                            emit("complete", outputData.value);
-                        }, 500);
-                    }
-                } else if (response.channels.includes("executions")) {
-                    if (response.payload.status === "completed") {
-                        // Just in case the DB update is delayed
-                        setTimeout(() => {
-                            emit("complete", outputData.value);
-                        }, 500);
-                    } else {
-                        if (response.payload.status === "failed") {
-                            emit("error", "All autofill attempts have failed. Please try again later or fill in the details manually.");
-                        }
-                    }
-                }
-            });
-        } else {
-            throw new Error("Autofill function execution failed to start.");
+        if (!jwt) {
+            throw new Error("User is not authenticated.");
         }
+
+        let sseClient;
+
+        try {
+            sseClient = new SSE("/api/content/items/autofill", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${jwt}`
+                },
+                payload: JSON.stringify({
+                    itemID: props.itemID,
+                    url: props.url,
+                    currency: props.currency
+                })
+            });
+        } catch (err) {
+            console.error("Failed to create SSE client:", err);
+            throw new Error("Failed to start autofill process. Please try again.");
+        }
+
+        autofillSSE.value = sseClient;
+
+        sseClient.onopen = () => {
+            console.log("SSE opened: /api/content/items/autofill");
+        };
+
+        sseClient.onmessage = (event) => {
+            try {
+                const payload = JSON.parse(event.data);
+                console.log("Autofill SSE:", payload);
+
+                currentAttempt.value = payload.attempt || 0;
+                totalAttempts.value = payload.totalAttempts || 0;
+                attemptStatus.value = payload.attemptStatus || payload.status || "";
+                status.value = payload.status || "";
+
+                if (payload.outputData) {
+                    outputData.value = payload.outputData;
+                }
+
+                if (payload.status === "completed" && payload.outputData) {
+                    completed.value = true;
+                    console.log(payload.outputData);
+                    emit("complete", JSON.stringify(payload.outputData));
+                    sseClient.close();
+                }
+            } catch (parseError) {
+                console.error("Failed to parse SSE message:", parseError, event.data);
+            }
+        };
+
+        sseClient.onerror = (event) => {
+            if (completed.value) {
+                return;
+            }
+            console.error("SSE Error:", event);
+            if (event.currentTarget.readyState === EventSource.CLOSED) {
+                console.warn("SSE connection was closed.");
+            }
+            emit("error", "Autofill stream failed. Please try again.");
+        };
     } catch (error) {
         console.error({
             error
@@ -223,6 +216,10 @@ onMounted(() => {
 onUnmounted(() => {
     if (autofillSubscription.value) {
         autofillSubscription.value(); // Unsubscribe from the subscription
+    }
+    if (autofillSSE.value) {
+        autofillSSE.value.close();
+        autofillSSE.value = null;
     }
     if (pollingFallback) {
         clearInterval(pollingFallback);

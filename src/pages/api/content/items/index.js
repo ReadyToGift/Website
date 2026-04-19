@@ -1,7 +1,7 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { createAdminClient, requireAuth } from "@/server/appwrite";
-import { getCustomerId, getLimitsForCustomer } from "@/server/billing";
 import { Permission, Query, Role } from "node-appwrite";
+import { getUserLimits } from "@/server/billing";
 
 const updateItemCount = async ({ adminClient, listId, itemCount = null }) => {
     if (!listId || typeof listId !== "string") {
@@ -25,47 +25,6 @@ const updateItemCount = async ({ adminClient, listId, itemCount = null }) => {
         rowId: listId,
         data: { itemCount }
     });
-};
-
-export const getUserLimits = async ({ account }) => {
-    try {
-        let limits;
-
-        try {
-            const customerId = await getCustomerId({ externalCustomerId: account.$id });
-            limits = await getLimitsForCustomer({ customerId });
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error getting customer limits"
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
-
-        return { limits };
-    } catch (err) {
-        console.log(err);
-
-        return new Response(
-            JSON.stringify({
-                message: "Internal server error"
-            }),
-            {
-                status: 500,
-                headers: {
-                    "Content-Type": "application/json"
-                }
-            }
-        );
-    }
 };
 
 export const POST = async (context) => {
@@ -628,6 +587,21 @@ export const PUT = async (context) => {
             permissions.push(Permission.read(Role.user(account.$id)));
         } else {
             permissions.push(Permission.read(Role.any()));
+        }
+
+        const differentImage = updateData.imageID && updateData.imageID !== item.imageID;
+
+        if (differentImage && item.imageID) {
+            try {
+                await adminClient.storage.deleteFile({
+                    bucketId: APPWRITE_IMAGE_BUCKET,
+                    fileId: item.imageID
+                });
+
+                console.log(`Deleted old image with ID ${item.imageID} for item ${itemId}`);
+            } catch (err) {
+                console.log(err);
+            }
         }
 
         let updatedItem;

@@ -93,7 +93,19 @@ export default defineConfig({
                 context: "server",
                 access: "secret",
                 default: false // TODO: May need to be updated
-            })
+            }),
+
+            AUTOFILL_USE_LOCAL_FETCH: envField.boolean({ context: "server", access: "secret", default: false }),
+            AUTOFILL_HTTP_PROXIES: envField.string({ context: "server", access: "secret", optional: true }),
+            AUTOFILL_PROXY_USERNAME: envField.string({ context: "server", access: "secret", optional: true }),
+            AUTOFILL_COUNTRY_PREFIX: envField.string({ context: "server", access: "secret", optional: true }),
+            AUTOFILL_PROXY_PASSWORD: envField.string({ context: "server", access: "secret", optional: true }),
+            AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
+            AUTOFILL_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 })
+            
+
+
+            
         }
     },
 

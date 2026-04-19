@@ -135,3 +135,15 @@ export const getActiveSubscription = async ({ externalCustomerId }) => {
     const subscriptions = await getCustomerSubscriptions({ externalCustomerId });
     return subscriptions.find((sub) => sub.status === "active");
 };
+
+export const getUserLimits = async ({ account }) => {
+    try {
+        const customerId = await getCustomerId({ externalCustomerId: account.$id });
+        const limits = await getLimitsForCustomer({ customerId });
+        return { limits };
+    } catch (err) {
+        console.log(err);
+
+        throw new Error("Error getting user limits", { cause: err });
+    }
+};
