@@ -144,7 +144,7 @@ const autofill = async () => {
         let sseClient;
 
         try {
-            sseClient = new SSE("/api/content/items/autofill", {
+            sseClient = new SSE("/api/content/item/autofill", {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${jwt}`
@@ -161,10 +161,6 @@ const autofill = async () => {
         }
 
         autofillSSE.value = sseClient;
-
-        sseClient.onopen = () => {
-            console.log("SSE opened: /api/content/items/autofill");
-        };
 
         sseClient.onmessage = (event) => {
             try {
@@ -196,10 +192,24 @@ const autofill = async () => {
                 return;
             }
             console.error("SSE Error:", event);
-            if (event.currentTarget.readyState === EventSource.CLOSED) {
-                console.warn("SSE connection was closed.");
+
+            if (event.data) {
+                try {
+                    const errorPayload = JSON.parse(event.data);
+                    console.error("Autofill SSE Error Payload:", errorPayload);
+                    if (errorPayload.message) {
+                        emit("error", `Autofill error: ${errorPayload.message}`);
+                    } else {
+                        emit("error", "An unknown error occurred during autofill.");
+                    }
+                } catch (parseError) {
+                    console.error("Failed to parse SSE error message:", parseError, event.data);
+                    emit("error", "An error occurred during autofill, and the error message could not be parsed.");
+                }
+            } else {
+                emit("error", "An error occurred during autofill, and no additional information is available.");
             }
-            emit("error", "Autofill stream failed. Please try again.");
+            sseClient.close();
         };
     } catch (error) {
         console.error({

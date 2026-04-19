@@ -432,7 +432,7 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                const createResp = await fetch("/api/content/items", {
+                const createResp = await fetch("/api/content/item", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -570,7 +570,7 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                const updateResp = await fetch("/api/content/items", {
+                const updateResp = await fetch("/api/content/item", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

@@ -120,7 +120,7 @@ export default {
                     return;
                 }
 
-                const deleteListResponse = await fetch("/api/content/lists", {
+                const deleteListResponse = await fetch("/api/content/list", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",

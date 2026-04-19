@@ -104,7 +104,7 @@ export default {
                     return;
                 }
 
-                const response = await fetch("/api/content/items", {
+                const response = await fetch("/api/content/item", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",

@@ -223,7 +223,7 @@ export default {
             }
 
             try {
-                const moveItemResp = await fetch("/api/content/items", {
+                const moveItemResp = await fetch("/api/content/item", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",

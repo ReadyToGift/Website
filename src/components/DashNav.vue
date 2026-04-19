@@ -6,11 +6,11 @@
             rail
             v-if="!$vuetify.display.mobile"
         >
-            <v-list v-if="account">
+            <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="account.avatar"
-                    :title="account.name || account.email"
-                    :subtitle="account.email"
+                    :prepend-avatar="user.avatar"
+                    :title="user.name || user.email"
+                    :subtitle="user.email"
                 />
             </v-list>
             <v-divider/>
@@ -70,7 +70,7 @@
                         title="Log Out"
                         @click="logout"
                         :loading="loadingLoginLogout"
-                        v-if="account"
+                        v-if="user"
                     />
                     <v-list-item
                         :prepend-icon="mdiLogin"
@@ -103,7 +103,7 @@
             <template v-slot:append>
                 <v-btn
                     to="/dash/lists"
-                    v-if="account"
+                    v-if="user"
                     :prepend-icon="mdiFormatListBulleted"
                     color="on-primary-container"
                     variant="tonal"
@@ -162,12 +162,12 @@ import {
 } from "vuetify/components";
 import QuickSettings from "./dialogs/QuickSettings.vue";
 
-import { logOut as logOutUser, user } from "@/stores/auth";
+import { logOut as logOutUser, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
-import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 const prefs = useStore($prefs);
+const user = useStore(userStore);
 
 
 export default {
@@ -190,7 +190,6 @@ export default {
     },
     data() {
         return {
-            account: useStore(user),
             loadingLoginLogout: false,
             prefs,
             mdiAccountCircle,
@@ -204,7 +203,7 @@ export default {
             mdiLogout,
             mdiMenu,
             mdiTune,
-            user: useStore(userStore)
+            user
         };
     },
     methods: {

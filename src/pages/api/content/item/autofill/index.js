@@ -194,6 +194,7 @@ const getPreview = async ({
                 attemptStatus: "completed"
             });
 
+
             const bandwidthGB = totalBandwidth / (1024 * 1024 * 1024);
             const costInCents = parseFloat(
                 (bandwidthGB * bandwidthCostPerGB.amount).toFixed(12)

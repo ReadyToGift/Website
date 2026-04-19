@@ -245,7 +245,7 @@ export default {
                 return;
             }
 
-            const editedListResponse = await fetch("/api/content/lists", {
+            const editedListResponse = await fetch("/api/content/list", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

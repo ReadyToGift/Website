@@ -236,7 +236,7 @@ export default {
                 return;
             }
 
-            const createListResp = await fetch("/api/content/lists", {
+            const createListResp = await fetch("/api/content/list", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
