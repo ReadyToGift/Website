@@ -8,6 +8,7 @@ export const user = atom(null);
 export const mfaFactors = atom([]);
 export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
 export const authInitialized = atom(false);
+let initPromise = null;
 
 const dev = process.env.NODE_ENV === "development";
 
@@ -27,7 +28,14 @@ if (dev) {
 }
 
 export const getJwt = async () => {
-    if (!user.get()) return false;
+    if (!authInitialized.get()) {
+        await init();
+    }
+
+    if (!user.get()) {
+        console.error("No user logged in, cannot get JWT");
+        return false;
+    }
 
     if (appwriteJwt.get() && appwriteJwtExp.get()) {
         const jwtExpired = new Date().getTime() > appwriteJwtExp.get();
@@ -44,7 +52,7 @@ export const getJwt = async () => {
     } catch (err) {
         console.log(err);
     }
-    
+
     return false;
 };
 
@@ -83,24 +91,37 @@ export const getMFAFactors = async () => {
     return mfaFactorsList;
 };
 
+const isUnauthorizedError = (error) => {
+    return error?.type === "user_unauthorized" || error?.code === 401;
+};
+
+const runInit = async ({ currentAccount = null } = {}) => {
+    if (!currentAccount) {
+        currentAccount = await account.get();
+    }
+
+    if (currentAccount.prefs) {
+        loadPrefs(currentAccount.prefs);
+    }
+
+    user.set({
+        ...currentAccount,
+        avatar: currentAccount?.name ? avatars.getInitials(currentAccount.name) : null
+    });
+    authInitialized.set(true);
+};
+
 export const init = async ({ router = null, currentAccount = null } = {}) => {
+    if (initPromise) {
+        return initPromise;
+    }
+
     console.log("Initialising auth");
-    try {
+    initPromise = (async () => {
         try {
-            if (!currentAccount) {
-                currentAccount = await account.get();
-            }
-
-            if (currentAccount.prefs) {
-                loadPrefs(currentAccount.prefs);
-            }
-
-            user.set({
-                ...currentAccount,
-                avatar: currentAccount?.name ? avatars.getInitials(currentAccount.name) : null
-            });
+            await runInit({ currentAccount });
         } catch (err) {
-            if (err.type === "user_more_factors_required") {
+            if (err?.type === "user_more_factors_required") {
                 console.log("MFA required, initiating TOTP challenge dialog.");
                 const totpChallengeResp = await createTOTPChallengeDialog();
                 console.log({ totpChallengeResp });
@@ -110,14 +131,26 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
                 }
                 console.log({ totpChallengeResp });
                 window.location.reload();
+                return;
             }
-        }
-    } catch (error) {
-        console.error("Auth init error:", error);
-        // Router guards will handle redirects for protected routes
-    }
 
-    authInitialized.set(true);
+            if (isUnauthorizedError(err)) {
+                user.set(null);
+                authInitialized.set(true);
+                return;
+            }
+
+            authInitialized.set(false);
+            console.error("Auth init error:", err);
+            // Keep authInitialized=false for transient errors so callers retry.
+        }
+    })();
+
+    try {
+        await initPromise;
+    } finally {
+        initPromise = null;
+    }
 };
 
 export async function logOut() {
