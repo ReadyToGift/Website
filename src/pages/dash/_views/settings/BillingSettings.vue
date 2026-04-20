@@ -137,7 +137,7 @@
                         <v-btn
                             disabled
                             variant="outlined"
-                            v-if="!prefs.pro"
+                            v-if="!billing.isPro"
                         >
                             Already on free
                         </v-btn>
@@ -154,7 +154,7 @@
                         <v-btn
                             :loading="proCheckoutLoading"
                             :href="proCheckoutURL || undefined"
-                            v-if="!prefs.pro"
+                            v-if="!billing.isPro"
                         >
                             Upgrade to Pro
                         </v-btn>
@@ -253,7 +253,6 @@
 <script setup>
 import { onMounted, shallowRef } from "vue";
 
-import { $prefs, updatePrefs } from "@/stores/prefs";
 import { allLimits as allLimitsStore, billing as billingStore, getBillingDetails, getProCheckout, getProProduct, init as initBilling } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
@@ -265,7 +264,6 @@ import { VAlert, VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProg
 
 const billing = useStore(billingStore);
 const allLimits = useStore(allLimitsStore);
-const prefs = useStore($prefs);
 
 const proCheckoutLoading = shallowRef(false);
 const proCheckoutURL = shallowRef("");
@@ -347,9 +345,6 @@ onMounted(async () => {
 
 
     if (status === "success") {
-        await updatePrefs({
-            pro: true
-        });
         await initBilling();
         createDialog({
             title: "Subscription updated",

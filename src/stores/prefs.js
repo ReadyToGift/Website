@@ -12,8 +12,7 @@ const defaultPrefs = {
         order: "asc"
     },
     history: [],
-    hidePWAInstallPrompt: false,
-    pro: false
+    hidePWAInstallPrompt: false
 };
 
 export const $prefs = persistentMap("userPrefs", { ...defaultPrefs }, {

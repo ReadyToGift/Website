@@ -50,7 +50,7 @@
                     >
                         You have reached your private list allowance.<br/><br/>
                         Please make some of your other lists public, or delete some of your lists.<br />
-                        <template v-if="!prefs.pro">
+                        <template v-if="!billing.isPro">
                             Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
                             <br/>
                             <v-btn
@@ -84,7 +84,7 @@
                     >
                         You have reached your public list allowance.<br/><br/>
                         Please make some of your other lists private, or delete some of your lists.<br />
-                        <template v-if="!prefs.pro">
+                        <template v-if="!billing.isPro">
                             Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
                             <br/>
                             <v-btn
@@ -128,12 +128,11 @@
 </template>
 
 <script>
-import { allLimits as allLimitsStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
+import { allLimits as allLimitsStore, billing as billingStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "appwrite";
 import { mdiAlert, mdiPencil } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { $prefs } from "@/stores/prefs";
 import { create as createDialog } from "@/stores/dialogs";
 import { databases } from "@/appwrite";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
@@ -177,7 +176,7 @@ export default {
             publicListLimitReached,
             privateListLimitReached,
             allLimits: useStore(allLimitsStore),
-            prefs: useStore($prefs)
+            billing: useStore(billingStore)
         };
     },
     watch: {

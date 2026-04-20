@@ -159,12 +159,12 @@ import PWAPrompt from "@/components/PWAPrompt.vue";
 import { Query } from "appwrite";
 
 import { $prefs, addToHistory } from "@/stores/prefs";
+import { billing as billingStore, limits as limitsStore } from "@/stores/billing";
 import { previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
 import { setCount as setListCount, userLists as userListsStore } from "@/stores/userLists";
 import { clientRouter } from "@/router";
 import { create as createDialog } from "@/stores/dialogs";
 import { formatter as currencyFormatter } from "@/stores/currency";
-import { limits as limitsStore } from "@/stores/billing";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -192,6 +192,7 @@ export default {
             currencyFormatter,
             createDialog,
             fulfillments: [],
+            billing: useStore(billingStore),
             list: false,
             limits: useStore(limitsStore),
             loadedAsAuthor: false,
@@ -333,7 +334,7 @@ export default {
             }
         },
         itemLimitReachedDialog() {
-            if (this.prefs.pro) {
+            if (this.billing.isPro) {
                 createDialog({
                     actions: [
                         {

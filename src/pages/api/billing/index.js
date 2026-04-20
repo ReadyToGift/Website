@@ -2,7 +2,19 @@ import { getCache, setCache } from "@/server/cache";
 import { createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
 
-import { getCustomerSession, getCustomerSubscriptions, getLimitsForCustomer } from "@/server/billing";
+import { getCustomerSession, getCustomerSubscriptions, getLimits, getProProduct } from "@/server/billing";
+
+import { ENABLE_BILLING } from "astro:env/client";
+
+const getProLimits = async () => {
+    if (!ENABLE_BILLING) {
+        return getLimits([]);
+    }
+
+    const proProduct = await getProProduct();
+    const benefitNames = proProduct.benefits.map((b) => b.description);
+    return getLimits(benefitNames);
+};
 
 export const GET = async (context) => {
     try {
@@ -38,27 +50,14 @@ export const GET = async (context) => {
             getCustomerSubscriptions({ externalCustomerId: account.$id })
         ]);
 
-        const limits = await getLimitsForCustomer({ customerId: customerSession.customerId });
-
         const hasPro = subscriptions.some(sub => sub.status === "active");
-
-        if (hasPro !== account.prefs.pro) {
-            try {
-                sessionClient.account.updatePrefs({
-                    ...account.prefs,
-                    pro: hasPro
-                });
-                console.log("Updated account prefs to match subscription status");
-            } catch (error) {
-                console.error("Error updating account prefs", error);
-            }
-        }
 
         return new Response(
             JSON.stringify({
                 customerSession,
                 subscriptions,
-                limits
+                proLimits: await getProLimits(),
+                pro: hasPro
             }),
             {
                 status: 200,

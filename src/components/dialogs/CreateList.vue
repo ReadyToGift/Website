@@ -54,7 +54,7 @@
                     >
                         You have reached your private list allowance.<br/><br/>
                         Please make some of your other lists public, or delete some of your lists.<br />
-                        <template v-if="!prefs.pro">
+                        <template v-if="!billing.isPro">
                             Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
                             <br/>
                             <v-btn
@@ -88,7 +88,7 @@
                     >
                         You have reached your public list allowance.<br/><br/>
                         Please make some of your other lists private, or delete some of your lists.<br />
-                        <template v-if="!prefs.pro">
+                        <template v-if="!billing.isPro">
                             Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
                             <br/>
                             <v-btn
@@ -136,8 +136,7 @@ import { mdiAlert, mdiPlus } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
-import { allLimits as allLimitsStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
-import { $prefs } from "@/stores/prefs";
+import { allLimits as allLimitsStore, billing as billingStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
 import { getJwt } from "@/stores/auth";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { useStore } from "@nanostores/vue";
@@ -190,7 +189,7 @@ export default {
             publicListLimitReached,
             privateListLimitReached,
             userLists: useStore(userListsStore),
-            prefs: useStore($prefs),
+            billing: useStore(billingStore),
             allLimits: useStore(allLimitsStore)
         };
     },

@@ -67,7 +67,7 @@
                 <v-card-actions>
                     <v-tooltip
                         :open-on-hover="false"
-                        :open-on-click="true"
+                        :open-on-click="!(modifiedItem.url && limits.autofill) ? true : false"
                         location="top"
                     >
                         <template v-slot:activator="{ props }">

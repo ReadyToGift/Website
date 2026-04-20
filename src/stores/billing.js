@@ -1,5 +1,4 @@
 import { computed, map } from "nanostores";
-import { $prefs } from "./prefs";
 import { getJwt } from "./auth";
 import { userLists } from "./userLists";
 
@@ -15,15 +14,20 @@ export const billing = map({
     billingLoaded: false,
     subscriptions: [],
     session: null,
+    isPro: false,
     pro: null,
     inactiveSubscription: null
 });
 
-export const limits = map({
+const getFreeLimits = () => ({
     publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
     privateLists: FREE_TIER_PRIVATE_LIST_LIMIT,
     itemsPerList: FREE_TIER_ITEMS_PER_LIST,
     autofill: FREE_TIER_ENABLE_AUTOFILL
+});
+
+export const limits = map({
+    ...getFreeLimits()
 });
 
 export const allLimits = map({
@@ -31,9 +35,26 @@ export const allLimits = map({
     pro: limits.get()
 });
 
+
+
+const applyLimits = ({ isPro, proLimits }) => {
+    const freeLimits = getFreeLimits();
+    const resolvedProLimits = proLimits || freeLimits;
+    const activeLimits = isPro ? resolvedProLimits : freeLimits;
+
+    allLimits.setKey("free", freeLimits);
+    allLimits.setKey("pro", resolvedProLimits);
+
+    limits.setKey("publicLists", activeLimits.publicLists);
+    limits.setKey("privateLists", activeLimits.privateLists);
+    limits.setKey("itemsPerList", activeLimits.itemsPerList);
+    limits.setKey("autofill", activeLimits.autofill);
+};
+
 export const getBillingDetails = async () => {
     if (!ENABLE_BILLING) {
         console.log("Billing is disabled, using free limits");
+        applyLimits({ isPro: false });
         billing.setKey("billingLoaded", true);
         return;
     }
@@ -50,16 +71,14 @@ export const getBillingDetails = async () => {
         const {
             customerSession,
             subscriptions,
-            limits: newLimits
+            proLimits,
+            pro: isPro
         } = await billingResp.json();
     
         billing.setKey("session", customerSession);
         billing.setKey("subscriptions", subscriptions);
-
-        limits.setKey("publicListLimit", newLimits.publicLists);
-        limits.setKey("privateListLimit", newLimits.privateLists);
-        limits.setKey("itemsPerListLimit", newLimits.itemsPerList);
-        limits.setKey("enableAutofill", newLimits.autofill);
+        billing.setKey("isPro", isPro);
+        applyLimits({ isPro, proLimits });
 
         const activeSubscription = subscriptions.find((sub) => sub.status === "active");
         billing.setKey("pro", activeSubscription);
@@ -77,23 +96,13 @@ export const getBillingDetails = async () => {
 
 export const init = async () => {
     try {
-        const allLimitsResp = await fetch("/api/billing/limits");
-        const allLimitsData = await allLimitsResp.json();
-    
-        let newLimits = $prefs.get().pro ? 
-            allLimitsData.pro :
-            allLimitsData.free;
-        
-        allLimits.setKey("free", allLimitsData.free);
-        
-        if (ENABLE_BILLING) {
-            allLimits.setKey("pro", allLimitsData.pro);
+        if (!ENABLE_BILLING) {
+            applyLimits({ isPro: false });
+            billing.setKey("billingLoaded", true);
+            return;
         }
-    
-        limits.setKey("publicLists", newLimits.publicLists);
-        limits.setKey("privateLists", newLimits.privateLists);
-        limits.setKey("itemsPerList", newLimits.itemsPerList);
-        limits.setKey("autofill", newLimits.autofill);
+
+        await getBillingDetails();
     } catch (error) {
         console.log(error);
     }
