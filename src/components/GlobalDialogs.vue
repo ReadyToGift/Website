@@ -14,7 +14,12 @@
     >
         <v-card :title="dialog.title">
             <v-card-text v-if="dialog.text">
-                {{ dialog.text }}
+                <p
+                    v-for="line in dialog.text.split('\n')"
+                    :key="line"
+                >
+                    {{ line }}
+                </p>
             </v-card-text>
             <component
                 :is="dialog.component"

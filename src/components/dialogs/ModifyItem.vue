@@ -65,31 +65,17 @@
                     />                    
                 </v-card-text>
                 <v-card-actions>
-                    <v-tooltip
-                        :open-on-hover="false"
-                        :open-on-click="!(modifiedItem.url && limits.autofill) ? true : false"
-                        location="top"
+                    <v-btn
+                        :prepend-icon="mdiRobot"
+                        variant="tonal"
+                        :disabled="!(modifiedItem.url && autofillUsage.remainingAllowance !== 0)"
+                        @click="autofill"
                     >
-                        <template v-slot:activator="{ props }">
-                            <span v-bind="props">
-                                <v-btn
-                                    text="Auto-fill"
-                                    :prepend-icon="mdiRobot"
-                                    variant="tonal"
-                                    :disabled="!(modifiedItem.url && limits.autofill)"
-                                    @click="autofill"
-                                />
-                            </span>
+                        Autofill
+                        <template v-if="!limits.autofill">
+                            ({{ autofillUsage.remainingAllowance }}/{{ autofillUsage.totalAllowance }})
                         </template>
-                        <span>
-                            <template v-if="limits.autofill && !modifiedItem.url">
-                                Please enter a URL to use the auto-fill feature.
-                            </template>
-                            <template v-else-if="!limits.autofill">
-                                Auto-fill feature is not available on the free plan. Please upgrade to use this feature.
-                            </template>
-                        </span>
-                    </v-tooltip>
+                    </v-btn>
                     <v-btn
                         text="Cancel"
                         @click="isActive.value = false"
@@ -118,14 +104,14 @@
 
 <script>
 import { AppwriteException, ID, Permission, Role } from "appwrite";
+import { autofillUsage as autofillUsageStore, limits as limitsStore } from "@/stores/billing";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab, VTooltip } from "vuetify/components";
+import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vuetify/components";
 import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { create as createDialog } from "@/stores/dialogs";
 import { getJwt } from "@/stores/auth";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
-import { limits as limitsStore } from "@/stores/billing";
 import { markRaw } from "vue";
 import mime from "mime-types";
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
@@ -143,8 +129,7 @@ export default {
         VCardActions,
         VCardText,
         VDialog,
-        VFab,
-        VTooltip
+        VFab
     },
     props: {
         currency: {
@@ -177,6 +162,7 @@ export default {
     },
     data() {
         return {
+            autofillUsage: useStore(autofillUsageStore),
             alert: false,
             createDialog,
             dialogOpen: false,
@@ -275,6 +261,51 @@ export default {
     },
     methods: {
         async autofill() {
+            if (!this.limits.autofill) {
+                if (this.autofillUsage.remainingAllowance > 0) {
+                    const useAutofill = await this.createDialog({
+                        async: true,
+                        title: "Use Auto-fill?",
+                        text: `You have ${this.autofillUsage.remainingAllowance}/${this.autofillUsage.totalAllowance} auto-fill uses remaining.\nThey will only be consumed if the auto-fill process successfully retrieves data.\n\nDo you want to proceed?`,
+                        actions: [
+                            {
+                                action: "close",
+                                text: "No"
+                            },
+                            {
+                                action: "close",
+                                color: "primary",
+                                text: "Yes"
+                            }
+                        ]
+                    });
+
+                    if (useAutofill.action !== "Yes") {
+                        return;
+                    }
+                } else {
+                    this.createDialog({
+                        title: "Auto-fill Unavailable",
+                        text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",
+                        actions: [
+                            {
+                                action: "close",
+                                color: "primary",
+                                text: "Close"
+                            },
+                            {
+                                to: "/dash/settings/billing",
+                                color: "secondary",
+                                closeAfterAction: true,
+                                text: "Upgrade to Pro"
+                            }
+                        ]
+                    });
+
+                    return;
+                }
+            }
+
             this.previousValues = { ...this.modifiedItem };
 
             const resp = await this.createDialog({

@@ -72,6 +72,7 @@ export default defineConfig({
                 access: "public",
                 default: true
             }),
+            AUTOFILL_FREE_ALLOWANCE: envField.number({ context: "client", access: "public", default: 5 }),
             ENABLE_BILLING: envField.boolean({ context: "client", access: "public", default: false }),
 
             POLAR_ACCESS_TOKEN: envField.string({
@@ -79,6 +80,7 @@ export default defineConfig({
                 access: "secret",
                 optional: true
             }),
+            POLAR_AUTOFILL_METER_ID: envField.string({ context: "server", access: "secret", optional: true }),
             POLAR_PRO_PRODUCT_ID: envField.string({
                 context: "server",
                 access: "secret",

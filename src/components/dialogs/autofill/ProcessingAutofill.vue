@@ -55,12 +55,11 @@
 
 
 <script setup>
-// import { client, databases, functions } from "@/appwrite";
 import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
 import { VCardText, VCardTitle, VChip, VIcon, VTimeline, VTimelineItem } from "vuetify/components";
-// import { APPWRITE_DB } from "astro:env/client";
 import { getJwt } from "@/stores/auth";
+import { setUsedAutofillAllowance } from "@/stores/billing";
 import { SSE } from "sse.js";
 
 const totalAttempts = shallowRef(0);
@@ -179,6 +178,7 @@ const autofill = async () => {
                 if (payload.status === "completed" && payload.outputData) {
                     completed.value = true;
                     console.log(payload.outputData);
+                    if (payload.newConsumedUnits) setUsedAutofillAllowance(payload.newConsumedUnits);
                     emit("complete", JSON.stringify(payload.outputData));
                     sseClient.close();
                 }

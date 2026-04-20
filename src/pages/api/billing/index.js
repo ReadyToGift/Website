@@ -2,7 +2,7 @@ import { getCache, setCache } from "@/server/cache";
 import { createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
 
-import { getCustomerSession, getCustomerSubscriptions, getLimits, getProProduct } from "@/server/billing";
+import { getCustomerSession, getCustomerSubscriptions, getLimits, getProProduct, getUserAutofillMeter } from "@/server/billing";
 
 import { ENABLE_BILLING } from "astro:env/client";
 
@@ -45,9 +45,10 @@ export const GET = async (context) => {
             );
         }
 
-        const [customerSession, subscriptions] = await Promise.all([
+        const [customerSession, subscriptions, autofillMeter] = await Promise.all([
             getCustomerSession({ externalCustomerId: account.$id }),
-            getCustomerSubscriptions({ externalCustomerId: account.$id })
+            getCustomerSubscriptions({ externalCustomerId: account.$id }),
+            getUserAutofillMeter({ externalCustomerId: account.$id })
         ]);
 
         const hasPro = subscriptions.some(sub => sub.status === "active");
@@ -56,6 +57,7 @@ export const GET = async (context) => {
             JSON.stringify({
                 customerSession,
                 subscriptions,
+                autofillMeter,
                 proLimits: await getProLimits(),
                 pro: hasPro
             }),

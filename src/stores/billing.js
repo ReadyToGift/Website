@@ -3,6 +3,7 @@ import { getJwt } from "./auth";
 import { userLists } from "./userLists";
 
 import {
+    AUTOFILL_FREE_ALLOWANCE,
     ENABLE_BILLING,
     FREE_TIER_ENABLE_AUTOFILL,
     FREE_TIER_ITEMS_PER_LIST,
@@ -35,7 +36,19 @@ export const allLimits = map({
     pro: limits.get()
 });
 
+export const autofillUsage = map({
+    totalAllowance: AUTOFILL_FREE_ALLOWANCE,
+    usedAllowance: 0,
+    remainingAllowance: AUTOFILL_FREE_ALLOWANCE
+});
 
+export const setUsedAutofillAllowance = (used) => {
+    const total = autofillUsage.get().totalAllowance;
+    const remaining = total - used;
+
+    autofillUsage.setKey("usedAllowance", used);
+    autofillUsage.setKey("remainingAllowance", remaining);
+};
 
 const applyLimits = ({ isPro, proLimits }) => {
     const freeLimits = getFreeLimits();
@@ -49,6 +62,11 @@ const applyLimits = ({ isPro, proLimits }) => {
     limits.setKey("privateLists", activeLimits.privateLists);
     limits.setKey("itemsPerList", activeLimits.itemsPerList);
     limits.setKey("autofill", activeLimits.autofill);
+
+    if (activeLimits.autofill) {
+        autofillUsage.setKey("totalAllowance", -1);
+        autofillUsage.setKey("remainingAllowance", -1);
+    }
 };
 
 export const getBillingDetails = async () => {
@@ -71,6 +89,7 @@ export const getBillingDetails = async () => {
         const {
             customerSession,
             subscriptions,
+            autofillMeter,
             proLimits,
             pro: isPro
         } = await billingResp.json();
@@ -78,6 +97,9 @@ export const getBillingDetails = async () => {
         billing.setKey("session", customerSession);
         billing.setKey("subscriptions", subscriptions);
         billing.setKey("isPro", isPro);
+
+        setUsedAutofillAllowance(autofillMeter.consumedUnits);
+
         applyLimits({ isPro, proLimits });
 
         const activeSubscription = subscriptions.find((sub) => sub.status === "active");

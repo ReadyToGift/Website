@@ -1,6 +1,6 @@
 import { FREE_TIER_ENABLE_AUTOFILL, FREE_TIER_ITEMS_PER_LIST, FREE_TIER_PRIVATE_LIST_LIMIT, FREE_TIER_PUBLIC_LIST_LIMIT } from "astro:env/client";
 import { getCache, setCache } from "@/server/cache";
-import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
+import { POLAR_ACCESS_TOKEN, POLAR_AUTOFILL_METER_ID, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { Polar } from "@polar-sh/sdk";
 
 const polar = new Polar({
@@ -122,6 +122,30 @@ export const getBenefitGrants = async ({ customerId }) => {
     }
 
     return benefitGrants;
+};
+
+export const getUserAutofillMeter = async ({ externalCustomerId }) => {
+    let autofillMeter = await getCache(`polarCustomerAutofillMeter:${externalCustomerId}`);
+
+    if (!autofillMeter) {
+        const metersResp = await polar.customerMeters.list({
+            externalCustomerId: toPolarExternalCustomerId(externalCustomerId),
+            meterId: POLAR_AUTOFILL_METER_ID
+        }).catch((error) => {
+            console.log(error);
+            throw new Error("Error getting autofill meter", { cause: error });
+        });
+
+        autofillMeter = metersResp.result.items[0];
+
+        await setCache(`polarCustomerAutofillMeter:${externalCustomerId}`, autofillMeter, 10 * 1000);
+    }
+
+    const { consumedUnits } = autofillMeter;
+
+    return {
+        consumedUnits
+    };
 };
 
 export const getProProduct = async () => {
