@@ -7,6 +7,16 @@ const polar = new Polar({
 
 const organizationId = process.env["POLAR_ORG_ID"] ?? "";
 
+const toPolarExternalCustomerId = (id) => {
+    if (!id) return id;
+    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
+};
+
+const matchesAppwriteUserId = (externalId, appwriteUserId) => {
+    const normalizedUserId = toPolarExternalCustomerId(appwriteUserId);
+    return externalId === appwriteUserId || externalId === normalizedUserId;
+};
+
 // This Appwrite function will be executed every time your function is triggered
 export default async ({ req, res, log, error }) => {
     // You can use the Appwrite SDK to interact with other services
@@ -35,8 +45,9 @@ export default async ({ req, res, log, error }) => {
             log(`Total customers in Polar: ${polarCustomers.result.items.length}`);
 
             for (const appwriteUser of allUsers.users) {
+                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
                 const existingCustomer = polarCustomers.result.items.find(
-                    (c) => c.externalId === appwriteUser.$id
+                    (c) => matchesAppwriteUserId(c.externalId, appwriteUser.$id)
                 );
                 if (existingCustomer) {
                     if (
@@ -45,7 +56,7 @@ export default async ({ req, res, log, error }) => {
                     ) {
                         try {
                             await polar.customers.updateExternal({
-                                externalId: appwriteUser.$id,
+                                externalId: appwriteExternalId,
                                 customerUpdateExternalID: {
                                     email: appwriteUser.email,
                                     name: appwriteUser.name
@@ -63,7 +74,7 @@ export default async ({ req, res, log, error }) => {
                 } else {
                     try {
                         await polar.customers.create({
-                            externalId: appwriteUser.$id,
+                            externalId: appwriteExternalId,
                             email: appwriteUser.email,
                             name: appwriteUser.name
                         });
@@ -77,7 +88,7 @@ export default async ({ req, res, log, error }) => {
             }
 
             const unmatchedPolarCustomers = polarCustomers.result.items.filter((c) => {
-                return !allUsers.users.find((u) => u.$id === c.externalId);
+                return !allUsers.users.find((u) => matchesAppwriteUserId(c.externalId, u.$id));
             });
 
             log(`Total unmatched Polar customers: ${unmatchedPolarCustomers.length}`);
@@ -101,8 +112,9 @@ export default async ({ req, res, log, error }) => {
 
             if (eventType === "update") {
                 const appwriteUser = req.body;
+                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
                 await polar.customers.updateExternal({
-                    externalId: appwriteUser.$id,
+                    externalId: appwriteExternalId,
                     customerUpdateExternalID: {
                         email: appwriteUser.email,
                         name: appwriteUser.name
@@ -112,8 +124,9 @@ export default async ({ req, res, log, error }) => {
             } else if (eventType === "delete") {
                 try {
                     const appwriteUser = req.body;
+                    const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
                     await polar.customers.deleteExternal({
-                        externalId: appwriteUser.$id
+                        externalId: appwriteExternalId
                     });
                     log(`Deleted Polar customer for Appwrite user ${user}`);
                 } catch (err) {
@@ -123,9 +136,10 @@ export default async ({ req, res, log, error }) => {
                 }
             } else if (eventType === "create") {
                 const appwriteUser = req.body;
+                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
                 try {
                     await polar.customers.create({
-                        externalId: appwriteUser.$id,
+                        externalId: appwriteExternalId,
                         email: appwriteUser.email,
                         name: appwriteUser.name
                     });

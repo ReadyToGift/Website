@@ -21,6 +21,11 @@ if (process.env.POLAR_ACCESS_TOKEN) {
     });
 }
 
+const toPolarExternalCustomerId = (id) => {
+    if (!id) return id;
+    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
+};
+
 const bandwidthCostPerGB = {
     currency: "usd",
     amount: 8,
@@ -130,6 +135,8 @@ const getPreview = async ({
     userID,
     userID,
 }) => {
+    const externalCustomerId = toPolarExternalCustomerId(userID);
+
     const updateStatus = (data) => {
         return databases.updateDocument(
             "wishlist",
@@ -255,7 +262,7 @@ const getPreview = async ({
                     events: [
                         {
                             name: "autofill",
-                            externalCustomerId: userID,
+                            externalCustomerId,
                             metadata: {
                                 itemID,
                                 imageFound: data.imageID ? true : false,
@@ -305,6 +312,7 @@ export default async ({ req, res, log, error }) => {
             let functionStartTime = new Date();
             const { url, currency, itemID } = req.bodyJson;
             const userID = req.headers["x-appwrite-user-id"];
+            const externalCustomerId = toPolarExternalCustomerId(userID);
 
             if (!url) {
                 return res.json({
@@ -323,7 +331,7 @@ export default async ({ req, res, log, error }) => {
 
             if (polar) {
                 const customer = await polar.customers.getExternal({
-                    externalId: userID,
+                    externalId: externalCustomerId,
                 });
 
                 if (customer.id) {
@@ -358,7 +366,7 @@ export default async ({ req, res, log, error }) => {
             let enableAutofill =
                 process.env.FREE_TIER_ENABLE_AUTOFILL === "true";
             const customer = await polar.customers.get({
-                externalCustomerId: userID,
+                externalCustomerId,
             });
 
             if (customer.id) {
@@ -392,7 +400,7 @@ export default async ({ req, res, log, error }) => {
             let enableAutofill =
                 process.env.FREE_TIER_ENABLE_AUTOFILL === "true";
             const customer = await polar.customers.get({
-                externalCustomerId: userID,
+                externalCustomerId,
             });
 
             if (customer.id) {

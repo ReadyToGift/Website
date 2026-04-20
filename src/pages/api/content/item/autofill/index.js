@@ -9,8 +9,8 @@ import { getUserLimits } from "@/server/billing.js";
 
 import { requireAuth } from "@/server/appwrite.js";
 
-import { AUTOFILL_COUNTRY_PREFIX, AUTOFILL_HTTP_PROXIES, AUTOFILL_PROXY_HOST, AUTOFILL_PROXY_PASSWORD, AUTOFILL_PROXY_USERNAME, AUTOFILL_USE_LOCAL_FETCH, POLAR_ACCESS_TOKEN } from "astro:env/server";
-import { AUTOFILL_ATTEMPTS } from "astro:env/client";
+import { AUTOFILL_HTTP_PROXIES, AUTOFILL_PROXY_COUNTRY_PREFIX, AUTOFILL_PROXY_HOST, AUTOFILL_PROXY_PASSWORD, AUTOFILL_PROXY_USERNAME, AUTOFILL_USE_LOCAL_FETCH, POLAR_ACCESS_TOKEN } from "astro:env/server";
+import { AUTOFILL_PROXY_ATTEMPTS } from "astro:env/client";
 
 let polar;
 
@@ -19,6 +19,11 @@ if (POLAR_ACCESS_TOKEN) {
         accessToken: POLAR_ACCESS_TOKEN
     });
 }
+
+const toPolarExternalCustomerId = (id) => {
+    if (!id) return id;
+    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
+};
 
 const bandwidthCostPerGB = {
     currency: "usd",
@@ -68,10 +73,10 @@ const getRequestMethods = ({ country }) => {
     }
 
     let proxyUsername = AUTOFILL_PROXY_USERNAME;
-    const proxyCountryPrefix = AUTOFILL_COUNTRY_PREFIX;
+    const proxyCountryPrefix = AUTOFILL_PROXY_COUNTRY_PREFIX;
     const proxyPassword = AUTOFILL_PROXY_PASSWORD;
     const proxyHost = AUTOFILL_PROXY_HOST;
-    const proxyAttempts = parseInt(AUTOFILL_ATTEMPTS) || 0;
+    const proxyAttempts = parseInt(AUTOFILL_PROXY_ATTEMPTS) || 0;
 
     if (proxyUsername && proxyPassword && proxyHost && proxyAttempts && proxyAttempts > 0) {
         if (proxyUsername && proxyUsername.includes("{country}")) {
@@ -108,6 +113,7 @@ const getPreview = async ({
     updateStatus
 }) => {
     console.log(`Total request methods to try: ${requestMethods.length}`);
+    const externalCustomerId = toPolarExternalCustomerId(userID);
 
     let totalBandwidth = 0;
 
@@ -205,7 +211,7 @@ const getPreview = async ({
                     events: [
                         {
                             name: "autofill",
-                            externalCustomerId: userID,
+                            externalCustomerId,
                             metadata: {
                                 itemID,
                                 imageFound: data.imageID ? true : false,

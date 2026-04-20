@@ -7,6 +7,13 @@ const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
 });
 
+const toPolarExternalCustomerId = (externalCustomerId) => {
+    if (!externalCustomerId) return externalCustomerId;
+    return externalCustomerId.startsWith("appwrite:")
+        ? externalCustomerId
+        : `appwrite:${externalCustomerId}`;
+};
+
 export const getLimits = (benefitNames) => {
     const limits = {
         publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
@@ -43,8 +50,10 @@ export const getLimits = (benefitNames) => {
 };
 
 export const getCustomerId = async ({ externalCustomerId }) => {
+    const normalizedExternalCustomerId = toPolarExternalCustomerId(externalCustomerId);
+
     const customer = await polar.customers.getExternal({
-        externalId: externalCustomerId
+        externalId: normalizedExternalCustomerId
     }).catch((error) => {
         console.log(error);
         throw new Error("Error getting customer", { cause: error });
@@ -60,11 +69,12 @@ export const getLimitsForCustomer = async ({ customerId }) => {
 };
 
 export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
-    let subscriptions = await getCache(`polarSubscriptions:${externalCustomerId}`);
+    const normalizedExternalCustomerId = toPolarExternalCustomerId(externalCustomerId);
+    let subscriptions = await getCache(`polarSubscriptions:${normalizedExternalCustomerId}`);
     
     if (!subscriptions) {
         subscriptions = await polar.subscriptions.list({
-            externalCustomerId: externalCustomerId
+            externalCustomerId: normalizedExternalCustomerId
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting subscriptions", { cause: error });
@@ -72,23 +82,24 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
         
         subscriptions = subscriptions.result.items;
         
-        await setCache(`polarSubscriptions:${externalCustomerId}`, subscriptions, 1 * 60 * 1000);
+        await setCache(`polarSubscriptions:${normalizedExternalCustomerId}`, subscriptions, 1 * 60 * 1000);
     }
     
     return subscriptions;
 };
 
 export const getCustomerSession = async ({ externalCustomerId }) => {
-    let session = await getCache(`polarCustomerSession:${externalCustomerId}`);
+    const normalizedExternalCustomerId = toPolarExternalCustomerId(externalCustomerId);
+    let session = await getCache(`polarCustomerSession:${normalizedExternalCustomerId}`);
 
     if (!session) {
         session = await polar.customerSessions.create({
-            externalCustomerId: externalCustomerId
+            externalCustomerId: normalizedExternalCustomerId
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting customer session", { cause: error });
         });
-        await setCache(`polarCustomerSession:${externalCustomerId}`, session, 55 * 60 * 1000);
+        await setCache(`polarCustomerSession:${normalizedExternalCustomerId}`, session, 55 * 60 * 1000);
     }
 
     return session;

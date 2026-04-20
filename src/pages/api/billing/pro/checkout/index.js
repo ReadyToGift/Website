@@ -6,6 +6,11 @@ const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
 });
 
+const toPolarExternalCustomerId = (id) => {
+    if (!id) return id;
+    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
+};
+
 
 export const POST = async (context) => {
     try {
@@ -43,7 +48,7 @@ export const POST = async (context) => {
         try {
             checkout = await polar.checkouts.create({
                 embedOrigin: websiteDomain,
-                externalCustomerId: account.$id,
+                externalCustomerId: toPolarExternalCustomerId(account.$id),
                 products: [
                     POLAR_PRO_PRODUCT_ID
                 ],

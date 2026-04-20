@@ -7,6 +7,11 @@ const polar = new Polar({
 
 let dryRun = false; // sets dry run for http trigger reconciliation
 
+const toPolarExternalCustomerId = (id) => {
+    if (!id) return id;
+    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
+};
+
 // This Appwrite function will be executed every time your function is triggered
 export default async ({ req, res, log, error }) => {
     const client = new Client()
@@ -46,8 +51,10 @@ export default async ({ req, res, log, error }) => {
                     ? parseInt(process.env.FREE_TIER_PUBLIC_LIST_LIMIT)
                     : -1;
 
+            const authorExternalCustomerId = toPolarExternalCustomerId(list.author);
+
             const customer = await polar.customers.getExternal({
-                externalId: list.author
+                externalId: authorExternalCustomerId
             });
 
             if (customer.id) {
@@ -91,7 +98,7 @@ export default async ({ req, res, log, error }) => {
                     `User ${list.author} is over the free tier public list limit of ${publicListLimit} with ${userPublicLists.total} public lists. Checking Polar benefits...`
                 );
                 const customer = await polar.customers.getExternal({
-                    externalId: list.author
+                    externalId: authorExternalCustomerId
                 });
 
                 if (customer.id) {
@@ -369,11 +376,13 @@ export default async ({ req, res, log, error }) => {
 
     if (trigger === "event" && (eventType === "create" || eventType === "delete")) {
         try {
+            const userExternalCustomerId = toPolarExternalCustomerId(user);
+
             await polar.events.ingest({
                 events: [
                     {
                         name: "listDelta",
-                        externalCustomerId: user,
+                        externalCustomerId: userExternalCustomerId,
                         metadata: {
                             delta: eventType === "delete" ? -1 : 1
                         }
