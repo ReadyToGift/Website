@@ -138,6 +138,7 @@ import ListFields from "@/components/dialogs/fields/ListFields.vue";
 
 import { allLimits as allLimitsStore, billing as billingStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
 import { getJwt } from "@/stores/auth";
+import { handleFetch } from "@/utils/handleFetch";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { useStore } from "@nanostores/vue";
 
@@ -235,7 +236,7 @@ export default {
                 return;
             }
 
-            const createListResp = await fetch("/api/content/list", {
+            const [createListData, createListError] = await handleFetch("/api/content/list", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -246,11 +247,9 @@ export default {
                 })
             });
 
-            const createListData = await createListResp.json();
-
-            if (!createListResp.ok) {
+            if (createListError) {
                 this.alert = {
-                    text: createListData.message || "An unknown error occurred.",
+                    text: createListError.message || "An unknown error occurred.",
                     title: "Error"
                 };
                 this.loading = false;

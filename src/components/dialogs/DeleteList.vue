@@ -64,7 +64,7 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/c
 import { adjustCount } from "@/stores/userLists";
 import { AppwriteException } from "appwrite";
 import { clientRouter } from "@/router";
-import { useStore } from "@nanostores/vue";
+import { handleFetch } from "@/utils/handleFetch";
 
 import { getJwt } from "@/stores/auth";
 
@@ -120,7 +120,7 @@ export default {
                     return;
                 }
 
-                const deleteListResponse = await fetch("/api/content/list", {
+                const [, deleteListError] = await handleFetch("/api/content/list", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -131,11 +131,10 @@ export default {
                     })
                 });
 
-                const deleteListData = await deleteListResponse.json();
-
-                if (!deleteListResponse.ok) {
+                
+                if (deleteListError) {
                     this.alert = {
-                        text: deleteListData.message || "An error occurred while deleting the list.",
+                        text: deleteListError.message || "An error occurred while deleting the list.",
                         title: "Error"
                     };
                     this.loading = false;

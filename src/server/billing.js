@@ -138,7 +138,7 @@ export const getUserAutofillMeter = async ({ externalCustomerId }) => {
 
         autofillMeter = metersResp.result.items[0];
 
-        await setCache(`polarCustomerAutofillMeter:${externalCustomerId}`, autofillMeter, 10 * 1000);
+        await setCache(`polarCustomerAutofillMeter:${externalCustomerId}`, autofillMeter, 60 * 1000);
     }
 
     const { consumedUnits } = autofillMeter;

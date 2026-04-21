@@ -59,6 +59,7 @@ import { mdiAlert, mdiDelete } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
 import { getJwt } from "@/stores/auth";
+import { handleFetch } from "@/utils/handleFetch";
 export default {
     title: "ListDialog",
     components: {
@@ -104,7 +105,7 @@ export default {
                     return;
                 }
 
-                const response = await fetch("/api/content/item", {
+                const [, deleteItemError] = await handleFetch("/api/content/item", {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json",
@@ -115,17 +116,9 @@ export default {
                     })
                 });
 
-                let responseBody = {};
-
-                try {
-                    responseBody = await response.json();
-                } catch (err) {
-                    // Ignore parse errors and fallback to generic message.
-                }
-
-                if (!response.ok) {
+                if (deleteItemError) {
                     this.alert = {
-                        text: responseBody.message || "An error occurred while deleting the item.",
+                        text: deleteItemError.message || "An error occurred while deleting the item.",
                         title: "Error"
                     };
                     this.loading = false;

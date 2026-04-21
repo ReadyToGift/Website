@@ -110,6 +110,7 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vue
 import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { create as createDialog } from "@/stores/dialogs";
 import { getJwt } from "@/stores/auth";
+import { handleFetch } from "@/utils/handleFetch";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
 import { markRaw } from "vue";
@@ -463,7 +464,7 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                const createResp = await fetch("/api/content/item", {
+                const [createRespData, createError] = await handleFetch("/api/content/item", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -487,11 +488,9 @@ export default {
                     })
                 });
 
-                const createRespData = await createResp.json();
-
-                if (!createResp.ok) {
+                if (createError) {
                     this.alert = {
-                        text: createRespData.message || "An unknown error occurred.",
+                        text: createError.message || "An unknown error occurred.",
                         title: "Error"
                     };
                     this.loading = false;
@@ -601,7 +600,7 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                const updateResp = await fetch("/api/content/item", {
+                const [updateRespData, updateError] = await handleFetch("/api/content/item", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -622,11 +621,9 @@ export default {
                     })
                 });
 
-                const updateRespData = await updateResp.json();
-
-                if (!updateResp.ok) {
+                if (updateError) {
                     this.alert = {
-                        text: updateRespData.message || "An unknown error occurred.",
+                        text: updateError.message || "An unknown error occurred.",
                         title: "Error"
                     };
                     this.loading = false;

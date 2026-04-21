@@ -102,6 +102,7 @@ import { AppwriteException, Query } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
 import { databases } from "@/appwrite";
+import { handleFetch } from "@/utils/handleFetch";
 import ListCard from "../ListCard.vue";
 
 import { allLimits as allLimitsStore, limits as limitsStore } from "@/stores/billing";
@@ -223,7 +224,7 @@ export default {
             }
 
             try {
-                const moveItemResp = await fetch("/api/content/item", {
+                const [, moveItemError] = await handleFetch("/api/content/item", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -237,11 +238,9 @@ export default {
                     })
                 });
 
-                const moveItemData = await moveItemResp.json();
-
-                if (!moveItemResp.ok) {
+                if (moveItemError) {
                     this.alert = {
-                        text: moveItemData.message || "An unknown error occurred.",
+                        text: moveItemError.message || "An unknown error occurred.",
                         title: "Error"
                     };
                     this.loadingMove = false;

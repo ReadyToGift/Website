@@ -1,5 +1,6 @@
 import { computed, map } from "nanostores";
 import { getJwt } from "./auth";
+import { handleFetch } from "@/utils/handleFetch";
 import { userLists } from "./userLists";
 
 import {
@@ -81,18 +82,25 @@ export const getBillingDetails = async () => {
     if (!jwt) return console.error("Unable to get jwt for user.");
 
     try {
-        const billingResp = await fetch("/api/billing", {
+        const [billingResp, billingError] = await handleFetch("/api/billing", {
             headers: {
                 "Authorization": `Bearer ${jwt}`
             }
         });
+
+        if (billingError) {
+            console.error("Failed to fetch billing details:", billingError);
+            billing.setKey("billingLoaded", true);
+            return;
+        }
+
         const {
             customerSession,
             subscriptions,
             autofillMeter,
             proLimits,
             pro: isPro
-        } = await billingResp.json();
+        } = billingResp;
     
         billing.setKey("session", customerSession);
         billing.setKey("subscriptions", subscriptions);
@@ -134,26 +142,34 @@ export const getProCheckout = async () => {
     const jwt = await getJwt();
     if (!jwt) return console.error("Unable to get jwt for user.");
 
-    const proCheckoutResp = await fetch("/api/billing/pro/checkout", {
+    const [proCheckout, proCheckoutError] = await handleFetch("/api/billing/pro/checkout", {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${jwt}`
         }
     });
-    const proCheckout = await proCheckoutResp.json();
+
+    if (proCheckoutError) {
+        console.error("Failed to fetch Pro checkout:", proCheckoutError);
+        return;
+    }
 
     return proCheckout.url;
 
 };
 
 export const getProProduct = async () => {
-    const response = await fetch("/api/billing/pro");
-    const data = await response.json();
+    const [proProduct, proProductError] = await handleFetch("/api/billing/pro");
 
-    if (data.success) {
-        return data;
+    if (proProductError) {
+        console.error("Failed to fetch Pro product:", proProductError);
+        return;
+    }
+
+    if (proProduct.success) {
+        return proProduct.product;
     } else {
-        throw new Error(data.error || "Failed to fetch Pro pricing");
+        throw new Error(proProduct.error || "Failed to fetch Pro pricing");
     }
 };
 
@@ -178,5 +194,8 @@ export default {
     init,
     getProCheckout,
     getProProduct,
-    publicListLimitReached
+    publicListLimitReached,
+    privateListLimitReached,
+    autofillUsage,
+    setUsedAutofillAllowance
 };

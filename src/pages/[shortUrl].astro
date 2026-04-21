@@ -15,8 +15,6 @@ const response = await client.tablesDB.listRows({
     queries: [Query.equal("shortUrl", shortUrl), Query.limit(1)]
 });
 
-console.log(`Query response: ${JSON.stringify(response)}`);
-
 if (response.total === 0) {
     return new Response("Not Found", { status: 404 });
 }

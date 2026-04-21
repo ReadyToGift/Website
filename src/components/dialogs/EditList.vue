@@ -129,15 +129,13 @@
 
 <script>
 import { allLimits as allLimitsStore, billing as billingStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { AppwriteException, Permission, Query, Role } from "appwrite";
+import { getJwt, user as userStore } from "@/stores/auth";
 import { mdiAlert, mdiPencil } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { create as createDialog } from "@/stores/dialogs";
-import { databases } from "@/appwrite";
-import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import { adjustCount } from "@/stores/userLists";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { handleFetch } from "@/utils/handleFetch";
+import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import { useStore } from "@nanostores/vue";
 
 export default {
@@ -244,7 +242,7 @@ export default {
                 return;
             }
 
-            const editedListResponse = await fetch("/api/content/list", {
+            const [editedListResponse, editedListError] = await handleFetch("/api/content/list", {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
@@ -256,15 +254,17 @@ export default {
                 })
             });
 
-            const listResponse = await editedListResponse.json();
+            let listResponse;
 
-            if (!editedListResponse.ok) {
+            if (editedListError) {
                 this.alert = {
-                    text: listResponse.message || "An unknown error occurred.",
+                    text: editedListError.message || "An unknown error occurred.",
                     title: "Error"
                 };
                 this.loading = false;
                 return;
+            } else {
+                listResponse = editedListResponse;
             }
 
             this.$emit("updateList", {
