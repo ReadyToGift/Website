@@ -277,17 +277,16 @@
 </template>
 
 <script setup>
-import { account, tablesDB } from "@/appwrite";
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { computed, onMounted, ref } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
 import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VChip, VDialog, VDivider, VList, VMenu, VSelect, VSheet, VSkeletonLoader, VSpacer, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
-import { Query } from "appwrite";
+import { account } from "@/appwrite";
 
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
+import { getJwt, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
+import { handleFetch } from "@/utils/handleFetch";
 import { useRouter } from "vue-router";
-import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
 import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
@@ -358,51 +357,6 @@ const createList = (data) => {
 
 const getLists = async () => {
     if (!user.value) {
-        console.error("User not loaded yet");
-        return;
-    }
-    
-    loading.value = true;
-
-    const listQuery = [
-        Query.limit(1000),
-        prefs.value.listSorting.order === "asc"
-            ? Query.orderAsc(prefs.value.listSorting.type.value)
-            : Query.orderDesc(prefs.value.listSorting.type.value)
-    ];
-
-    const authorQuery = Query.equal("author", user.value.$id);
-
-    if (prefs.value.savedLists.length) {
-        listQuery.push(
-            Query.or([authorQuery, Query.equal("$id", prefs.value.savedLists)])
-        );
-    } else {
-        listQuery.push(authorQuery);
-    }
-
-    try {
-        const listsResponse = await tablesDB.listRows({
-            databaseId: APPWRITE_DB,
-            tableId: APPWRITE_LIST_COLLECTION,
-            queries: listQuery
-        });
-
-        savedLists.value = listsResponse.rows.filter((list) =>
-            prefs.value.savedLists?.includes(list.$id)
-        );
-        lists.value = listsResponse.rows.filter(
-            (list) => !prefs.value.savedLists?.includes(list.$id)
-        );
-
-        setListsCount({
-            private: privateLists.value.length,
-            public: publicLists.value.length
-        });
-
-        loading.value = false;
-    } catch (error) {
-        console.log({ error });
         createDialog({
             actions: [
                 {
@@ -411,10 +365,74 @@ const getLists = async () => {
                     text: "Retry"
                 }
             ],
-            text: error,
+            text: "User not logged in",
             title: "Failed to load lists"
         });
+        return;
     }
+    
+    loading.value = true;
+
+    const jwt = await getJwt();
+    if (!jwt) {
+        // TODO: Handle graphically
+        createDialog({
+            actions: [
+                {
+                    action: getLists,
+                    closeAfterAction: true,
+                    text: "Retry"
+                }
+            ],
+            text: "Couldn't get user authentication token.",
+            title: "Failed to load lists"
+        });
+        loading.value = false;
+        return;
+    }
+
+    const searchParams = new URLSearchParams({
+        sort: prefs.value.listSorting ? prefs.value.listSorting.type.value : null,
+        order: prefs.value.listSorting ? prefs.value.listSorting.order : null
+    });
+
+    const [listsResponse, listsError] = await handleFetch("/api/content/lists?" + searchParams.toString(), {
+        method: "GET",
+        headers: {
+            "Authorization": `Bearer ${jwt}`
+        }
+    });
+
+    if (listsError) {
+        console.error({ listsError });
+        createDialog({
+            actions: [
+                {
+                    action: getLists,
+                    closeAfterAction: true,
+                    text: "Retry"
+                }
+            ],
+            text: listsError.message || "An unknown error occurred.",
+            title: "Failed to load lists"
+        });
+        loading.value = false;
+        return;
+    }
+
+    savedLists.value = listsResponse.lists.filter((list) =>
+        prefs.value.savedLists?.includes(list.$id)
+    );
+    lists.value = listsResponse.lists.filter(
+        (list) => !prefs.value.savedLists?.includes(list.$id)
+    );
+
+    setListsCount({
+        private: privateLists.value.length,
+        public: publicLists.value.length
+    });
+
+    loading.value = false;
 };
 
 const setSortType = async (event) => {
