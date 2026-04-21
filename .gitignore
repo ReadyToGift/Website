@@ -37,3 +37,4 @@ functions/*/.appwrite
 /vue
 /.astro
 *.zip
+/.wrangler
