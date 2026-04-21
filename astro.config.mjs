@@ -6,14 +6,16 @@ import vue from "@astrojs/vue";
 import sentry from "@sentry/astro";
 import vercel from "@astrojs/vercel";
 
+import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
+
 let adapter;
 
 if (process.env.VERCEL) {
     adapter = vercel();
 } else {
-    adapter = node({
-        mode: "standalone"
+    adapter = cloudflare({
+        sessionKVBindingName: "READYTOGIFT_SESSION"
     });
 }
 
@@ -104,10 +106,6 @@ export default defineConfig({
             AUTOFILL_PROXY_PASSWORD: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 })
-            
-
-
-            
         }
     },
 
