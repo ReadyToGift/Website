@@ -40,6 +40,119 @@ const getListUsage = async ({ account, adminClient }) => {
     return { limits, publicListCount, privateListCount };
 };
 
+export const GET = async (context) => {
+    try {
+        const { sessionClient, account } = await requireAuth(context);
+
+        if (!sessionClient || !account) {
+            return new Response(
+                JSON.stringify({
+                    message: "Unauthenticated"
+                }),
+                {
+                    status: 401,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+        
+        let adminClient;
+
+        try {
+            adminClient = createAdminClient();
+        } catch (err) {
+            console.log(err);
+
+            return new Response(
+                JSON.stringify({
+                    message: "Error creating admin client"
+                }),
+                {
+                    status: 500,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
+        const searchParams = context.url.searchParams;
+        const listID = searchParams.get("listId");
+
+        let list;
+
+        try {
+            list = await adminClient.tablesDB.getRow({
+                databaseId: APPWRITE_DB,
+                tableId: APPWRITE_LIST_COLLECTION,
+                rowId: listID
+            });
+
+            if (!list) {
+                return new Response(
+                    JSON.stringify({
+                        message: "List not found"
+                    }),
+                    {
+                        status: 404,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+
+            if (list.author !== account.$id && list.private) {
+                return new Response(
+                    JSON.stringify({
+                        message: "Unauthorized"
+                    }),
+                    {
+                        status: 403,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+        } catch (err) {
+            console.log(err);
+
+            return new Response(
+                JSON.stringify({
+                    message: "Error fetching list"
+                }),
+                {
+                    status: 500,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
+        console.log("Fetched list:", list);
+
+        
+    } catch (err) {
+        console.log(err);
+
+        return new Response(
+            JSON.stringify({
+                message: "Internal server error"
+            }),
+            {
+                status: 500,
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+    }
+};
+
 export const POST = async (context) => {
     try {
         const { sessionClient, account } = await requireAuth(context);

@@ -1,4 +1,5 @@
 import { deleteCache } from "@/server/cache";
+import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 import { POLAR_ACCESS_TOKEN } from "astro:env/server";
 
@@ -7,6 +8,9 @@ const polar = new Polar({
 });
 
 export const GET = async (context) => {
+    if (!ENABLE_BILLING) {
+        return context.redirect("/dash");
+    }
     try {
         const { searchParams } = new URL(context.request.url);
         const customerSessionToken = searchParams.get("customer_session_token");

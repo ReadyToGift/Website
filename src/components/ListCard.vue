@@ -94,7 +94,10 @@
                         v-if="list.itemCount !== null"
                     >
                         {{ list.itemCount }}{{ ownList && limits.itemsPerList > 0 ? "/" + limits.itemsPerList : '' }} items
-                        <div class="progress">
+                        <div
+                            class="progress"
+                            v-if="ENABLE_BILLING"
+                        >
                             <v-progress-linear
                                 :max="limits.itemsPerList"
                                 :model-value="list.itemCount"
@@ -195,6 +198,8 @@ import { limits as limitsStore } from "@/stores/billing";
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+
+import { ENABLE_BILLING } from "astro:env/client";
 
 const prefs = useStore($prefs);
 const user = useStore(userStore);

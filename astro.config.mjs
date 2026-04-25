@@ -12,10 +12,17 @@ import node from "@astrojs/node";
 let adapter;
 
 if (process.env.VERCEL) {
+    console.log("Vercel environment detected, using Vercel adapter");
     adapter = vercel();
-} else {
+} else if (process.env.CF_PAGES_BRANCH) {
+    console.log("Cloudflare Pages environment detected, using Cloudflare adapter");
     adapter = cloudflare({
         sessionKVBindingName: "READYTOGIFT_SESSION"
+    });
+} else {
+    console.log("No specific adapter environment detected, defaulting to Node adapter");
+    adapter = node({
+        mode: "standalone"
     });
 }
 
@@ -74,7 +81,7 @@ export default defineConfig({
                 access: "public",
                 default: true
             }),
-            AUTOFILL_FREE_ALLOWANCE: envField.number({ context: "client", access: "public", default: 5 }),
+            AUTOFILL_FREE_ALLOWANCE: envField.number({ context: "client", access: "public", default: 0 }),
             ENABLE_BILLING: envField.boolean({ context: "client", access: "public", default: false }),
 
             POLAR_ACCESS_TOKEN: envField.string({
@@ -117,6 +124,9 @@ export default defineConfig({
     ],
 
     vite: {
+        // resolve: {
+        //     noExternal: [/^vuetify/, /^vite-plugin-vuetify/]
+        // },
         ssr: {
             noExternal: ["vuetify"]
         }

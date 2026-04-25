@@ -234,7 +234,7 @@ export default {
     },
     computed: {
         itemLimitReached() {
-            return this.wishlistOwner && this.list.itemCount >= this.limits.itemsPerList;
+            return this.wishlistOwner && this.list.itemCount >= this.limits.itemsPerList && this.limits.itemsPerList != -1;
         },
         itemsByPriceGroups() {
             if (!this.list) return [];
@@ -350,7 +350,7 @@ export default {
                             text: "Contact"
                         }
                     ],
-                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list<br />
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
                     Please remove some items, or contact support if you'd like this limit raised.`,
                     title: "Item limit reached",
                     variant: "warning"
@@ -371,7 +371,7 @@ export default {
                             text: "Upgrade"
                         }
                     ],
-                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list<br />
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
                     Please remove some items, or upgrade your plan.`,
                     title: "Item limit reached",
                     variant: "warning"

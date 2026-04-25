@@ -68,8 +68,9 @@
                     <v-btn
                         :prepend-icon="mdiRobot"
                         variant="tonal"
-                        :disabled="!(modifiedItem.url && autofillUsage.remainingAllowance !== 0)"
+                        :disabled="!(modifiedItem.url && (limits.autofill || autofillUsage.remainingAllowance.value !== 0))"
                         @click="autofill"
+                        v-if="limits.autofill || autofillUsage.totalAllowance.value > 0"
                     >
                         Autofill
                         <template v-if="!limits.autofill">

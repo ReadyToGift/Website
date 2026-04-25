@@ -16,6 +16,7 @@
                     Account
                 </v-tab>
                 <v-tab
+                    v-if="ENABLE_BILLING"
                     value="billing"
                     to="/dash/settings/billing"
                     :disabled="!user"
@@ -37,6 +38,7 @@
                     <AccountSettings />
                 </v-tabs-window-item>
                 <v-tabs-window-item
+                    v-if="ENABLE_BILLING"
                     value="billing"
                     class="pt-4"
                 >
@@ -61,6 +63,8 @@ import BillingSettings from "./settings/BillingSettings.vue";
 import { shallowRef } from "vue";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+
+import { ENABLE_BILLING } from "astro:env/client";
 
 const user = useStore(userStore);
 

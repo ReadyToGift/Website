@@ -18,6 +18,20 @@ const getProLimits = async () => {
 
 export const GET = async (context) => {
     try {
+        if (!ENABLE_BILLING) {
+            return new Response(
+                JSON.stringify({
+                    message: "Billing is disabled"
+                }),
+                {
+                    status: 200,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
         let account;
         let sessionClient;
         try {

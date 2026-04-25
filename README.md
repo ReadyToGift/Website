@@ -86,3 +86,28 @@ pnpm build
 ```sh
 pnpm format && pnpm lint
 ```
+
+
+# Billing
+
+This project features a billing system which is disabled.
+
+You can change the limits using the following:
+
+- `FREE_TIER_PUBLIC_LIST_LIMIT`
+    How many public lists a user can have. A public list is one that anyone can view, and the author can choose to show what has been purchased or not.
+    Set to `-1` for unlimited.
+- `FREE_TIER_PRIVATE_LIST_LIMIT`
+    How many private lists a user can have. A private list is one that only the author can view.
+    Set to `-1` for unlimited.
+- `FREE_TIER_ITEMS_PER_LIST`
+    How many items can be in a list.
+    Set to `-1` for unlimited.
+- `FREE_TIER_ENABLE_AUTOFILL`
+    Wether to allow autofill. Set to `true` to allow it, `false` to disable it. Autofill is where the app will try to fill in item details (like name and image) based on a URL.
+
+# License
+
+This project is licensed under the PolyForm Noncommercial License 1.0.0.
+
+You are free to use, modify, and distribute this software for noncommercial purposes. Any commercial use of this software is strictly prohibited. See the [LICENSE](./LICENSE) file for more details.

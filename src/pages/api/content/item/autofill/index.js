@@ -9,7 +9,7 @@ import { getUserAutofillMeter, getUserLimits } from "@/server/billing.js";
 
 import { requireAuth } from "@/server/appwrite.js";
 
-import { AUTOFILL_FREE_ALLOWANCE, AUTOFILL_PROXY_ATTEMPTS } from "astro:env/client";
+import { AUTOFILL_FREE_ALLOWANCE, AUTOFILL_PROXY_ATTEMPTS, ENABLE_BILLING } from "astro:env/client";
 import { AUTOFILL_HTTP_PROXIES, AUTOFILL_PROXY_COUNTRY_PREFIX, AUTOFILL_PROXY_HOST, AUTOFILL_PROXY_PASSWORD, AUTOFILL_PROXY_USERNAME, AUTOFILL_USE_LOCAL_FETCH, POLAR_ACCESS_TOKEN } from "astro:env/server";
 
 let polar;
@@ -298,13 +298,23 @@ export const POST = async (context) => {
             }
 
             const { limits } = await getUserLimits({ account });
-            const { consumedUnits } = await getUserAutofillMeter({ externalCustomerId: account.$id });
-
+            
             let autofillEnabled = false;
+            let usingFreeAllowance = false;
             if (limits.autofill) {
                 autofillEnabled = true;
-            } else if (consumedUnits < AUTOFILL_FREE_ALLOWANCE) {
-                autofillEnabled = true;
+            }
+
+            let consumedUnits = 0;
+            
+            if (ENABLE_BILLING && !autofillEnabled) {
+                const autofillMeter = await getUserAutofillMeter({ externalCustomerId: account.$id });
+                consumedUnits = autofillMeter.consumedUnits;
+            
+                if (consumedUnits < AUTOFILL_FREE_ALLOWANCE && AUTOFILL_FREE_ALLOWANCE > 0) {
+                    autofillEnabled = true;
+                    usingFreeAllowance = true;
+                }
             }
 
             if (!autofillEnabled) {
@@ -386,7 +396,7 @@ export const POST = async (context) => {
                         executionTime:
                             new Date().getTime() - autofillStartTime.getTime(),
                         outputData: autofillData,
-                        newConsumedUnits: newConsumedUnits
+                        newConsumedUnits: usingFreeAllowance ? null : newConsumedUnits
                     });
 
                     controller.close();

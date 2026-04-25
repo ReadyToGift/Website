@@ -71,6 +71,8 @@ const applyLimits = ({ isPro, proLimits }) => {
 };
 
 export const getBillingDetails = async () => {
+    console.log(ENABLE_BILLING);
+    console.log("Fetching billing details..." + (ENABLE_BILLING ? "Billing is enabled" : "Billing is disabled, using free limits"));
     if (!ENABLE_BILLING) {
         console.log("Billing is disabled, using free limits");
         applyLimits({ isPro: false });
