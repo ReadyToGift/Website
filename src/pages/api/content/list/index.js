@@ -704,7 +704,7 @@ export const PUT = async (context) => {
             let userLimits;
 
             try {
-                userLimits = await getUserLimits({ account, adminClient });
+                userLimits = await getListUsage({ account, adminClient });
             } catch (err) {
                 console.log(err);
 

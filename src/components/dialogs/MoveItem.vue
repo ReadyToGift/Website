@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { APPWRITE_DB, APPWRITE_LIST_COLLECTION, ENABLE_BILLING } from "astro:env/client";
 import { AppwriteException, Query } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
@@ -273,23 +273,37 @@ export default {
         selectList(list) {
             if (list.itemCount + 1 >= this.limits.itemsPerList) {
                 this.selectedList = null;
-                createDialog({
-                    actions: [
-                        {
-                            action: "close",
-                            color: "primary",
-                            text: "OK"
-                        },
-                        {
-                            to: "/dash/settings/billing",
-                            color: "secondary",
-                            closeAfterAction: true,
-                            text: "Upgrade"
+                createDialog(
+                    ENABLE_BILLING
+                        ? {
+                            actions: [
+                                {
+                                    action: "close",
+                                    color: "primary",
+                                    text: "OK"
+                                },
+                                {
+                                    to: "/dash/settings/billing",
+                                    color: "secondary",
+                                    closeAfterAction: true,
+                                    text: "Upgrade"
+                                }
+                            ],
+                            text: `This list has reached its limit of ${this.limits.itemsPerList}.`,
+                            title: "You cannot add any more items into this list"
                         }
-                    ],
-                    text: `This list has reached its limit of ${this.limits.itemsPerList}.`,
-                    title: "You cannot add any more items into this list"
-                });
+                        : {
+                            actions: [
+                                {
+                                    action: "close",
+                                    color: "primary",
+                                    text: "OK"
+                                }
+                            ],
+                            text: `This list has reached its limit of ${this.limits.itemsPerList}. Please remove an item from that list before moving another item into it.`,
+                            title: "You cannot add any more items into this list"
+                        }
+                );
                 return;
             } else {
                 this.alert = false;

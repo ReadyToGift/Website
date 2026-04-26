@@ -147,7 +147,7 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION, ENABLE_BILLING } from "astro:env/client";
 import { avatars, databases, tablesDB } from "@/appwrite";
 import { VAlert, VCard, VCardSubtitle, VCardText, VCardTitle, VDivider, VProgressCircular, VProgressLinear, VSpacer, VSwitch } from "vuetify/components";
 import ListCard from "@/components/ListCard.vue";
@@ -334,7 +334,22 @@ export default {
             }
         },
         itemLimitReachedDialog() {
-            if (this.billing.isPro) {
+            if (!ENABLE_BILLING) {
+                createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "Okay",
+                            variant: "elevated"
+                        }
+                    ],
+                    text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
+                    Please remove some items before adding more.`,
+                    title: "Item limit reached",
+                    variant: "warning"
+                });
+            } else if (this.billing.isPro) {
                 createDialog({
                     actions: [
                         {

@@ -6,6 +6,7 @@ const polar = new Polar({
 });
 
 const organizationId = process.env["POLAR_ORG_ID"] ?? "";
+const billingEnabled = process.env["ENABLE_BILLING"] === "true";
 
 const toPolarExternalCustomerId = (id) => {
     if (!id) return id;
@@ -22,6 +23,14 @@ export default async ({ req, res, log, error }) => {
     // You can use the Appwrite SDK to interact with other services
     // For this example, we're using the Users service
     try {
+        if (!billingEnabled) {
+            log("Billing is disabled; skipping Polar customer sync.");
+            return res.json({
+                success: true,
+                skipped: true
+            });
+        }
+
         const client = new Client()
             .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
             .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)

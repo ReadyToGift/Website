@@ -1,4 +1,5 @@
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
+import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 
 import { getCache, setCache } from "@/server/cache";
@@ -9,6 +10,20 @@ const polar = new Polar({
 
 export const GET = async () => {
     try {
+        if (!ENABLE_BILLING) {
+            return new Response(
+                JSON.stringify({
+                    error: "Billing is disabled"
+                }),
+                {
+                    status: 404,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
         let pro = await getCache("pro");
 
         if (!pro) {

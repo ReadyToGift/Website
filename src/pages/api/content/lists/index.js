@@ -44,7 +44,6 @@ export const GET = async (context) => {
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
         const sortField = searchParams.get("sort") || "createdAt";
-        console.log(searchParams.toString());
 
         const savedListIDs = account?.prefs?.savedLists || [];
 

@@ -104,11 +104,11 @@
 </template>
 
 <script>
+import { APPWRITE_IMAGE_BUCKET, ENABLE_BILLING } from "astro:env/client";
 import { AppwriteException, ID, Permission, Role } from "appwrite";
 import { autofillUsage as autofillUsageStore, limits as limitsStore } from "@/stores/billing";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vuetify/components";
-import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
 import { create as createDialog } from "@/stores/dialogs";
 import { getJwt } from "@/stores/auth";
 import { handleFetch } from "@/utils/handleFetch";
@@ -286,23 +286,37 @@ export default {
                         return;
                     }
                 } else {
-                    this.createDialog({
-                        title: "Auto-fill Unavailable",
-                        text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",
-                        actions: [
-                            {
-                                action: "close",
-                                color: "primary",
-                                text: "Close"
-                            },
-                            {
-                                to: "/dash/settings/billing",
-                                color: "secondary",
-                                closeAfterAction: true,
-                                text: "Upgrade to Pro"
+                    this.createDialog(
+                        ENABLE_BILLING
+                            ? {
+                                title: "Auto-fill Unavailable",
+                                text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",
+                                actions: [
+                                    {
+                                        action: "close",
+                                        color: "primary",
+                                        text: "Close"
+                                    },
+                                    {
+                                        to: "/dash/settings/billing",
+                                        color: "secondary",
+                                        closeAfterAction: true,
+                                        text: "Upgrade to Pro"
+                                    }
+                                ]
                             }
-                        ]
-                    });
+                            : {
+                                title: "Auto-fill Unavailable",
+                                text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually.",
+                                actions: [
+                                    {
+                                        action: "close",
+                                        color: "primary",
+                                        text: "Close"
+                                    }
+                                ]
+                            }
+                    );
 
                     return;
                 }

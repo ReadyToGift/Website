@@ -1,5 +1,6 @@
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { createSessionClient } from "@/server/appwrite";
+import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 
 const polar = new Polar({
@@ -14,6 +15,20 @@ const toPolarExternalCustomerId = (id) => {
 
 export const POST = async (context) => {
     try {
+        if (!ENABLE_BILLING) {
+            return new Response(
+                JSON.stringify({
+                    message: "Billing is disabled"
+                }),
+                {
+                    status: 404,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
         let sessionClient;
         try {
             sessionClient = createSessionClient(context);

@@ -50,27 +50,29 @@
                     >
                         You have reached your private list allowance.<br/><br/>
                         Please make some of your other lists public, or delete some of your lists.<br />
-                        <template v-if="!billing.isPro">
-                            Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
-                            <br/>
-                            <v-btn
-                                to="/dash/settings/billing"
-                                color="warning"
-                                class="mt-4"
-                            >
-                                Upgrade
-                            </v-btn>
-                        </template>
-                        <template v-else>
-                            Alternatively, contact support if you'd like this limit raised.
-                            <br/>
-                            <v-btn
-                                to="/contact"
-                                color="warning"
-                                class="mt-4"
-                            >
-                                Contact
-                            </v-btn>
+                        <template v-if="ENABLE_BILLING">
+                            <template v-if="!billing.isPro">
+                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
+                                <br/>
+                                <v-btn
+                                    to="/dash/settings/billing"
+                                    color="warning"
+                                    class="mt-4"
+                                >
+                                    Upgrade
+                                </v-btn>
+                            </template>
+                            <template v-else>
+                                Alternatively, contact support if you'd like this limit raised.
+                                <br/>
+                                <v-btn
+                                    to="/contact"
+                                    color="warning"
+                                    class="mt-4"
+                                >
+                                    Contact
+                                </v-btn>
+                            </template>
                         </template>
                         
                     </v-alert>
@@ -84,27 +86,29 @@
                     >
                         You have reached your public list allowance.<br/><br/>
                         Please make some of your other lists private, or delete some of your lists.<br />
-                        <template v-if="!billing.isPro">
-                            Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
-                            <br/>
-                            <v-btn
-                                to="/dash/settings/billing"
-                                color="warning"
-                                class="mt-4"
-                            >
-                                Upgrade
-                            </v-btn>
-                        </template>
-                        <template v-else>
-                            Alternatively, contact support if you'd like this limit raised.
-                            <br/>
-                            <v-btn
-                                to="/contact"
-                                color="warning"
-                                class="mt-4"
-                            >
-                                Contact
-                            </v-btn>
+                        <template v-if="ENABLE_BILLING">
+                            <template v-if="!billing.isPro">
+                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
+                                <br/>
+                                <v-btn
+                                    to="/dash/settings/billing"
+                                    color="warning"
+                                    class="mt-4"
+                                >
+                                    Upgrade
+                                </v-btn>
+                            </template>
+                            <template v-else>
+                                Alternatively, contact support if you'd like this limit raised.
+                                <br/>
+                                <v-btn
+                                    to="/contact"
+                                    color="warning"
+                                    class="mt-4"
+                                >
+                                    Contact
+                                </v-btn>
+                            </template>
                         </template>
                     </v-alert>
                 </v-card-text>
@@ -128,12 +132,18 @@
 </template>
 
 <script>
-import { allLimits as allLimitsStore, billing as billingStore, privateListLimitReached, publicListLimitReached } from "@/stores/billing";
+import {
+    allLimits as allLimitsStore,
+    billing as billingStore,
+    privateListLimitReached as privateListLimitReachedStore,
+    publicListLimitReached as publicListLimitReachedStore
+} from "@/stores/billing";
 import { getJwt, user as userStore } from "@/stores/auth";
 import { mdiAlert, mdiPencil } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { adjustCount } from "@/stores/userLists";
 import { create as createDialog } from "@/stores/dialogs";
+import { ENABLE_BILLING } from "astro:env/client";
 import { handleFetch } from "@/utils/handleFetch";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import { useStore } from "@nanostores/vue";
@@ -166,13 +176,14 @@ export default {
             createDialog,
             dialogOpen: false,
             editedList: {},
+            ENABLE_BILLING,
             listId: null,
             loading: false,
             mdiAlert,
             mdiPencil,
             previousValues: {},
-            publicListLimitReached,
-            privateListLimitReached,
+            publicListLimitReached: useStore(publicListLimitReachedStore),
+            privateListLimitReached: useStore(privateListLimitReachedStore),
             allLimits: useStore(allLimitsStore),
             billing: useStore(billingStore)
         };

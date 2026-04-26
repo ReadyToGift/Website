@@ -531,7 +531,7 @@ export const PUT = async (context) => {
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_LIST_COLLECTION,
                 rowId: targetListId,
-                queries: [Query.select(["private", "author"])]
+                queries: [Query.select(["private", "author", "itemCount"])]
             });
         } catch (err) {
             console.log(err);
@@ -577,6 +577,45 @@ export const PUT = async (context) => {
             );
         }
 
+        if (movingToDifferentList) {
+            let userLimitsResp;
+
+            try {
+                userLimitsResp = await getUserLimits({ account });
+            } catch (err) {
+                console.log(err);
+
+                return new Response(
+                    JSON.stringify({
+                        message: "Error getting user limits"
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+
+            const { limits } = userLimitsResp;
+            const targetItemCount = list.itemCount ?? 0;
+
+            if (limits.itemsPerList !== -1 && targetItemCount >= limits.itemsPerList) {
+                return new Response(
+                    JSON.stringify({
+                        message: "Item limit for list reached"
+                    }),
+                    {
+                        status: 400,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+        }
+
         let permissions = [
             Permission.write(Role.user(account.$id)),
             Permission.delete(Role.user(account.$id)),
@@ -618,7 +657,7 @@ export const PUT = async (context) => {
             if (movingToDifferentList) {
                 await Promise.all([
                     updateItemCount({ adminClient, listId: previousListId }),
-                    updateItemCount({ adminClient, listId: targetListId, itemCount: list.items.length + 1 })
+                    updateItemCount({ adminClient, listId: targetListId })
                 ]);
             }
         } catch (err) {
