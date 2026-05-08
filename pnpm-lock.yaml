@@ -151,6 +151,19 @@ importers:
         specifier: ^7.3.2
         version: 7.3.3(@types/node@24.10.1)(sass@1.94.2)
 
+  functions/polar-update-customers:
+    dependencies:
+      '@polar-sh/sdk':
+        specifier: ^0.41.1
+        version: 0.41.5
+      node-appwrite:
+        specifier: ^14.1.0
+        version: 14.2.0
+    devDependencies:
+      prettier:
+        specifier: ^3.2.5
+        version: 3.7.1
+
 packages:
 
   '@apm-js-collab/code-transformer@0.8.2':
@@ -4028,6 +4041,9 @@ packages:
 
   node-addon-api@7.1.1:
     resolution: {integrity: sha512-5m3bsyrjFWE1xf7nz7YXdN4udnVtXK6/Yfgn5qnahL6bCkf2yKt4k3nuTKAtT4r3IG8JNR2ncsIMdZuAzJjHQQ==}
+
+  node-appwrite@14.2.0:
+    resolution: {integrity: sha512-sPPA+JzdBJRS+lM6azX85y3/6iyKQYlHcXCbjMuWLROh6IiU9EfXRW3XSUTa5HDoBrlo8ve+AnVA6BIjQfUs1g==}
 
   node-appwrite@20.3.0:
     resolution: {integrity: sha512-vaxlpkNTtjkccyngwc9HRSwQQasZ/CJri6KMZ62mlDAM1YdvOgqIM8EYJwvhx/fiHdyjfxithFcmnvzUR9TGTQ==}
@@ -9526,6 +9542,10 @@ snapshots:
 
   node-addon-api@7.1.1:
     optional: true
+
+  node-appwrite@14.2.0:
+    dependencies:
+      node-fetch-native-with-agent: 1.7.2
 
   node-appwrite@20.3.0:
     dependencies:
