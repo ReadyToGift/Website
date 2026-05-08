@@ -9,26 +9,17 @@ import vercel from "@astrojs/vercel";
 import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
 
-let adapter;
-
-if (process.env.VERCEL) {
-    console.log("Vercel environment detected, using Vercel adapter");
-    adapter = vercel();
-} else if (process.env.CF_PAGES_BRANCH) {
-    console.log("Cloudflare Pages environment detected, using Cloudflare adapter");
-    adapter = cloudflare({
-        sessionKVBindingName: "READYTOGIFT_SESSION"
-    });
-} else {
-    console.log("No specific adapter environment detected, defaulting to Node adapter");
-    adapter = node({
-        mode: "standalone"
-    });
-}
+let adapter = cloudflare({
+    sessionKVBindingName: "SESSION"
+});
 
 // https://astro.build/config
 export default defineConfig({
     site: "https://readyto.gift",
+
+    devToolbar: {
+        enabled: false
+    },
 
     env: {
         schema: {
@@ -91,11 +82,6 @@ export default defineConfig({
             }),
             POLAR_AUTOFILL_METER_ID: envField.string({ context: "server", access: "secret", optional: true }),
             POLAR_PRO_PRODUCT_ID: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true
-            }),
-            REDIS_HOST: envField.string({
                 context: "server",
                 access: "secret",
                 optional: true

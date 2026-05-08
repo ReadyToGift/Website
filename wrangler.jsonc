@@ -1,21 +1,28 @@
 {
-	"name": "readytogift",
-  "compatibility_date": "2026-04-21",
-  "compatibility_flags": [
-    "nodejs_compat",
-    "global_fetch_strictly_public"
-  ],
-	"assets": {
-		"binding": "ASSETS",
-		"directory": "./dist"
-	},
-  "observability": {
-    "logs": {
-      "enabled": true,
-      "invocation_logs": true
+    "name": "readytogift",
+    "compatibility_date": "2026-04-21",
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+    "assets": {
+        "binding": "ASSETS",
+        "directory": "./dist"
     },
-    "traces": {
-      "enabled": true
-    }
-  }
+    "observability": {
+        "logs": {
+            "enabled": true,
+            "invocation_logs": true
+        },
+        "traces": {
+            "enabled": true
+        }
+    },
+    "kv_namespaces": [
+        {
+            "binding": "CACHE",
+            "id": "88be1f5c132e46c794698d494fa01947"
+        },
+        {
+            "binding": "SESSION",
+            "id": "6b93206edd314faf8704adedadcce336"
+        }
+    ]
 }

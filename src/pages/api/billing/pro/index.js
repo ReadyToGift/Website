@@ -53,8 +53,10 @@ export const GET = async () => {
         return new Response(
             JSON.stringify({
                 success: true,
-                price: prices[0],
-                benefits: pro.benefits.map((b) => b.description)
+                product: {
+                    price: prices[0],
+                    benefits: pro.benefits.map((b) => b.description)
+                }
             }),
             {
                 status: 200,

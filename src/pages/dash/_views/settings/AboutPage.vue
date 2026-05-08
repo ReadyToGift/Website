@@ -1,7 +1,6 @@
 <template>
     <v-card
         variant="tonal"
-        color="secondary"
     >
         <v-card-title>
             About Readyto.gift

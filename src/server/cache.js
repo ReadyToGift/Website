@@ -1,34 +1,14 @@
-import { createClient } from "redis";
-import { REDIS_HOST } from "astro:env/server";
+import { env } from "cloudflare:workers";
 
-
-export let cacheType = null; // null, 'redis'
-
-let redisClient;
-
-if (REDIS_HOST) {
-    cacheType = "redis";
-    redisClient = await createClient({
-        url: `redis://${REDIS_HOST}:6379`
-    })
-        .on("error", (err) => console.log("Redis Client Error", err))
-        .connect(() => console.log("Connected to Redis"));
-    
-    await redisClient.flushAll();
-}
-
+const kvCacheNamespace = env.CACHE;
 
 export const setCache = async (key, value, ttl) => {
     try {
-        if (!cacheType) return;
-        if (redisClient) {
-            await redisClient.set(key, JSON.stringify({
-                data: value,
-                ttl,
-                exp: new Date().getTime() + ttl
-            }));
-
-        }
+        await kvCacheNamespace.put(key, JSON.stringify({
+            data: value,
+            ttl,
+            exp: new Date().getTime() + ttl
+        }));
         console.log(`Set ${key} in cache`);
     } catch (err) {
         console.error("Error setting cache:", err);
@@ -37,12 +17,8 @@ export const setCache = async (key, value, ttl) => {
 
 export const getCache = async (key) => {
     try {
-        if (!cacheType) return;
-
         let value;
-        if (redisClient) {
-            value = await redisClient.get(key);
-        }
+        value = await kvCacheNamespace.get(key);
 
         if (value) {
             value = JSON.parse(value);
@@ -64,8 +40,7 @@ export const getCache = async (key) => {
 
 export const deleteCache = async (key) => {
     try {
-        if (!cacheType) return;
-        if (redisClient) await redisClient.del(key);
+        await kvCacheNamespace.delete(key);
     } catch (err) {
         console.error("Error deleting cache:", err);
     }
