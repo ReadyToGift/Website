@@ -25,9 +25,13 @@ export default defineConfig({
         schema: {
             APPWRITE_PROJECT: envField.string({ context: "client", access: "public" }),
             APPWRITE_ENDPOINT: envField.string({
+               
                 context: "client",
+               
                 access: "public",
+               
                 default: "https://cloud.appwrite.io/v1"
+           
             }),
             APPWRITE_DB: envField.string({ context: "client", access: "public" }),
             APPWRITE_ITEM_COLLECTION: envField.string({ context: "client", access: "public" }),
@@ -115,6 +119,19 @@ export default defineConfig({
         // },
         ssr: {
             noExternal: ["vuetify"]
+        },
+        build: {
+            cssCodeSplit: true,
+            rollupOptions: {
+                output: {
+                    manualChunks(id) {
+                        // Ensure Vue SFC styles are always extracted to separate CSS files
+                        if (id.includes(".vue") && id.includes("?vue&type=style")) {
+                            return "styles";
+                        }
+                    }
+                }
+            }
         }
     },
 
