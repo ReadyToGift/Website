@@ -101,11 +101,10 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION } from "astro:env/client";
-import { AppwriteException, ID } from "appwrite";
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VTextField } from "vuetify/components";
-import { databases } from "@/appwrite";
+import { getJwt } from "@/stores/auth";
+import { handleFetch } from "@/utils/handleFetch";
 
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
@@ -149,35 +148,34 @@ export default {
             this.alert = false;
             let result;
             try {
-                result = await databases.createDocument(
-                    APPWRITE_DB,
-                    APPWRITE_FULFILLMENT_COLLECTION,
-                    ID.unique(),
-                    {
-                        item: this.item.$id,
+                const jwt = await getJwt();
+                const [resp, fulfillError] = await handleFetch("/api/content/item/fulfillment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                    },
+                    body: JSON.stringify({
+                        itemId: this.item.$id,
                         name: this.name !== "" ? this.name : null
-                    }
-                );
-            } catch (e) {
-                if (e instanceof AppwriteException) {
-                    if (e.type === "document_already_exists") {
-                        this.alert = {
-                            text: "This item is already fulfilled. Please refresh the page.",
-                            title: "Error"
-                        };
-                        this.loading = false;
-                        return;
-                    }
+                    })
+                });
+
+                if (fulfillError) {
                     this.alert = {
-                        text: e.message,
+                        text: fulfillError.message || "An unknown error occurred.",
                         title: "Error"
                     };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
+                    this.loading = false;
+                    return;
                 }
+
+                result = resp.fulfillment;
+            } catch (e) {
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }
@@ -191,23 +189,32 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                await databases.deleteDocument(
-                    APPWRITE_DB,
-                    APPWRITE_FULFILLMENT_COLLECTION,
-                    this.item.fulfillment.$id
-                );
-            } catch (e) {
-                if (e instanceof AppwriteException) {
+                const jwt = await getJwt();
+                const [, unfulfillError] = await handleFetch("/api/content/item/fulfillment", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                    },
+                    body: JSON.stringify({
+                        fulfillmentId: this.item.fulfillment.$id,
+                        itemId: this.item.$id
+                    })
+                });
+
+                if (unfulfillError) {
                     this.alert = {
-                        text: e.message,
+                        text: unfulfillError.message || "An unknown error occurred.",
                         title: "Error"
                     };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
+                    this.loading = false;
+                    return;
                 }
+            } catch (e) {
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }

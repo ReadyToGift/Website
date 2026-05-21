@@ -1,36 +1,19 @@
 <template>
     <div
-        class="page-content loading"
+        class="loader-outer"
         v-if="!list && !newItem.notFound"
     >
-        <v-card
-            variant="tonal"
-            class="mb-5"
-            width="80%"
-        >
-            <v-card-title>
-                Loading
-                <v-progress-circular
-                    indeterminate
-                    size="20"
-                    width="2"
-                    class="ml-2"
-                    rounded
-                />
-            </v-card-title>
-            <v-card-subtitle>
-                {{ loading.status }}
-            </v-card-subtitle>
-            <v-card-text>
-                <v-progress-linear
-                    height="5"
-                    color="primary"
-                    :max="loading.max"
-                    :model-value="Math.min(loading.value + 0.25, loading.max)"
-                    :buffer-value="loading.bufferValue"
-                />
-            </v-card-text>
-        </v-card>
+        <div class="loader-inner">
+            <v-progress-circular
+                indeterminate
+                size="80"
+                width="8"
+                color="primary"
+                class="big-loader"
+                rounded
+            />
+            <h1 class="loader-label">Loading list…</h1>
+        </div>
     </div>
     <template v-else-if="!newItem.notFound">
         <div
@@ -147,20 +130,20 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION, ENABLE_BILLING } from "astro:env/client";
-import { avatars, databases, tablesDB } from "@/appwrite";
-import { VAlert, VCard, VCardSubtitle, VCardText, VCardTitle, VDivider, VProgressCircular, VProgressLinear, VSpacer, VSwitch } from "vuetify/components";
+import { VAlert, VDivider, VProgressCircular, VSpacer, VSwitch } from "vuetify/components";
+import { avatars } from "@/appwrite";
+import { ENABLE_BILLING } from "astro:env/client";
+import { handleFetch } from "@/utils/handleFetch";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import NotFound from "../../404/_NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-import { Query } from "appwrite";
 
 import { $prefs, addToHistory } from "@/stores/prefs";
 import { billing as billingStore, limits as limitsStore } from "@/stores/billing";
-import { previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
+import { getJwt, previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
 import { setCount as setListCount, userLists as userListsStore } from "@/stores/userLists";
 import { clientRouter } from "@/router";
 import { create as createDialog } from "@/stores/dialogs";
@@ -176,11 +159,6 @@ export default {
         VAlert,
         VDivider,
         VSpacer,
-        VCard,
-        VCardText,
-        VCardTitle,
-        VCardSubtitle,
-        VProgressLinear,
         VProgressCircular,
         NotFound,
         PWAPrompt
@@ -534,19 +512,29 @@ export default {
             }
             return true;
         },
-        async getList ({ tablesDB, listId, sort = "price", user }) {
+        async getList ({ listId, sort = "price" }) {
             this.loading = {
                 ...this.loading,
                 status: "Getting list",
                 value: 0,
                 bufferValue: 1
             };
-            let list = await tablesDB.getRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                rowId: listId,
-                queries: [Query.select(["*", "items.*"])]
+            const query = new URLSearchParams({ listId, sort }).toString();
+            const jwt = await getJwt();
+
+            const [listData, listError] = await handleFetch(`/api/content/list?${query}`, {
+                headers: jwt
+                    ? {
+                        Authorization: `Bearer ${jwt}`
+                    }
+                    : {}
             });
+
+            if (listError) {
+                const error = new Error(listError.message || "Failed to get list");
+                error.code = listError.status;
+                throw error;
+            }
 
             this.loading = {
                 ...this.loading,
@@ -555,15 +543,6 @@ export default {
                 bufferValue: 2
             };
 
-            console.log("Loading community items");
-            const communityItems = (
-                await tablesDB.listRows({
-                    databaseId: APPWRITE_DB,
-                    tableId: APPWRITE_ITEM_COLLECTION,
-                    queries: [Query.equal("communityList", list.$id)]
-                })
-            ).rows;
-
             this.loading = {
                 ...this.loading,
                 status: "Getting fulfillments",
@@ -571,49 +550,12 @@ export default {
                 bufferValue: 3
             };
 
-            const loadedAsAuthor = user && list.author === user.$id;
-
-            let fulfillments = [];
-
-            if (list.items && list.items.length) {
-                console.log("Loading fulfillments");
-                fulfillments = (
-                    await tablesDB.listRows({
-                        databaseId: APPWRITE_DB,
-                        tableId: APPWRITE_FULFILLMENT_COLLECTION,
-                        queries: [
-                            Query.equal(
-                                "item",
-                                list.items.map((item) => item.$id)
-                            ),
-                            Query.select(["*", "item.*"]),
-                            Query.limit(list.items.length)
-                        ]
-                    })
-                ).rows;
-            }
-
             this.loading = {
                 ...this.loading,
                 status: "Finishing up",
                 value: 2,
                 bufferValue: 3
             };
-
-            list.items = list.items
-                .sort((a, b) => {
-                    if (sort === "price") {
-                        return a.price - b.price;
-                    }
-                    return a.title.localeCompare(b.title);
-                })
-                .map((item) => {
-                    item.fulfillment = fulfillments.find((fulfillment) => {
-                        return fulfillment.item.$id === item.$id;
-                    });
-
-                    return item;
-                });
             
             this.loading = {
                 ...this.loading,
@@ -623,10 +565,10 @@ export default {
             };
 
             return {
-                list,
-                loadedAsAuthor,
-                fulfillments,
-                communityItems
+                list: listData.list,
+                loadedAsAuthor: listData.loadedAsAuthor,
+                fulfillments: listData.fulfillments,
+                communityItems: listData.communityItems
             };
         },
         async setList({ listData }) {
@@ -665,7 +607,7 @@ export default {
         },
         async loadList(listId) {
             try {
-                const listData = await this.getList({ listId, tablesDB, user: this.user });
+                const listData = await this.getList({ listId, user: this.user });
                 if (listData && listData.list) {
                     const continueAnyway = await this.createAvoidSpoilersDialog(listData.list);
                     if (!continueAnyway) {
@@ -692,27 +634,43 @@ export default {
             this.loadList();
         }
     },
+    async created() {
+        if (import.meta.env.SSR) return;
+        const preloaded = window.__PRELOADED_LIST__;
+        if (preloaded) {
+            window.__PRELOADED_LIST__ = null;
+            await this.setList({ listData: preloaded });
+            this.quickCreateURL = this.quickCreateURLParam;
+        }
+    },
     async mounted() {
         const route = clientRouter.currentRoute.value;
         const { listId } = route.params;
-        await this.loadList(listId);
+        if (!this.list) {
+            await this.loadList(listId);
+        }
 
         if (this.user) {
-            const lists = await databases.listDocuments(
-                APPWRITE_DB,
-                APPWRITE_LIST_COLLECTION,
-                [
-                    Query.equal("author", this.user.$id)
-                ]
-            );
+            const jwt = await getJwt();
 
-            const publicLists = lists.documents.filter((list) => !list.private);
-            const privateLists = lists.documents.filter((list) => list.private);
+            if (jwt) {
+                const [listsData, listsError] = await handleFetch("/api/content/lists", {
+                    headers: {
+                        Authorization: `Bearer ${jwt}`
+                    }
+                });
 
-            setListCount({
-                private: privateLists.length,
-                public: publicLists.length
-            });
+                if (!listsError && listsData?.lists) {
+                    const ownLists = listsData.lists.filter((list) => list.author === this.user.$id);
+                    const publicLists = ownLists.filter((list) => !list.private);
+                    const privateLists = ownLists.filter((list) => list.private);
+
+                    setListCount({
+                        private: privateLists.length,
+                        public: publicLists.length
+                    });
+                }
+            }
         }
         clientRouter.afterEach(async (to, from) => {
             if (to.params.listId !== from.params.listId && to.params.listId) {
@@ -734,44 +692,62 @@ main {
         width: var(--section-width);
         margin: 0 auto;
         padding: 2rem 0;
-        &.loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+    }
+
+    .loader-outer {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .loader-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+    }
+    .big-loader {
+        margin-bottom: 1rem;
+    }
+    .loader-label {
+        font-size: 1.5rem;
+        color: var(--v-theme-primary);
+        font-weight: 500;
+        text-align: center;
+    }
+
+    .list-header {
+        padding: 1rem;
+        h1 {
+            word-break: break-word;
+            white-space: pre-wrap;
         }
-        .list-header {
-            padding: 1rem;
-            h1 {
-                word-break: break-word;
-                white-space: pre-wrap;
+
+        .mobile-list-buttons {
+            text-align: center;
+        }
+    }
+
+    .filters {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .items {
+        margin-top: 1rem;
+        .item-price-group {
+            h3 {
+                font-size: 2rem;
+                margin-top: 2rem;
             }
-
-            .mobile-list-buttons {
-                text-align: center;
+            hr {
+                margin: 0.5rem 0 1rem;
             }
-        }
-
-        .filters {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .items {
-            margin-top: 1rem;
-            .item-price-group {
-                h3 {
-                    font-size: 2rem;
-                    margin-top: 2rem;
-                }
-                hr {
-                    margin: 0.5rem 0 1rem;
-                }
-                .item-price-group-items {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 1rem;
-                }
+            .item-price-group-items {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
             }
         }
     }

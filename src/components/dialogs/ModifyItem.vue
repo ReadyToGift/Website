@@ -104,20 +104,19 @@
 </template>
 
 <script>
-import { APPWRITE_IMAGE_BUCKET, ENABLE_BILLING } from "astro:env/client";
-import { AppwriteException, ID, Permission, Role } from "appwrite";
 import { autofillUsage as autofillUsageStore, limits as limitsStore } from "@/stores/billing";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
+import { ENABLE_BILLING } from "astro:env/client";
 import { getJwt } from "@/stores/auth";
 import { handleFetch } from "@/utils/handleFetch";
+import { ID } from "appwrite";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
 import { markRaw } from "vue";
 import mime from "mime-types";
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
-import { storage } from "@/appwrite";
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
 
@@ -218,18 +217,6 @@ export default {
                     };
 
                     this.previousValues = { ...this.modifiedItem };
-
-                    if (this.item.imageID) {
-                        const file = await storage.getFile(
-                            APPWRITE_IMAGE_BUCKET,
-                            this.item.imageID
-                        );
-
-                        this.modifiedItem.imageFile = new File(
-                            ["a".repeat(file.sizeOriginal)],
-                            file.name
-                        );
-                    }
                 } else {
                     this.itemID = ID.unique();
                 }
@@ -410,17 +397,36 @@ export default {
         async setFileState(value) {
             this.fileState = value;
             if (value === "removed") {
-                try {
-                    await storage.deleteFile(
-                        APPWRITE_IMAGE_BUCKET,
-                        this.modifiedItem.imageID
-                    );
-                } catch (e) {
-                    console.error("Failed to delete file:", e);
-                }
                 this.modifiedItem.imageFile = null;
                 this.modifiedItem.imageID = null;
+                this.modifiedItem.image = null;
             }
+        },
+        async uploadImageFile({ jwt }) {
+            const formData = new FormData();
+            formData.append("file", this.modifiedItem.imageFile);
+            formData.append("listId", this.listId);
+
+            const response = await fetch("/api/content/item/image", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${jwt}`
+                },
+                body: formData
+            });
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                data = null;
+            }
+
+            if (!response.ok) {
+                throw new Error(data?.message || "Failed to upload image");
+            }
+
+            return data.file;
         },
         async createItem() {
             let result;
@@ -447,32 +453,13 @@ export default {
             }
 
             try {
-                let permissions = [
-                    Permission.delete(Role.user(this.user.$id)),
-                    Permission.update(Role.user(this.user.$id))
-                ];
-
-                if (this.wishlistOwner && this.list.private) {
-                    permissions.push(
-                        Permission.read(Role.user(this.user.$id))
-                    );
-                } else {
-                    permissions.push(
-                        Permission.read(Role.any())
-                    );
-                }
-
                 if (this.modifiedItem.image) {
                     await this.downloadRemoteImage(this.modifiedItem.image);
                 }
+
                 if (this.modifiedItem.imageFile && !this.modifiedItem.imageID) {
                     this.uploadingFile = true;
-                    const fileUpload = await storage.createFile(
-                        APPWRITE_IMAGE_BUCKET,
-                        ID.unique(),
-                        this.modifiedItem.imageFile,
-                        permissions
-                    );
+                    const fileUpload = await this.uploadImageFile({ jwt });
 
                     this.uploadingFile = false;
                     this.modifiedItem.imageID = fileUpload.$id;
@@ -514,17 +501,10 @@ export default {
 
                 result = createRespData.item;
             } catch (e) {
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 console.error(e);
                 this.loading = false;
                 return;
@@ -563,51 +543,20 @@ export default {
                 return;
             }
 
-            let permissions = [
-                Permission.delete(Role.user(this.user.$id)),
-                Permission.update(Role.user(this.user.$id))
-            ];
-
-            if (this.wishlistOwner && this.list.private) {
-                permissions.push(
-                    Permission.read(Role.user(this.user.$id))
-                );
-            } else {
-                permissions.push(
-                    Permission.read(Role.any())
-                );
-            }
-
             try {
                 // Upload hotlinked image if present (manually added)
                 if (this.modifiedItem.image) {
                     await this.downloadRemoteImage(this.modifiedItem.image);
                 }
 
-                if (["removed", "replaced"].includes(this.fileState)) {
-                    try {
-                        if (this.modifiedItem.imageID) {
-                            await storage.deleteFile(
-                                APPWRITE_IMAGE_BUCKET,
-                                this.modifiedItem.imageID
-                            );
-
-                            this.modifiedItem.imageID = null;
-                        }
-
-                    } catch (e) {
-                        console.error("Failed to delete file:", e);
-                    }
+                if (this.fileState === "removed") {
+                    this.modifiedItem.imageID = null;
+                    this.modifiedItem.image = null;
                 }
 
                 if (["added", "replaced"].includes(this.fileState)) {
                     this.uploadingFile = true;
-                    const fileUpload = await storage.createFile(
-                        APPWRITE_IMAGE_BUCKET,
-                        ID.unique(),
-                        this.modifiedItem.imageFile,
-                        permissions
-                    );
+                    const fileUpload = await this.uploadImageFile({ jwt });
 
                     this.uploadingFile = false;
 
@@ -647,17 +596,10 @@ export default {
 
                 result = updateRespData.item;
             } catch (e) {
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }

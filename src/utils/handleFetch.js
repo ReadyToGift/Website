@@ -18,6 +18,8 @@ export const handleFetch = async (...args) => {
                 error = { message: textError || "An unknown error occurred." };
             }                
 
+            error.status = response.status;
+
             return [null, error];
         }
 

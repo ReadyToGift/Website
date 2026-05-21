@@ -1,0 +1,95 @@
+import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { createAdminClient, requireAuth } from "@/server/appwrite";
+import { InputFile, Permission, Query, Role } from "node-appwrite";
+import { Buffer } from "buffer";
+
+export const POST = async (context) => {
+    try {
+        const { sessionClient, account } = await requireAuth(context);
+
+        if (!sessionClient || !account) {
+            return new Response(JSON.stringify({ message: "Unauthenticated" }), {
+                status: 401,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        let adminClient;
+        try {
+            adminClient = createAdminClient();
+        } catch (err) {
+            console.log(err);
+            return new Response(JSON.stringify({ message: "Error creating admin client" }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const formData = await context.request.formData();
+        const file = formData.get("file");
+        const listId = formData.get("listId");
+
+        if (!file || typeof file === "string") {
+            return new Response(JSON.stringify({ message: "Missing file" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        if (!listId || typeof listId !== "string") {
+            return new Response(JSON.stringify({ message: "Missing list ID" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const list = await adminClient.tablesDB.getRow({
+            databaseId: APPWRITE_DB,
+            tableId: APPWRITE_LIST_COLLECTION,
+            rowId: listId,
+            queries: [Query.select(["$id", "author", "private"])]
+        });
+
+        if (!list) {
+            return new Response(JSON.stringify({ message: "List not found" }), {
+                status: 404,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        if (list.private && list.author !== account.$id) {
+            return new Response(JSON.stringify({ message: "Unauthorized" }), {
+                status: 403,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const permissions = [
+            Permission.write(Role.user(account.$id)),
+            Permission.delete(Role.user(account.$id)),
+            Permission.update(Role.user(account.$id)),
+            list.private ? Permission.read(Role.user(account.$id)) : Permission.read(Role.any())
+        ];
+
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const fileInput = InputFile.fromBuffer(buffer, file.name);
+
+        const uploaded = await adminClient.storage.createFile({
+            bucketId: APPWRITE_IMAGE_BUCKET,
+            fileId: "unique()",
+            file: fileInput,
+            permissions
+        });
+
+        return new Response(JSON.stringify({ file: uploaded }), {
+            status: 200,
+            headers: { "Content-Type": "application/json" }
+        });
+    } catch (err) {
+        console.log(err);
+        return new Response(JSON.stringify({ message: "Internal server error" }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+};

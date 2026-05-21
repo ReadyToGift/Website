@@ -1,6 +1,6 @@
-import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 import { AppwriteException, Permission, Query, Role } from "node-appwrite";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
+import { createAdminClient, createSessionClient, requireAuth } from "@/server/appwrite";
 import { getUserLimits } from "@/server/billing";
 
 const getListUsage = async ({ account, adminClient }) => {
@@ -42,22 +42,14 @@ const getListUsage = async ({ account, adminClient }) => {
 
 export const GET = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
-
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated"
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
+        let account = null;
+        try {
+            const sessionClient = createSessionClient({ request: context.request });
+            account = await sessionClient.account.get();
+        } catch {
+            // Public list access is allowed without authentication.
         }
-        
+
         let adminClient;
 
         try {
@@ -80,6 +72,21 @@ export const GET = async (context) => {
 
         const searchParams = context.url.searchParams;
         const listID = searchParams.get("listId");
+        const sort = searchParams.get("sort") || "price";
+
+        if (!listID) {
+            return new Response(
+                JSON.stringify({
+                    message: "Missing list ID"
+                }),
+                {
+                    status: 400,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
 
         let list;
 
@@ -87,7 +94,8 @@ export const GET = async (context) => {
             list = await adminClient.tablesDB.getRow({
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_LIST_COLLECTION,
-                rowId: listID
+                rowId: listID,
+                queries: [Query.select(["*", "items.*"])]
             });
 
             if (!list) {
@@ -104,7 +112,7 @@ export const GET = async (context) => {
                 );
             }
 
-            if (list.author !== account.$id && list.private) {
+            if (list.private && (!account || list.author !== account.$id)) {
                 return new Response(
                     JSON.stringify({
                         message: "Unauthorized"
@@ -133,9 +141,91 @@ export const GET = async (context) => {
             );
         }
 
-        console.log("Fetched list:", list);
+        let communityItems;
 
-        
+        try {
+            const communityItemsResp = await adminClient.tablesDB.listRows({
+                databaseId: APPWRITE_DB,
+                tableId: APPWRITE_ITEM_COLLECTION,
+                queries: [Query.equal("communityList", list.$id)]
+            });
+
+            communityItems = communityItemsResp.rows;
+        } catch (err) {
+            console.log(err);
+
+            return new Response(
+                JSON.stringify({
+                    message: "Error getting community items"
+                }),
+                {
+                    status: 500,
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+        }
+
+        let fulfillments = [];
+
+        if (list.items?.length) {
+            try {
+                const fulfillmentsResp = await adminClient.tablesDB.listRows({
+                    databaseId: APPWRITE_DB,
+                    tableId: APPWRITE_FULFILLMENT_COLLECTION,
+                    queries: [
+                        Query.equal("item", list.items.map((item) => item.$id)),
+                        Query.select(["*", "item.*"]),
+                        Query.limit(list.items.length)
+                    ]
+                });
+
+                fulfillments = fulfillmentsResp.rows;
+            } catch (err) {
+                console.log(err);
+
+                return new Response(
+                    JSON.stringify({
+                        message: "Error getting fulfillments"
+                    }),
+                    {
+                        status: 500,
+                        headers: {
+                            "Content-Type": "application/json"
+                        }
+                    }
+                );
+            }
+        }
+
+        list.items = (list.items || [])
+            .sort((a, b) => {
+                if (sort === "price") {
+                    return a.price - b.price;
+                }
+
+                return a.title.localeCompare(b.title);
+            })
+            .map((item) => {
+                item.fulfillment = fulfillments.find((fulfillment) => fulfillment.item.$id === item.$id) || null;
+                return item;
+            });
+
+        return new Response(
+            JSON.stringify({
+                list,
+                loadedAsAuthor: !!account && list.author === account.$id,
+                fulfillments,
+                communityItems
+            }),
+            {
+                status: 200,
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
     } catch (err) {
         console.log(err);
 

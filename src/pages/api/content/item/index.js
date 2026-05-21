@@ -628,9 +628,10 @@ export const PUT = async (context) => {
             permissions.push(Permission.read(Role.any()));
         }
 
-        const differentImage = updateData.imageID && updateData.imageID !== item.imageID;
+        const differentImage = !!updateData.imageID && updateData.imageID !== item.imageID;
+        const removedImage = updateData.imageID === null && !!item.imageID;
 
-        if (differentImage && item.imageID) {
+        if ((differentImage || removedImage) && item.imageID) {
             try {
                 await adminClient.storage.deleteFile({
                     bucketId: APPWRITE_IMAGE_BUCKET,

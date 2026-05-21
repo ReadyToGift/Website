@@ -97,11 +97,9 @@
 </template>
 
 <script>
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION, ENABLE_BILLING } from "astro:env/client";
-import { AppwriteException, Query } from "appwrite";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
-import { databases } from "@/appwrite";
+import { ENABLE_BILLING } from "astro:env/client";
 import { handleFetch } from "@/utils/handleFetch";
 import ListCard from "../ListCard.vue";
 
@@ -168,19 +166,37 @@ export default {
         async getLists() {
             this.loading = true;
             try {
-                const response = await databases.listDocuments(
-                    APPWRITE_DB,
-                    APPWRITE_LIST_COLLECTION,
-                    [
-                        Query.equal("author", this.user.$id),
-                        Query.orderDesc("$updatedAt"),
-                        Query.notEqual("$id", this.list.$id),
-                        Query.select(["*","items.*"]),
-                        Query.limit(1000)
-                    ]
-                );
+                const jwt = await getJwt();
 
-                if (response.total === 0) {
+                if (!jwt) {
+                    this.alert = {
+                        text: "You must be logged in to move an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                const [response, listsError] = await handleFetch("/api/content/lists", {
+                    headers: {
+                        Authorization: `Bearer ${jwt}`
+                    }
+                });
+
+                if (listsError) {
+                    this.alert = {
+                        text: listsError.message || "An unknown error occurred.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
+
+                const userLists = (response.lists || [])
+                    .filter((list) => list.author === this.user.$id && list.$id !== this.list.$id)
+                    .sort((a, b) => new Date(b.$updatedAt).getTime() - new Date(a.$updatedAt).getTime());
+
+                if (userLists.length === 0) {
                     this.alert = {
                         text: "You have no other lists to move this item to.",
                         title: "No lists"
@@ -189,22 +205,15 @@ export default {
                     return;
                 }
 
-                this.lists = response.documents;
+                this.lists = userLists;
 
                 this.loading = false;
             } catch (e) {
                 console.error(e);
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loading = false;
                 return;
             }
@@ -251,17 +260,10 @@ export default {
                 this.success = true;
             } catch (error) {
                 console.error(error);
-                if (error instanceof AppwriteException) {
-                    this.alert = {
-                        text: error.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+                this.alert = {
+                    text: error.message || "An unknown error occurred.",
+                    title: "Error"
+                };
                 this.loadingMove = false;
                 return;
             }

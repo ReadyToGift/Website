@@ -155,14 +155,13 @@
 </template>
 
 <script>
-import { avatars, storage } from "@/appwrite";
+import { APPWRITE_ENDPOINT, APPWRITE_IMAGE_BUCKET, APPWRITE_PROJECT } from "astro:env/client";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
 import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
-import { APPWRITE_IMAGE_BUCKET } from "astro:env/client";
+import { avatars } from "@/appwrite";
 import { convertPriority } from "@/utils";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
-import { ImageFormat } from "appwrite";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
 import validation from "@/utils/validation";
@@ -220,22 +219,13 @@ export default {
         imageURL() {
             if (this.item.imageID) {
                 try {
-                    const imageURL = storage.getFilePreview(
-                        APPWRITE_IMAGE_BUCKET,
-                        this.item.imageID,
-                        undefined, // width (optional)
-                        400, // height (optional)
-                        undefined, // gravity (optional)
-                        undefined, // quality (optional)
-                        undefined, // borderWidth (optional)
-                        undefined, // borderColor (optional)
-                        undefined, // borderRadius (optional)
-                        undefined, // opacity (optional)
-                        undefined, // rotation (optional)
-                        undefined, // background (optional)
-                        ImageFormat.Png // output (optional)
-                    );
-                    return imageURL.toString();
+                    const params = new URLSearchParams({
+                        project: APPWRITE_PROJECT,
+                        output: "png",
+                        height: "400"
+                    });
+
+                    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_IMAGE_BUCKET}/files/${this.item.imageID}/preview?${params.toString()}`;
                 } catch (error) {
                     console.error(error);
                     return null;
