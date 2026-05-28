@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { getCurrentUser } from "@/stores/auth";
 import { ENABLE_BILLING } from "astro:env/client";
+import { getCurrentUser } from "@/stores/auth";
 
 let clientRouter;
 
@@ -18,11 +18,13 @@ if (!import.meta.env.SSR) {
             },
             {
                 path: "/dash/login",
-                component: () => import("@/pages/dash/_views/LoginPage.vue")
+                component: () => import("@/pages/dash/_views/LoginPage.vue"),
+                meta: { requiresAuth: false }
             },
             {
                 path: "/dash/register",
-                component: () => import("@/pages/dash/_views/RegisterPage.vue")
+                component: () => import("@/pages/dash/_views/RegisterPage.vue"),
+                meta: { requiresAuth: false }
             },
             {
                 path: "/dash/settings",
@@ -75,6 +77,10 @@ if (!import.meta.env.SSR) {
                     path: "/dash/login",
                     query: { redirect: encodeURIComponent(to.fullPath) }
                 });
+            }
+        } else if (to.meta && to.meta.requiresAuth === false) {
+            if (currentUser) {
+                return next("/dash/lists");
             }
         }
         next();

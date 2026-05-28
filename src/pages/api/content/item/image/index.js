@@ -1,7 +1,9 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
-import { InputFile, Permission, Query, Role } from "node-appwrite";
 import { Buffer } from "buffer";
+
+import { createAdminClient, requireAuth } from "@/server/appwrite";
+import { Permission, Query, Role } from "node-appwrite";
+import { InputFile } from "node-appwrite/file";
 
 export const POST = async (context) => {
     try {
