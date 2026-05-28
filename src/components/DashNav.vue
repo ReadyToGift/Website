@@ -13,7 +13,7 @@
                     :subtitle="user.email"
                 />
             </v-list>
-            <v-divider/>
+            <v-divider v-if="user" />
             <v-list
                 density="compact"
                 nav
@@ -33,7 +33,7 @@
             <v-list
                 v-if="prefs.history && prefs.history.length > 0"
             >
-                <v-divider />
+                <v-divider v-if="user" />
                 <v-list-item
                     :prepend-icon="mdiClock"
                     title="Recently Viewed"
