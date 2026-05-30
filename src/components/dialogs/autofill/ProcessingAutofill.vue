@@ -182,6 +182,13 @@ const autofill = async () => {
                     emit("complete", JSON.stringify(payload.outputData));
                     sseClient.close();
                 }
+
+                if (payload.status === "failed") {
+                    completed.value = true;
+                    emit("error", "Autofill process failed. Please try again or fill in the details manually.");
+                    sseClient.close();
+                }
+
             } catch (parseError) {
                 console.error("Failed to parse SSE message:", parseError, event.data);
             }

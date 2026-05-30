@@ -9,8 +9,7 @@ import Layout from "@/layouts/Layout.astro";
         <noscript>
             <h1>JavaScript is disabled</h1>
             <p>
-                This application requires JavaScript to run. Please enable JavaScript to
-                continue.
+                This application requires JavaScript to run. Please enable JavaScript to continue.
             </p>
         </noscript>
         <style>
@@ -24,6 +23,6 @@ import Layout from "@/layouts/Layout.astro";
                 }
             }
         </style>
-        <App client:only />
+        <App client:only="vue" />
     </div>
 </Layout>

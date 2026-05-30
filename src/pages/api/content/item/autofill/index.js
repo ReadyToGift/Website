@@ -368,38 +368,54 @@ export const POST = async (context) => {
                         totalAttempts: requestMethods.length
                     });
 
-                    const data = await getPreview({
-                        url,
-                        requestMethods,
-                        site,
-                        itemID,
-                        userID,
-                        updateStatus
-                    });
+                    try {
+                        const data = await getPreview({
+                            url,
+                            requestMethods,
+                            site,
+                            itemID,
+                            userID,
+                            updateStatus
+                        });
 
-                    const autofillData = {
-                        title: formatTitle(data, site),
-                        url: data.url ? TidyURL.clean(data.url).url : "",
-                        image: "",
-                        bestImage: data.bestImage || null,
-                        imageID: data.imageID,
-                        imageSize: data.imageSize,
-                        images: data.images,
-                        price: data.price
-                    };
+                        const autofillData = {
+                            title: formatTitle(data, site),
+                            url: data.url ? TidyURL.clean(data.url).url : "",
+                            image: "",
+                            bestImage: data.bestImage || null,
+                            imageID: data.imageID,
+                            imageSize: data.imageSize,
+                            images: data.images,
+                            price: data.price
+                        };
 
-                    const newConsumedUnits = consumedUnits + 1;
+                        const newConsumedUnits = consumedUnits + 1;
 
-                    updateStatus({
-                        message: "Autofill completed",
-                        status: "completed",
-                        executionTime:
-                            new Date().getTime() - autofillStartTime.getTime(),
-                        outputData: autofillData,
-                        newConsumedUnits: usingFreeAllowance ? null : newConsumedUnits
-                    });
+                        updateStatus({
+                            message: "Autofill completed",
+                            status: "completed",
+                            executionTime:
+                                new Date().getTime() - autofillStartTime.getTime(),
+                            outputData: autofillData,
+                            newConsumedUnits: usingFreeAllowance ? null : newConsumedUnits
+                        });
 
-                    controller.close();
+                        controller.close();
+                    } catch (err) {
+                        console.error("Autofill stream error:", err && err.message ? err.message : err);
+
+                        // Ensure the client receives a final failed event instead of hanging
+                        updateStatus({
+                            message: err && err.message ? err.message : "Autofill failed",
+                            status: "failed"
+                        });
+
+                        try {
+                            controller.close();
+                        } catch {
+                            // ignore
+                        }
+                    }
                 }
             });
 
