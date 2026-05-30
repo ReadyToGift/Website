@@ -1,4 +1,5 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+export const prerender = false;
 import { createAdminClient, requireAuth } from "@/server/appwrite";
 import { Permission, Query, Role } from "node-appwrite";
 import { getUserLimits } from "@/server/billing";

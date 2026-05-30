@@ -1,4 +1,5 @@
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
+export const prerender = false;
 import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 

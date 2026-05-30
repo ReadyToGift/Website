@@ -1,4 +1,5 @@
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION } from "astro:env/client";
+export const prerender = false;
 import { createAdminClient, createSessionClient } from "@/server/appwrite";
 import { Query } from "node-appwrite";
 

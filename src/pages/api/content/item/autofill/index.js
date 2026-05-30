@@ -1,4 +1,5 @@
 import getBestImage from "./_modules/get-best-image.js";
+export const prerender = false;
 import { getLinkPreview } from "./_modules/link-preview-js.js";
 import getSite from "./_modules/get-site.js";
 import { HttpsProxyAgent } from "https-proxy-agent";

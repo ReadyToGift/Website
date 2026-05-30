@@ -1,4 +1,5 @@
 import { getCache, setCache } from "@/server/cache";
+export const prerender = false;
 import { createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
 

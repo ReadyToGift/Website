@@ -1,4 +1,5 @@
 import { deleteCache } from "@/server/cache";
+export const prerender = false;
 import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 import { POLAR_ACCESS_TOKEN } from "astro:env/server";

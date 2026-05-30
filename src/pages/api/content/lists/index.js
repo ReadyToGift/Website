@@ -1,4 +1,5 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+export const prerender = false;
 import { createAdminClient, requireAuth } from "@/server/appwrite";
 import { Query } from "node-appwrite";
 

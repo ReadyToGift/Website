@@ -1,4 +1,5 @@
 import { APPWRITE_DB, APPWRITE_IMAGE_BUCKET, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+export const prerender = false;
 import { Buffer } from "buffer";
 
 import { createAdminClient, requireAuth } from "@/server/appwrite";

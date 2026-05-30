@@ -3,6 +3,8 @@ import { createSessionClient } from "@/server/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 
+export const prerender = false;
+
 const polar = new Polar({
     accessToken: POLAR_ACCESS_TOKEN
 });
