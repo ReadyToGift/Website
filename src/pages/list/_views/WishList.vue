@@ -631,7 +631,7 @@ export default {
         async listId() {
             this.list = false;
             this.newItem.notFound = false;
-            this.loadList();
+            this.loadList(this.listId);
         }
     },
     async created() {

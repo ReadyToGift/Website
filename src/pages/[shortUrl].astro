@@ -9,6 +9,8 @@ const client = createAdminClient();
 
 console.log(`Looking up list with shortUrl: ${shortUrl}`);
 
+export const prerender = false;
+
 const response = await client.tablesDB.listRows({
     databaseId: APPWRITE_DB,
     tableId: APPWRITE_LIST_COLLECTION,

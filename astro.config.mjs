@@ -2,20 +2,25 @@
 import { defineConfig, envField } from "astro/config";
 
 import vue from "@astrojs/vue";
+import vuetifyPlugin from "vite-plugin-vuetify";
 
-import sentry from "@sentry/astro";
-import vercel from "@astrojs/vercel";
+const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((plugin) =>
+    plugin.name === "vuetify:import" ? { ...plugin, enforce: "post" } : plugin
+);
 
 import cloudflare from "@astrojs/cloudflare";
-import node from "@astrojs/node";
+import sentry from "@sentry/astro";
 
 let adapter = cloudflare({
     sessionKVBindingName: "SESSION"
 });
 
+// No server adapter — build static output
+
 // https://astro.build/config
 export default defineConfig({
     site: "https://readyto.gift",
+    adapter,
 
     devToolbar: {
         enabled: false
@@ -114,11 +119,15 @@ export default defineConfig({
     ],
 
     vite: {
-        // resolve: {
-        //     noExternal: [/^vuetify/, /^vite-plugin-vuetify/]
-        // },
+        plugins: [...vuetifyPlugins],
+        optimizeDeps: {
+            exclude: ["vuetify", "vite-plugin-vuetify"]
+        },
+        resolve: {
+            noExternal: [/^vuetify/, /^vite-plugin-vuetify/]
+        },
         ssr: {
-            noExternal: ["vuetify"]
+            noExternal: ["vuetify", "vite-plugin-vuetify"]
         },
         build: {
             cssCodeSplit: true,
@@ -135,7 +144,5 @@ export default defineConfig({
         }
     },
 
-    output: "server",
-
-    adapter
+    output: "static"
 });
