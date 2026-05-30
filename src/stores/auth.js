@@ -142,7 +142,6 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
 
             authInitialized.set(false);
             console.error("Auth init error:", err);
-            // Keep authInitialized=false for transient errors so callers retry.
         }
     })();
 
