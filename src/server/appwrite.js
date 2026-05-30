@@ -93,3 +93,21 @@ export const requireAuth = async (context) => {
 
     return { sessionClient, account };
 };
+
+// Convert Appwrite/network errors into friendly Responses for API routes.
+export const appwriteErrorResponse = (err, fallbackMessage = null) => {
+    // Try known locations for HTTP status
+    const status = err?.code || err?.status || err?.response?.status || (typeof err === "object" && err?.message && /\b502\b/.test(err.message) ? 502 : null);
+
+    if (status === 502) {
+        return new Response(
+            JSON.stringify({ message: fallbackMessage || "Appwrite backend is unavailable" }),
+            {
+                status: 502,
+                headers: { "Content-Type": "application/json" }
+            }
+        );
+    }
+
+    return null;
+};

@@ -1,5 +1,5 @@
+import { appwriteErrorResponse, createSessionClient } from "@/server/appwrite";
 import { getCache, setCache } from "@/server/cache";
-import { createSessionClient } from "@/server/appwrite";
 import { extractJwt } from "@/server/auth";
 
 import { getCustomerSession, getCustomerSubscriptions, getLimits, getProProduct, getUserAutofillMeter } from "@/server/billing";
@@ -45,7 +45,8 @@ export const GET = async (context) => {
             }
         } catch (error) {
             console.error("Error getting account", error);
-            
+            const resp = appwriteErrorResponse(error, "Appwrite backend is unavailable");
+            if (resp) return resp;
             return new Response(
                 JSON.stringify({
                     message: "Internal server error when getting account"
@@ -84,7 +85,8 @@ export const GET = async (context) => {
         );
     } catch (error) {
         console.error(error);
-
+        const resp = appwriteErrorResponse(error, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(null, {
             status: 500
         });

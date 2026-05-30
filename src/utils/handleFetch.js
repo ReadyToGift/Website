@@ -1,8 +1,27 @@
+import { create as createDialog } from "@/stores/dialogs";
+
 export const handleFetch = async (...args) => {
     try {
         const response = await fetch(...args);
 
         if (!response.ok) {
+            if (response.status === 502) {
+                // Show global Appwrite/backend-down dialog
+                try {
+                    createDialog({
+                        title: "Service Unavailable",
+                        text: "The backend service is currently unavailable. Please try again later.",
+                        actions: [
+                            { text: "Retry", action: () => window.location.reload(), color: "primary", closeAfterAction: true },
+                            { text: "Close", action: "close" }
+                        ]
+                    });
+                } catch (e) {
+                    // ignore dialog errors
+                }
+
+                return [null, { message: "Backend unavailable. Please try again later.", status: 502 }];
+            }
             let error;
             if (response.headers.get("Content-Type")?.includes("application/json")) {
                 try {

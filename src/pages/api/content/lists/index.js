@@ -1,5 +1,5 @@
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
+import { appwriteErrorResponse, createAdminClient, requireAuth } from "@/server/appwrite";
 import { Query } from "node-appwrite";
 
 export const GET = async (context) => {
@@ -80,6 +80,8 @@ export const GET = async (context) => {
             });
         } catch (err) {
             console.log(err);
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
 
             return new Response(
                 JSON.stringify({
@@ -108,6 +110,8 @@ export const GET = async (context) => {
 
     } catch (error) {
         console.log("Internal server error:", error);
+        const resp = appwriteErrorResponse(error, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(
             JSON.stringify({
                 message: "Internal server error"

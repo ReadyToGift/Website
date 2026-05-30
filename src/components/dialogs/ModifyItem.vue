@@ -423,6 +423,19 @@ export default {
             }
 
             if (!response.ok) {
+                if (response.status === 502) {
+                    try {
+                        createDialog({
+                            title: "Service Unavailable",
+                            text: "The backend service is currently unavailable. Please try again later.",
+                            actions: [
+                                { text: "Retry", action: () => this.uploadImageFile({ jwt }), color: "primary", closeAfterAction: true },
+                                { text: "Close", action: "close" }
+                            ]
+                        });
+                    } catch (e) {}
+                    throw new Error("Backend unavailable. Please try again later.");
+                }
                 throw new Error(data?.message || "Failed to upload image");
             }
 

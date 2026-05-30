@@ -21,6 +21,7 @@ export const completeMFAchallenge = async (code, factor = "totp") => {
     const challenge = await account.createMFAChallenge({
         factor
     });
+    console.log({ challenge });
     const challengeId = challenge.$id;
 
     await account.updateMFAChallenge({

@@ -34,3 +34,25 @@ export const close = (id, actionText, data = null) => {
         dialogs.setKey(id, undefined);
     }, 500);
 };
+
+export const showAppwriteDown = ({ onRetry } = {}) => {
+    create({
+        title: "Service Unavailable",
+        text: "The backend service is currently unavailable. Please try again later.",
+        actions: [
+            {
+                text: "Retry",
+                action: () => {
+                    if (typeof onRetry === "function") onRetry();
+                    else window.location.reload();
+                },
+                color: "primary",
+                closeAfterAction: true
+            },
+            {
+                text: "Close",
+                action: "close"
+            }
+        ]
+    });
+};

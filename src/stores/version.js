@@ -12,6 +12,9 @@ export const getBuildInfo = async () => {
     try {
         const response = await fetch("/api/version");
         if (!response.ok) {
+            if (response.status === 502) {
+                throw new Error("Backend unavailable. Please try again later.");
+            }
             throw new Error(`Failed to fetch build info: ${response.status} ${response.statusText}`);
         }
         const data = await response.json();

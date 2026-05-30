@@ -1,6 +1,6 @@
 import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { appwriteErrorResponse, createAdminClient, createSessionClient, requireAuth } from "@/server/appwrite";
 import { AppwriteException, Permission, Query, Role } from "node-appwrite";
-import { createAdminClient, createSessionClient, requireAuth } from "@/server/appwrite";
 import { getUserLimits } from "@/server/billing";
 
 const getListUsage = async ({ account, adminClient }) => {
@@ -20,7 +20,8 @@ const getListUsage = async ({ account, adminClient }) => {
         userLists = listsResp.rows;
     } catch (err) {
         console.log(err);
-
+        const resp = appwriteErrorResponse?.(err, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(
             JSON.stringify({
                 message: "Error getting user lists"
@@ -127,6 +128,8 @@ export const GET = async (context) => {
             }
         } catch (err) {
             console.log(err);
+            const resp = appwriteErrorResponse?.(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
 
             return new Response(
                 JSON.stringify({
@@ -153,6 +156,8 @@ export const GET = async (context) => {
             communityItems = communityItemsResp.rows;
         } catch (err) {
             console.log(err);
+            const resp = appwriteErrorResponse?.(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
 
             return new Response(
                 JSON.stringify({
@@ -184,6 +189,8 @@ export const GET = async (context) => {
                 fulfillments = fulfillmentsResp.rows;
             } catch (err) {
                 console.log(err);
+                const resp = appwriteErrorResponse?.(err, "Appwrite backend is unavailable");
+                if (resp) return resp;
 
                 return new Response(
                     JSON.stringify({
@@ -228,7 +235,8 @@ export const GET = async (context) => {
         );
     } catch (err) {
         console.log(err);
-
+        const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(
             JSON.stringify({
                 message: "Internal server error"
@@ -268,6 +276,9 @@ export const POST = async (context) => {
         } catch (err) {
             console.log(err);
 
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
+
             return new Response(
                 JSON.stringify({
                     message: "Error creating admin client"
@@ -291,6 +302,9 @@ export const POST = async (context) => {
             privateListCount = userLimitsResp.privateListCount;
         } catch (err) {
             console.log(err);
+
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
 
             return new Response(
                 JSON.stringify({
@@ -359,6 +373,8 @@ export const POST = async (context) => {
                     );
                 }
             } catch (err) {
+                const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+                if (resp) return resp;
                 if (err instanceof AppwriteException) {
                     return new Response(
                         JSON.stringify({
@@ -420,6 +436,9 @@ export const POST = async (context) => {
         } catch (err) {
             console.log(err);
 
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
+
             return new Response(
                 JSON.stringify({
                     message: "Error creating list"
@@ -446,7 +465,8 @@ export const POST = async (context) => {
         );
     } catch (err) {
         console.log(err);
-
+        const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(
             JSON.stringify({
                 message: "Internal server error"
@@ -602,6 +622,9 @@ export const DELETE = async (context) => {
         } catch (err) {
             console.log(err);
 
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
+
             return new Response(
                 JSON.stringify({
                     message: "Error deleting list"
@@ -628,6 +651,9 @@ export const DELETE = async (context) => {
         );
     } catch (err) {
         console.log(err);
+
+        const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+        if (resp) return resp;
 
         return new Response(
             JSON.stringify({
@@ -668,6 +694,9 @@ export const PUT = async (context) => {
             adminClient = createAdminClient();
         } catch (err) {
             console.log(err);
+
+            const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+            if (resp) return resp;
 
             return new Response(
                 JSON.stringify({
@@ -981,7 +1010,8 @@ export const PUT = async (context) => {
         );
     } catch (err) {
         console.log(err);
-
+        const resp = appwriteErrorResponse(err, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(
             JSON.stringify({
                 message: "Internal server error"

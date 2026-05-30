@@ -1,5 +1,5 @@
+import { appwriteErrorResponse, createSessionClient } from "@/server/appwrite";
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
-import { createSessionClient } from "@/server/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
 import { Polar } from "@polar-sh/sdk";
 
@@ -87,6 +87,8 @@ export const POST = async (context) => {
         );
     } catch (error) {
         console.log(error);
+        const resp = appwriteErrorResponse?.(error, "Appwrite backend is unavailable");
+        if (resp) return resp;
         return new Response(null, {
             status: 500
         });
