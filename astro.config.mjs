@@ -141,6 +141,7 @@ export default defineConfig({
         build: {
             cssCodeSplit: true,
             rollupOptions: {
+                external: ["cloudflare:workers"],
                 output: {
                     manualChunks(id) {
                         // Ensure Vue SFC styles are always extracted to separate CSS files
