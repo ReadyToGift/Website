@@ -29,7 +29,7 @@ export const setCache = async (key, value, ttl) => {
             }), {
                 EX: ttl / 1000
             });
-        } else {
+        } else if (cloudflareKV) {
             await cloudflareKV.put(key, JSON.stringify({
                 data: value,
                 ttl,
@@ -47,7 +47,7 @@ export const getCache = async (key) => {
         let value;
         if (redis) {
             value = await redis.get(key);
-        } else {
+        } else if (cloudflareKV) {
             value = await cloudflareKV.get(key);
         }
 
@@ -73,7 +73,7 @@ export const deleteCache = async (key) => {
     try {
         if (redis) {
             await redis.del(key);
-        } else {
+        } else if (cloudflareKV) {
             await cloudflareKV.delete(key);
         }
     } catch (err) {

@@ -124,7 +124,6 @@
 
         <v-sheet
             elevation="0"
-            v-else
         >
             <v-tabs
                 color="primary"
@@ -302,21 +301,6 @@ const user = useStore(userStore);
 const limits = useStore(limitsStore);
 const userLists = useStore(userListsStore);
 
-const props = defineProps({
-    title: {
-        type: String,
-        default: null
-    },
-    text: {
-        type: String,
-        default: null
-    },
-    url: {
-        type: String,
-        default: null
-    }
-});
-
 const newUserPrefs = ref($prefs.get());
 
 const lists = ref([]);
@@ -469,21 +453,24 @@ const verifyEmail = async () => {
 };
 
 onMounted(async () => {
+    console.log("Mounted, loading lists...");
     try {
         await getLists();
     } catch (error) {
         console.error("Failed to load lists:", error);
     }
 
-    if (props.title || props.text || props.url) {
-        if (!props.url) {
-            if (props.text.match(validation.urlRegexGlobal)) {
-                quickCreateURL.value = props.text.match(validation.urlRegexGlobal)[0];
-            } else if (props.title.match(validation.urlRegexGlobal)) {
-                quickCreateURL.value = props.title.match(validation.urlRegexGlobal)[0];
+    const params = router.currentRoute.value.query;
+
+    if (params.title || params.text || params.url) {
+        if (!params.url) {
+            if (params.text.match(validation.urlRegexGlobal)) {
+                quickCreateURL.value = params.text.match(validation.urlRegexGlobal)[0];
+            } else if (params.title.match(validation.urlRegexGlobal)) {
+                quickCreateURL.value = params.title.match(validation.urlRegexGlobal)[0];
             }
         } else {
-            quickCreateURL.value = props.url;
+            quickCreateURL.value = params.url;
         }
     }
 });

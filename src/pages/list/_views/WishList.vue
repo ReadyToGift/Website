@@ -204,10 +204,6 @@ export default {
         listId: {
             type: String,
             required: false
-        },
-        quickCreateURLParam: {
-            type: String,
-            required: false
         }
     },
     computed: {
@@ -519,10 +515,13 @@ export default {
                 value: 0,
                 bufferValue: 1
             };
-            const query = new URLSearchParams({ listId, sort }).toString();
+            const query = new URLSearchParams({ sort });
+            if (typeof listId === "string" && listId) {
+                query.set("listId", listId);
+            }
             const jwt = await getJwt();
 
-            const [listData, listError] = await handleFetch(`/api/content/list?${query}`, {
+            const [listData, listError] = await handleFetch(`/api/content/list?${query.toString()}`, {
                 headers: jwt
                     ? {
                         Authorization: `Bearer ${jwt}`
@@ -681,7 +680,7 @@ export default {
                 await this.loadList(to.params.listId);
             }
         });
-        this.quickCreateURL = this.quickCreateURLParam;
+        this.quickCreateURL = route.query.quickCreateURL || null;
     }
 };
 </script>
