@@ -17,6 +17,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    ports:
+      - "4321:4321"
   redis:
     container_name: readytogift-redis
     image: redis:latest
