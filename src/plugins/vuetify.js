@@ -1,5 +1,4 @@
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
-import { $prefs } from "@/stores/prefs";
 import { createVuetify } from "vuetify";
 import { md3 } from "vuetify/blueprints";
 
@@ -134,7 +133,7 @@ export default createVuetify({
         }
     },
     theme: {
-        defaultTheme: $prefs.value.darkMode ? "dark" : "light",
+        defaultTheme: "light",
         themes: {
             light: lightTheme,
             dark: darkTheme

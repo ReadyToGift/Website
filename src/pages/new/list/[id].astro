@@ -1,0 +1,186 @@
+---
+import { createAdminClient } from "@/server/appwrite";
+import { Query } from "node-appwrite";
+import {
+    APPWRITE_DB,
+    APPWRITE_LIST_COLLECTION,
+    APPWRITE_PROJECT,
+    APPWRITE_ENDPOINT,
+    APPWRITE_IMAGE_BUCKET
+} from "astro:env/client";
+
+import NewLayout from "@/layouts/NewLayout.astro";
+
+import { Icon } from "astro-icon/components";
+
+import { Badge } from "@/components/ui/badge";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@/components/ui/button-group";
+
+import { formatter as currencyFormatter } from "@/stores/currency";
+import { convertPriority } from "@/utils";
+
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card";
+
+const { id } = Astro.params;
+export const prerender = false;
+
+const client = createAdminClient();
+const list = await client.tablesDB.getRow({
+    databaseId: APPWRITE_DB,
+    tableId: APPWRITE_LIST_COLLECTION,
+    rowId: id,
+    queries: [Query.select(["*", "items.*"])]
+});
+
+if (list.total === 0) {
+    return new Response("Not Found", { status: 404 });
+}
+
+const items = list.items || [];
+const createdAt = list.$createdAt ? new Date(list.$createdAt).toLocaleDateString() : null;
+const listCurrency = list.currency || "USD";
+
+const imageURL = (item) => {
+    if (item.imageID) {
+        const params = new URLSearchParams({
+            project: APPWRITE_PROJECT,
+            output: "png",
+            height: "400"
+        });
+
+        return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_IMAGE_BUCKET}/files/${item.imageID}/preview?${params.toString()}`;
+    }
+    return null;
+};
+
+const formatPrice = (value) => {
+    if (value === null || value === undefined) return "—";
+    return `${listCurrency}${value}`;
+};
+
+const priceGroups = [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, Infinity];
+
+const itemsByPriceGroups = priceGroups
+    .map((price, index) => {
+        const lowerBound = index === 0 ? 0 : priceGroups[index - 1];
+        const upperBound = price;
+        const title =
+            price === 0
+                ? "Flexible Gifts"
+                : currencyFormatter(list.currency).format(lowerBound).split(".")[0] +
+                  " - " +
+                  currencyFormatter(list.currency).format(upperBound).split(".")[0];
+
+        const groupItems = items
+            .filter((item) => {
+                const itemPrice = typeof item.price === "number" ? item.price : 0;
+                if (upperBound === 0) {
+                    return itemPrice === 0;
+                }
+                if (upperBound === Infinity) {
+                    return itemPrice > priceGroups[priceGroups.length - 2];
+                }
+                return itemPrice > lowerBound && itemPrice <= upperBound;
+            })
+            .sort((a, b) => a.title?.localeCompare(b.title || "") || 0);
+
+        return {
+            title,
+            price: upperBound,
+            items: groupItems
+        };
+    })
+    .filter((group) => group.items.length > 0);
+---
+
+<NewLayout>
+    <Card className="w-full my-4">
+        <CardHeader>
+            <CardTitle>{list.title || "Untitled List"}</CardTitle>
+            {list.description && <CardDescription>{list.description}</CardDescription>}
+            <CardAction>
+                <Button>Share <Icon name="mdi:share" /></Button>
+            </CardAction>
+        </CardHeader>
+    </Card>
+    {
+        itemsByPriceGroups.map((group) => (
+            <div key={group.title} className="my-6">
+                <h2 className="text-xl font-semibold mb-2">{group.title}</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
+                    {group.items.map((item) => (
+                        <Card key={item.$id} className="w-full">
+                            {imageURL(item) && (
+                                <img
+                                    src={imageURL(item)}
+                                    alt={item.title}
+                                    className="relative z-20 aspect-video w-full object-cover brightness-60 grayscale dark:brightness-40"
+                                />
+                            )}
+                            <CardHeader>
+                                <CardTitle>{item.title || "Untitled Item"}</CardTitle>
+                                <CardAction>
+                                    <ButtonGroup>
+                                        <ButtonGroup>
+                                            <Button size="lg">
+                                                Fullfill
+                                                <Icon data-icon="inline-end" name="mdi:gift" />
+                                            </Button>
+                                        </ButtonGroup>
+                                        <ButtonGroup>
+                                            {item.url && (
+                                                <Button asChild>
+                                                    <a
+                                                        href={item.url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        class={buttonVariants()}
+                                                    >
+                                                        View
+                                                        <Icon
+                                                            data-icon="inline-end"
+                                                            name="mdi:open-in-new"
+                                                        />
+                                                    </a>
+                                                </Button>
+                                            )}
+                                        </ButtonGroup>
+                                    </ButtonGroup>
+                                </CardAction>
+                            </CardHeader>
+                            <CardContent>{item.description}</CardContent>
+                            {(item.price && item.displayPrice) || item.fulfilledBy ? (
+                                <CardFooter>
+                                    <div class="chips">
+                                        {item.price && item.displayPrice && (
+                                            <Badge variant="outline">
+                                                {currencyFormatter(list.currency).format(
+                                                    item.price
+                                                )}
+                                            </Badge>
+                                        )}
+                                        {item.fulfilledBy && (
+                                            <Badge className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                                Fulfilled by {item.fulfilledBy}
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </CardFooter>
+                            ) : null}
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        ))
+    }
+</NewLayout>

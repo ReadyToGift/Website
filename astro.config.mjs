@@ -4,6 +4,9 @@ import { defineConfig, envField } from "astro/config";
 import vue from "@astrojs/vue";
 import vuetifyPlugin from "vite-plugin-vuetify";
 
+import icon from "astro-icon";
+import tailwindcss from "@tailwindcss/vite";
+
 const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((plugin) =>
     plugin.name === "vuetify:import" ? { ...plugin, enforce: "post" } : plugin
 );
@@ -11,6 +14,8 @@ const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((
 import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
 import sentry from "@sentry/astro";
+
+import react from "@astrojs/react";
 
 let adapter;
 if (process.env.CF_PAGES) {
@@ -129,15 +134,12 @@ export default defineConfig({
         }
     },
 
-    integrations: [
-        vue({
-            appEntrypoint: "/src/pages/_app"
-        }),
-        sentry()
-    ],
+    integrations: [icon(), vue({
+        appEntrypoint: "/src/pages/_app"
+    }), sentry(), react()],
 
     vite: {
-        plugins: [...vuetifyPlugins],
+        plugins: [...vuetifyPlugins, tailwindcss()],
         optimizeDeps: {
             exclude: ["vuetify", "vite-plugin-vuetify"]
         },

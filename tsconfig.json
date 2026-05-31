@@ -9,11 +9,12 @@
     "dist"
   ],
   "compilerOptions": {
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "paths": {
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "jsxImportSource": "react"
   }
 }
