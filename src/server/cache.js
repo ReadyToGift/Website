@@ -1,15 +1,22 @@
 import { createClient } from "redis";
-import { env } from "cloudflare:workers";
 import { REDIS_HOST } from "astro:env/server";
 
-const cloudflareKV = env.CACHE;
-let redis;
-if (REDIS_HOST) {
-    redis = createClient({
-        url: `redis://${REDIS_HOST}:6379`
-    });
+const cloudflareEnv = process.env.CF_PAGES
+    ? await import("cloudflare:workers").then((mod) => mod.env)
+    : null;
+
+const cloudflareKV = cloudflareEnv ? cloudflareEnv.CACHE : null;
+
+const redis = REDIS_HOST
+    ? createClient({ url: `redis://${REDIS_HOST}:6379` })
+    : null;
+
+if (redis) {
     redis.on("error", (err) => console.error("Redis Client Error", err));
-    redis.connect().then(() => console.log("Connected to Redis")).catch((err) => console.error("Error connecting to Redis:", err));
+    redis.connect().then(
+        () => console.log("Connected to Redis"),
+        (err) => console.error("Error connecting to Redis:", err)
+    );
 }
 
 export const setCache = async (key, value, ttl) => {

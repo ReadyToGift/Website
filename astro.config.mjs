@@ -9,11 +9,19 @@ const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((
 );
 
 import cloudflare from "@astrojs/cloudflare";
+import node from "@astrojs/node";
 import sentry from "@sentry/astro";
 
-let adapter = cloudflare({
-    sessionKVBindingName: "SESSION"
-});
+let adapter;
+if (process.env.CF_PAGES) {
+    adapter = cloudflare({
+        sessionKVBindingName: "SESSION"
+    });
+} else {
+    adapter = node({
+        mode: "standalone"
+    });
+}
 
 // No server adapter — build static output
 
