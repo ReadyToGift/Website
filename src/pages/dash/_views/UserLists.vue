@@ -141,11 +141,15 @@
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
-                        v-if="!loading"
                     >
-                        {{ userLists.listCount.public }}
-                        <template v-if="limits.publicLists && limits.publicLists > 0">
-                            / {{ limits.publicLists }}
+                        <template v-if="loading">
+                            -
+                        </template>
+                        <template v-else>
+                            {{ userLists.listCount.public }}
+                            <template v-if="limits.publicLists && limits.publicLists > 0">
+                                / {{ limits.publicLists }}
+                            </template>
                         </template>
                     </v-chip>
                 </v-tab>
@@ -159,11 +163,15 @@
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
-                        v-if="!loading"
                     >
-                        {{ userLists.listCount.private }}
-                        <template v-if="limits.privateLists && limits.privateLists > 0">
-                            / {{ limits.privateLists }}
+                        <template v-if="loading">
+                            -
+                        </template>
+                        <template v-else>
+                            {{ userLists.listCount.private }}
+                            <template v-if="limits.privateLists && limits.privateLists > 0">
+                                / {{ limits.privateLists }}
+                            </template>
                         </template>
                     </v-chip>
                 </v-tab>
@@ -178,9 +186,13 @@
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
-                        v-if="!loading"
                     >
-                        {{ savedLists.length }}
+                        <template v-if="loading">
+                            -
+                        </template>
+                        <template v-else>
+                            {{ savedLists.length }}
+                        </template>
                     </v-chip>
                 </v-tab>
             </v-tabs>
