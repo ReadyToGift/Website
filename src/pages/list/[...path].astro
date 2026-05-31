@@ -2,15 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import App from "@/layouts/App.vue";
 
-export function getStaticPaths() {
-    return [
-        {
-            params: {
-                path: undefined
-            }
-        }
-    ];
-}
+export const prerender = false;
 ---
 
 <Layout>
