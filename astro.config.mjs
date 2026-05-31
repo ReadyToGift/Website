@@ -107,7 +107,8 @@ export default defineConfig({
             AUTOFILL_PROXY_COUNTRY_PREFIX: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_PASSWORD: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
-            AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 })
+            AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 }),
+            REDIS_HOST: envField.string({ context: "server", access: "secret", optional: true })
         }
     },
 

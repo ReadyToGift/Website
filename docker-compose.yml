@@ -1,0 +1,47 @@
+services:
+  readytogift:
+    build:
+      context: .
+    restart: unless-stopped
+    environment:
+      - APPWRITE_PROJECT=${APPWRITE_PROJECT}
+      - APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+      - APPWRITE_DB=${APPWRITE_DB}
+      - APPWRITE_ITEM_COLLECTION=${APPWRITE_ITEM_COLLECTION}
+      - APPWRITE_LIST_COLLECTION=${APPWRITE_LIST_COLLECTION}
+      - APPWRITE_FULFILLMENT_COLLECTION=${APPWRITE_FULFILLMENT_COLLECTION}
+      - APPWRITE_IMAGE_BUCKET=${APPWRITE_IMAGE_BUCKET}
+      - LOGIN_METHODS=${LOGIN_METHODS}
+      - UMAMI_URL=${UMAMI_URL}
+      - UMAMI_ID=${UMAMI_ID}
+      - UMAMI_DOMAINS=${UMAMI_DOMAINS}
+      - SENTRY_DSN=${SENTRY_DSN}
+      - FREE_TIER_PUBLIC_LIST_LIMIT=${FREE_TIER_PUBLIC_LIST_LIMIT}
+      - FREE_TIER_PRIVATE_LIST_LIMIT=${FREE_TIER_PRIVATE_LIST_LIMIT}
+      - FREE_TIER_ITEMS_PER_LIST=${FREE_TIER_ITEMS_PER_LIST}
+      - FREE_TIER_ENABLE_AUTOFILL=${FREE_TIER_ENABLE_AUTOFILL}
+      - AUTOFILL_FREE_ALLOWANCE=${AUTOFILL_FREE_ALLOWANCE}
+      - ENABLE_BILLING=${ENABLE_BILLING}
+      - AUTOFILL_PROXY_ATTEMPTS=${AUTOFILL_PROXY_ATTEMPTS}
+    networks:
+      - dokploy-network
+    labels:
+      - "traefik.http.routers.traefik.middlewares=traefik-compress"
+      - "traefik.http.middlewares.traefik-compress.compress=true"
+    depends_on:
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4321/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  redis:
+    container_name: readytogift-redis
+    image: redis:latest
+    restart: unless-stopped
+    networks:
+      - dokploy-network
+
+networks:
+  dokploy-network:
+    external: true

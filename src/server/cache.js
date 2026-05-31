@@ -1,14 +1,34 @@
+import { createClient } from "redis";
 import { env } from "cloudflare:workers";
+import { REDIS_HOST } from "astro:env/server";
 
-const kvCacheNamespace = env.CACHE;
+const cloudflareKV = env.CACHE;
+let redis;
+if (REDIS_HOST) {
+    redis = createClient({
+        url: `redis://${REDIS_HOST}:6379`
+    });
+    redis.on("error", (err) => console.error("Redis Client Error", err));
+    redis.connect().then(() => console.log("Connected to Redis")).catch((err) => console.error("Error connecting to Redis:", err));
+}
 
 export const setCache = async (key, value, ttl) => {
     try {
-        await kvCacheNamespace.put(key, JSON.stringify({
-            data: value,
-            ttl,
-            exp: new Date().getTime() + ttl
-        }));
+        if (redis) {
+            await redis.set(key, JSON.stringify({
+                data: value,
+                ttl,
+                exp: new Date().getTime() + ttl
+            }), {
+                EX: ttl / 1000
+            });
+        } else {
+            await cloudflareKV.put(key, JSON.stringify({
+                data: value,
+                ttl,
+                exp: new Date().getTime() + ttl
+            }));
+        }
         console.log(`Set ${key} in cache`);
     } catch (err) {
         console.error("Error setting cache:", err);
@@ -18,7 +38,11 @@ export const setCache = async (key, value, ttl) => {
 export const getCache = async (key) => {
     try {
         let value;
-        value = await kvCacheNamespace.get(key);
+        if (redis) {
+            value = await redis.get(key);
+        } else {
+            value = await cloudflareKV.get(key);
+        }
 
         if (value) {
             value = JSON.parse(value);
@@ -40,7 +64,11 @@ export const getCache = async (key) => {
 
 export const deleteCache = async (key) => {
     try {
-        await kvCacheNamespace.delete(key);
+        if (redis) {
+            await redis.del(key);
+        } else {
+            await cloudflareKV.delete(key);
+        }
     } catch (err) {
         console.error("Error deleting cache:", err);
     }

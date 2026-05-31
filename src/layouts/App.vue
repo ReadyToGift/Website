@@ -67,6 +67,7 @@ const router = useRouter();
 const user = useStore(userStore);
 
 const routeRequiresAuth = computed(() => {
+    if (!router?.currentRoute?.value) return false;
     const currentRoute = router.currentRoute.value;
     return currentRoute?.meta?.requiresAuth === true;
 });
