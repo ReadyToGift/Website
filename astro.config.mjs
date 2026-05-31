@@ -34,6 +34,15 @@ export default defineConfig({
         enabled: false
     },
 
+    security: {
+        allowedDomains: [
+            {
+                hostname: "readyto.gift",
+                protocol: "https"
+            }
+        ]
+    },
+
     env: {
         schema: {
             APPWRITE_PROJECT: envField.string({ context: "client", access: "public" }),
