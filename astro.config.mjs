@@ -148,19 +148,21 @@ export default defineConfig({
             noExternal: ["vuetify", "vite-plugin-vuetify"]
         },
         build: {
-            cssCodeSplit: true,
+            // cssCodeSplit: true,
             rollupOptions: {
-                external: ["cloudflare:workers"],
-                output: {
-                    manualChunks(id) {
-                        // Ensure Vue SFC styles are always extracted to separate CSS files
-                        if (id.includes(".vue") && id.includes("?vue&type=style")) {
-                            return "styles";
-                        }
-                    }
-                }
+                external: ["cloudflare:workers"]
             }
         }
+        //         output: {
+        //             manualChunks(id) {
+        //                 // Ensure Vue SFC styles are always extracted to separate CSS files
+        //                 if (id.includes(".vue") && id.includes("?vue&type=style")) {
+        //                     return "styles";
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
     },
 
     output: "static"
