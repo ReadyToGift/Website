@@ -242,7 +242,7 @@ import {
 import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VCardTitle, VDialog, VIcon, VList, VListItem, VListItemTitle, VMenu, VOtpInput, VProgressCircular, VSnackbar, VSpacer, VTextField, VTimeline } from "vuetify/components";
 import { useStore } from "@nanostores/vue";
 
-import { createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";
+import { completeMFAchallenge, createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";
 import { mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 
@@ -343,6 +343,7 @@ const removeTOTP = async () => {
 
 const enableTOTP = async () => {
     try {
+        await completeMFAchallenge(totpInput.value, "totp");
         recoveryCodes.value = await regenerateRecoveryCodes(totpInput.value);
 
         await account.updateMFAAuthenticator({
