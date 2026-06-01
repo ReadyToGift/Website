@@ -9,10 +9,24 @@ import {
     CardTitle
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 import { Icon } from "astro-icon/components";
 
+import { formatter as currencyFormatter } from "@/stores/currency";
+
 const { list } = Astro.props;
+
+const ownList = false; // Placeholder for whether the current user owns the list
+const communityItems = []; // Placeholder for items added by the community
+const spoilSurprises = false; // Placeholder for user preference on showing community items in total price
+
+const totalPrice = currencyFormatter(list.currency).format(
+    list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
+        (!ownList || (ownList && spoilSurprises)
+            ? communityItems.reduce((sum, item) => sum + (item.price || 0), 0)
+            : 0)
+);
 ---
 
 <Card className="w-full my-4">
@@ -23,4 +37,30 @@ const { list } = Astro.props;
             <Button>Share <Icon name="mdi:share" /></Button>
         </CardAction>
     </CardHeader>
+    <CardFooter>
+        <Badge variant="outline">
+            <Icon name="mdi:format-list-bulleted" data-icon="inline-start" />
+            {list.items ? list.items.length : 0}
+            {list.items && list.items.length === 1 ? " item" : " items"}
+        </Badge>
+        <Badge variant="outline">
+            {
+                list.$updatedAt && (
+                    <>
+                        <Icon name="mdi:update" data-icon="inline-start" />
+                        Updated{" "}
+                        {new Date(list.$updatedAt).toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric"
+                        })}
+                    </>
+                )
+            }
+        </Badge>
+        <Badge variant="outline">
+            <Icon name="mdi:invoice-list" data-icon="inline-start" />
+            {totalPrice}
+        </Badge>
+    </CardFooter>
 </Card>

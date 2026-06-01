@@ -8,6 +8,17 @@ import NewLayout from "@/layouts/NewLayout.astro";
 import ListHeader from "@/components/list/Header.astro";
 import ItemCard from "@/components/list/Item.astro";
 
+import { Icon } from "astro-icon/components";
+
+import {
+    Empty,
+    EmptyContent,
+    EmptyDescription,
+    EmptyHeader,
+    EmptyMedia,
+    EmptyTitle
+} from "@/components/ui/empty";
+
 import { formatter as currencyFormatter } from "@/stores/currency";
 
 const { id } = Astro.params;
@@ -25,8 +36,6 @@ if (list.total === 0) {
     return new Response("Not Found", { status: 404 });
 }
 
-const items = list.items || [];
-
 const priceGroups = [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, Infinity];
 
 const itemsByPriceGroups = priceGroups
@@ -40,7 +49,7 @@ const itemsByPriceGroups = priceGroups
                   " - " +
                   currencyFormatter(list.currency).format(upperBound).split(".")[0];
 
-        const groupItems = items
+        const groupItems = list.items
             .filter((item) => {
                 const itemPrice = typeof item.price === "number" ? item.price : 0;
                 if (upperBound === 0) {
@@ -64,16 +73,43 @@ const itemsByPriceGroups = priceGroups
 
 <NewLayout>
     <ListHeader list={list} />
-    {
-        itemsByPriceGroups.map((group) => (
-            <div key={group.title} className="my-6">
-                <h2 className="text-xl font-semibold mb-2">{group.title}</h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-4">
-                    {group.items.map((item) => (
-                        <ItemCard key={item.$id} item={item} list={list} />
-                    ))}
-                </div>
-            </div>
-        ))
-    }
+
+    <section class="mt-8">
+        {
+            itemsByPriceGroups.length ? (
+                itemsByPriceGroups.map((group) => (
+                    <section key={group.title} class="mb-10">
+                        <div class="mb-4 flex items-center justify-between gap-3 rounded-3xl bg-base-200 p-4">
+                            <div>
+                                <h3 class="text-lg font-semibold">{group.title}</h3>
+                                <p class="text-sm text-base-content/70">
+                                    {group.items.length} item{group.items.length === 1 ? "" : "s"}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="items flex flex-col gap-6">
+                            {group.items.map((item) => (
+                                <ItemCard item={item} list={list} key={item.$id} />
+                            ))}
+                        </div>
+                    </section>
+                ))
+            ) : (
+                <Empty>
+                    <EmptyHeader>
+                        <EmptyMedia variant="icon">
+                            <Icon name="mdi:format-list-bulleted" />
+                        </EmptyMedia>
+                        <EmptyTitle>No items yet</EmptyTitle>
+                        <EmptyDescription>
+                            Start adding items to your list to see them here.
+                        </EmptyDescription>
+                    </EmptyHeader>
+                    {/* <EmptyContent>
+                        <Button>Add data</Button>
+                    </EmptyContent> */}
+                </Empty>
+            )
+        }
+    </section>
 </NewLayout>
