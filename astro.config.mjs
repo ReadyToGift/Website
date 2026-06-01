@@ -15,8 +15,6 @@ import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
 import sentry from "@sentry/astro";
 
-import react from "@astrojs/react";
-
 let adapter;
 if (process.env.CF_PAGES) {
     adapter = cloudflare({
@@ -136,7 +134,7 @@ export default defineConfig({
 
     integrations: [icon(), vue({
         appEntrypoint: "/src/pages/_app"
-    }), sentry(), react()],
+    }), sentry()],
 
     vite: {
         plugins: [...vuetifyPlugins, tailwindcss()],

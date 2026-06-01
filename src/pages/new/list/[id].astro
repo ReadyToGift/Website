@@ -5,19 +5,21 @@ import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 
 import NewLayout from "@/layouts/NewLayout.astro";
 
+import { Card } from "@/components/starwind/card";
+
 import ListHeader from "@/components/list/Header.astro";
-import ItemCard from "@/components/list/Item.astro";
+// import ItemCard from "@/components/list/Item.astro";
 
 import { Icon } from "astro-icon/components";
 
-import {
-    Empty,
-    EmptyContent,
-    EmptyDescription,
-    EmptyHeader,
-    EmptyMedia,
-    EmptyTitle
-} from "@/components/ui/empty";
+// import {
+//     Empty,
+//     EmptyContent,
+//     EmptyDescription,
+//     EmptyHeader,
+//     EmptyMedia,
+//     EmptyTitle
+// } from "@/components/ui/empty";
 
 import { formatter as currencyFormatter } from "@/stores/currency";
 
@@ -71,8 +73,9 @@ const itemsByPriceGroups = priceGroups
     .filter((group) => group.items.length > 0);
 ---
 
-<NewLayout>
+<NewLayout title={list.title}>
     <ListHeader list={list} />
+    <!---
 
     <section class="mt-8">
         {
@@ -111,5 +114,5 @@ const itemsByPriceGroups = priceGroups
                 </Empty>
             )
         }
-    </section>
+    </section> -->
 </NewLayout>
