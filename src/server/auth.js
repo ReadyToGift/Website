@@ -1,4 +1,20 @@
+import { createSessionClient } from "@/server/appwrite";
+
 export const JWT_COOKIE = "appwrite";
+
+export const getSessionClientFromRequest = ({ request }) => {
+    try {
+        const jwt = extractJwt({ request });
+        console.log("Extracted JWT from request:", jwt);
+        if (!jwt) return null;
+        const sessionClient = createSessionClient({ request });
+        return sessionClient;
+    } catch (error) {
+        console.error("Error extracting session client from request", error);
+        return null;
+    }
+};
+    
 
 export const extractJwt = ({ request }) => {
     let jwt;
@@ -11,10 +27,6 @@ export const extractJwt = ({ request }) => {
             // Fallback to cookie (for SSR pages)
             const cookies = parseCookies(request.headers.get("cookie") ?? "");
             jwt = cookies.get(JWT_COOKIE);
-        }
-        
-        if (!jwt) {
-            throw new Error("jwt not found in Authorization header or cookie");
         }
     }
 

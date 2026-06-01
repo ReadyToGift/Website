@@ -1,5 +1,7 @@
 ---
 import { createAdminClient } from "@/server/appwrite";
+import { getSessionClientFromRequest } from "@/server/auth";
+
 import { Query } from "node-appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 
@@ -12,29 +14,29 @@ import ListHeader from "@/components/list/Header.astro";
 
 import { Icon } from "astro-icon/components";
 
-// import {
-//     Empty,
-//     EmptyContent,
-//     EmptyDescription,
-//     EmptyHeader,
-//     EmptyMedia,
-//     EmptyTitle
-// } from "@/components/ui/empty";
-
 import { formatter as currencyFormatter } from "@/stores/currency";
 
 const { id } = Astro.params;
 export const prerender = false;
 
-const client = createAdminClient();
-const list = await client.tablesDB.getRow({
+const sessionClient = getSessionClientFromRequest({ request: Astro.request });
+const user = sessionClient ? await sessionClient.account.get() : null;
+
+const adminClient = createAdminClient();
+
+const list = await adminClient.tablesDB.getRow({
     databaseId: APPWRITE_DB,
     tableId: APPWRITE_LIST_COLLECTION,
     rowId: id,
     queries: [Query.select(["*", "items.*"])]
 });
 
-if (list.total === 0) {
+console.log({
+    list,
+    user
+});
+
+if (!list || (list.private && (!user || list.author !== user.$id))) {
     return new Response("Not Found", { status: 404 });
 }
 
