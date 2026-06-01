@@ -108,6 +108,15 @@ const methodsData = {
 };
 
 const finaliseLogin = async () => {
+    const jwtResp = await account.createJWT();
+    await fetch("/api/auth/session", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ jwt: jwtResp.jwt })
+    });
+
     const accountSession = await account.get();
     console.log("Login successful:", accountSession);
 

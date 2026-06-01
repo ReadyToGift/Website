@@ -109,8 +109,7 @@ import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vuetify/components";
 import { create as createDialog } from "@/stores/dialogs";
 import { ENABLE_BILLING } from "astro:env/client";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
+import { ensureAuth, handleAuthFetch } from "@/utils/authFetch";
 import { ID } from "appwrite";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
@@ -402,16 +401,19 @@ export default {
                 this.modifiedItem.image = null;
             }
         },
-        async uploadImageFile({ jwt }) {
+        async uploadImageFile() {
+            const authEnsured = await ensureAuth();
+
+            if (!authEnsured) {
+                throw new Error("You must be logged in to upload an image.");
+            }
+
             const formData = new FormData();
             formData.append("file", this.modifiedItem.imageFile);
             formData.append("listId", this.listId);
 
             const response = await fetch("/api/content/item/image", {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${jwt}`
-                },
                 body: formData
             });
 
@@ -442,16 +444,6 @@ export default {
                 return;
             }
 
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to create an item.",
-                    title: "Error"
-                };
-                this.loading = false;
-                return;
-            }
-
             try {
                 if (this.modifiedItem.image) {
                     await this.downloadRemoteImage(this.modifiedItem.image);
@@ -459,18 +451,17 @@ export default {
 
                 if (this.modifiedItem.imageFile && !this.modifiedItem.imageID) {
                     this.uploadingFile = true;
-                    const fileUpload = await this.uploadImageFile({ jwt });
+                    const fileUpload = await this.uploadImageFile();
 
                     this.uploadingFile = false;
                     this.modifiedItem.imageID = fileUpload.$id;
                     this.modifiedItem.image = "";
                 }
 
-                const [createRespData, createError] = await handleFetch("/api/content/item", {
+                const [createRespData, createError] = await handleAuthFetch("/api/content/item", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         itemData: {
@@ -489,6 +480,15 @@ export default {
                         }
                     })
                 });
+
+                if (createError?.status === 401) {
+                    this.alert = {
+                        text: "You must be logged in to create an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
 
                 if (createError) {
                     this.alert = {
@@ -533,16 +533,6 @@ export default {
             this.alert = false;
             this.loading = true;
 
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to edit an item.",
-                    title: "Error"
-                };
-                this.loading = false;
-                return;
-            }
-
             try {
                 // Upload hotlinked image if present (manually added)
                 if (this.modifiedItem.image) {
@@ -556,7 +546,7 @@ export default {
 
                 if (["added", "replaced"].includes(this.fileState)) {
                     this.uploadingFile = true;
-                    const fileUpload = await this.uploadImageFile({ jwt });
+                    const fileUpload = await this.uploadImageFile();
 
                     this.uploadingFile = false;
 
@@ -564,11 +554,10 @@ export default {
                     this.modifiedItem.image = "";
                 }
 
-                const [updateRespData, updateError] = await handleFetch("/api/content/item", {
+                const [updateRespData, updateError] = await handleAuthFetch("/api/content/item", {
                     method: "PUT",
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         itemId: this.item.$id,
@@ -584,6 +573,15 @@ export default {
                         }
                     })
                 });
+
+                if (updateError?.status === 401) {
+                    this.alert = {
+                        text: "You must be logged in to edit an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
 
                 if (updateError) {
                     this.alert = {

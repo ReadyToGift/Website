@@ -294,9 +294,9 @@ import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VCh
 import { account } from "@/appwrite";
 
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 import { useRouter } from "vue-router";
 import { useStore } from "@nanostores/vue";
 
@@ -369,34 +369,13 @@ const getLists = async () => {
     
     loading.value = true;
 
-    const jwt = await getJwt();
-    if (!jwt) {
-        // TODO: Handle graphically
-        createDialog({
-            actions: [
-                {
-                    action: getLists,
-                    closeAfterAction: true,
-                    text: "Retry"
-                }
-            ],
-            text: "Couldn't get user authentication token.",
-            title: "Failed to load lists"
-        });
-        loading.value = false;
-        return;
-    }
-
     const searchParams = new URLSearchParams({
         sort: prefs.value.listSorting ? prefs.value.listSorting.type.value : null,
         order: prefs.value.listSorting ? prefs.value.listSorting.order : null
     });
 
-    const [listsResponse, listsError] = await handleFetch("/api/content/lists?" + searchParams.toString(), {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
+    const [listsResponse, listsError] = await handleAuthFetch("/api/content/lists?" + searchParams.toString(), {
+        method: "GET"
     });
 
     if (listsError) {

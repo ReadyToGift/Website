@@ -58,7 +58,7 @@
 import { computed, onMounted, onUnmounted, shallowRef } from "vue";
 import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
 import { VCardText, VCardTitle, VChip, VIcon, VTimeline, VTimelineItem } from "vuetify/components";
-import { getJwt } from "@/stores/auth";
+import { ensureAuth } from "@/utils/authFetch";
 import { setUsedAutofillAllowance } from "@/stores/billing";
 import { SSE } from "sse.js";
 
@@ -134,9 +134,9 @@ const autofill = async () => {
     try {
         pollingFallback = null;
 
-        const jwt = await getJwt();
+        const authEnsured = await ensureAuth();
 
-        if (!jwt) {
+        if (!authEnsured) {
             throw new Error("User is not authenticated.");
         }
 
@@ -145,9 +145,6 @@ const autofill = async () => {
         try {
             sseClient = new SSE("/api/content/item/autofill", {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${jwt}`
-                },
                 payload: JSON.stringify({
                     itemID: props.itemID,
                     url: props.url,

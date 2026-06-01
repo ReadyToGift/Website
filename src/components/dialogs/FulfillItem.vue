@@ -103,8 +103,7 @@
 <script>
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VTextField } from "vuetify/components";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 
 import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
@@ -148,18 +147,25 @@ export default {
             this.alert = false;
             let result;
             try {
-                const jwt = await getJwt();
-                const [resp, fulfillError] = await handleFetch("/api/content/item/fulfillment", {
+                const [resp, fulfillError] = await handleAuthFetch("/api/content/item/fulfillment", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
-                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         itemId: this.item.$id,
                         name: this.name !== "" ? this.name : null
                     })
                 });
+
+                if (fulfillError?.status === 401) {
+                    this.alert = {
+                        text: "You must be logged in to fulfill an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
 
                 if (fulfillError) {
                     this.alert = {
@@ -189,18 +195,25 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
-                const [, unfulfillError] = await handleFetch("/api/content/item/fulfillment", {
+                const [, unfulfillError] = await handleAuthFetch("/api/content/item/fulfillment", {
                     method: "DELETE",
                     headers: {
-                        "Content-Type": "application/json",
-                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         fulfillmentId: this.item.fulfillment.$id,
                         itemId: this.item.$id
                     })
                 });
+
+                if (unfulfillError?.status === 401) {
+                    this.alert = {
+                        text: "You must be logged in to unfulfill an item.",
+                        title: "Error"
+                    };
+                    this.loading = false;
+                    return;
+                }
 
                 if (unfulfillError) {
                     this.alert = {

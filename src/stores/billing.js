@@ -1,5 +1,5 @@
 import { computed, map } from "nanostores";
-import { getJwt } from "./auth";
+import { ensureAuth, handleAuthFetch } from "@/utils/authFetch";
 import { handleFetch } from "@/utils/handleFetch";
 import { userLists } from "./userLists";
 
@@ -80,15 +80,11 @@ export const getBillingDetails = async () => {
         return;
     }
 
-    const jwt = await getJwt();
-    if (!jwt) return console.error("Unable to get jwt for user.");
+    const authEnsured = await ensureAuth();
+    if (!authEnsured) return console.error("Unable to authenticate user.");
 
     try {
-        const [billingResp, billingError] = await handleFetch("/api/billing", {
-            headers: {
-                "Authorization": `Bearer ${jwt}`
-            }
-        });
+        const [billingResp, billingError] = await handleAuthFetch("/api/billing");
 
         if (billingError) {
             console.error("Failed to fetch billing details:", billingError);
@@ -141,14 +137,11 @@ export const init = async () => {
 };
 
 export const getProCheckout = async () => {
-    const jwt = await getJwt();
-    if (!jwt) return console.error("Unable to get jwt for user.");
+    const authEnsured = await ensureAuth();
+    if (!authEnsured) return console.error("Unable to authenticate user.");
 
-    const [proCheckout, proCheckoutError] = await handleFetch("/api/billing/pro/checkout", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
+    const [proCheckout, proCheckoutError] = await handleAuthFetch("/api/billing/pro/checkout", {
+        method: "POST"
     });
 
     if (proCheckoutError) {

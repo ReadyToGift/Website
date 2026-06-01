@@ -138,13 +138,13 @@ import {
     privateListLimitReached as privateListLimitReachedStore,
     publicListLimitReached as publicListLimitReachedStore
 } from "@/stores/billing";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import { mdiAlert, mdiPencil } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { adjustCount } from "@/stores/userLists";
 import { create as createDialog } from "@/stores/dialogs";
 import { ENABLE_BILLING } from "astro:env/client";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import { useStore } from "@nanostores/vue";
 
@@ -243,8 +243,18 @@ export default {
                 }
             }
 
-            const jwt = await getJwt();
-            if (!jwt) {
+            const [editedListResponse, editedListError] = await handleAuthFetch("/api/content/list", {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    listId: this.listId,
+                    updateData: this.editedList
+                })
+            });
+
+            if (editedListError?.status === 401) {
                 this.alert = {
                     text: "You must be logged in to edit a list.",
                     title: "Error"
@@ -252,18 +262,6 @@ export default {
                 this.loading = false;
                 return;
             }
-
-            const [editedListResponse, editedListError] = await handleFetch("/api/content/list", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwt}`
-                },
-                body: JSON.stringify({
-                    listId: this.listId,
-                    updateData: this.editedList
-                })
-            });
 
             let listResponse;
 

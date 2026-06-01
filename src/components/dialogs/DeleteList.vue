@@ -64,9 +64,7 @@ import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/c
 import { adjustCount } from "@/stores/userLists";
 import { AppwriteException } from "appwrite";
 import { clientRouter } from "@/router";
-import { handleFetch } from "@/utils/handleFetch";
-
-import { getJwt } from "@/stores/auth";
+import { handleAuthFetch } from "@/utils/authFetch";
 
 export default {
     title: "ListDialog",
@@ -110,8 +108,17 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
+                const [, deleteListError] = await handleAuthFetch("/api/content/list", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        listId: this.list.$id
+                    })
+                });
+
+                if (deleteListError?.status === 401) {
                     this.alert = {
                         text: "You must be logged in to delete a list.",
                         title: "Error"
@@ -119,17 +126,6 @@ export default {
                     this.loading = false;
                     return;
                 }
-
-                const [, deleteListError] = await handleFetch("/api/content/list", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
-                    },
-                    body: JSON.stringify({
-                        listId: this.list.$id
-                    })
-                });
 
                 
                 if (deleteListError) {

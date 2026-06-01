@@ -146,8 +146,7 @@ import {
     privateListLimitReached as privateListLimitReachedStore,
     publicListLimitReached as publicListLimitReachedStore
 } from "@/stores/billing";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { useStore } from "@nanostores/vue";
 
@@ -202,7 +201,8 @@ export default {
             privateListLimitReached: useStore(privateListLimitReachedStore),
             userLists: useStore(userListsStore),
             billing: useStore(billingStore),
-            allLimits: useStore(allLimitsStore)
+            allLimits: useStore(allLimitsStore),
+            ENABLE_BILLING
         };
     },
     watch: {
@@ -236,9 +236,19 @@ export default {
                 return;
             }
 
-            const jwt = await getJwt();
+            const requestOptions = {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    ...this.newList
+                })
+            };
 
-            if (!jwt) {
+            const [createListData, createListError] = await handleAuthFetch("/api/content/list", requestOptions);
+
+            if (createListError?.status === 401) {
                 this.alert = {
                     text: "You must be logged in to create a list.",
                     title: "Error"
@@ -246,17 +256,6 @@ export default {
                 this.loading = false;
                 return;
             }
-
-            const [createListData, createListError] = await handleFetch("/api/content/list", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwt}`
-                },
-                body: JSON.stringify({
-                    ...this.newList
-                })
-            });
 
             if (createListError) {
                 this.alert = {

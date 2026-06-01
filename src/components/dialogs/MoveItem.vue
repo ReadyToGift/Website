@@ -100,11 +100,11 @@
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
 import { ENABLE_BILLING } from "astro:env/client";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 import ListCard from "../ListCard.vue";
 
 import { allLimits as allLimitsStore, limits as limitsStore } from "@/stores/billing";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
 
@@ -166,9 +166,9 @@ export default {
         async getLists() {
             this.loading = true;
             try {
-                const jwt = await getJwt();
+                const [response, listsError] = await handleAuthFetch("/api/content/lists");
 
-                if (!jwt) {
+                if (listsError?.status === 401) {
                     this.alert = {
                         text: "You must be logged in to move an item.",
                         title: "Error"
@@ -176,12 +176,6 @@ export default {
                     this.loading = false;
                     return;
                 }
-
-                const [response, listsError] = await handleFetch("/api/content/lists", {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`
-                    }
-                });
 
                 if (listsError) {
                     this.alert = {
@@ -221,23 +215,11 @@ export default {
         async moveToList() {
             this.loadingMove = true;
 
-            const jwt = await getJwt();
-
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to move an item.",
-                    title: "Error"
-                };
-                this.loadingMove = false;
-                return;
-            }
-
             try {
-                const [, moveItemError] = await handleFetch("/api/content/item", {
+                const [, moveItemError] = await handleAuthFetch("/api/content/item", {
                     method: "PUT",
                     headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify({
                         itemId: this.item.$id,
@@ -246,6 +228,15 @@ export default {
                         }
                     })
                 });
+
+                if (moveItemError?.status === 401) {
+                    this.alert = {
+                        text: "You must be logged in to move an item.",
+                        title: "Error"
+                    };
+                    this.loadingMove = false;
+                    return;
+                }
 
                 if (moveItemError) {
                     this.alert = {

@@ -155,6 +155,7 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
 export async function logOut() {
     try {
         await account.deleteSession({ sessionId: "current" });
+        await fetch("/api/auth/session", { method: "DELETE" });
         appwriteJwt.set("");
         appwriteJwtExp.set("");
     } catch (error) {

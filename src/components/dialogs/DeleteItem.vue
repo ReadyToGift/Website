@@ -58,8 +58,7 @@
 import { mdiAlert, mdiDelete } from "@mdi/js";
 import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
+import { handleAuthFetch } from "@/utils/authFetch";
 export default {
     title: "ListDialog",
     components: {
@@ -95,8 +94,17 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
+                const [, deleteItemError] = await handleAuthFetch("/api/content/item", {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        itemId: this.item.$id
+                    })
+                });
+
+                if (deleteItemError?.status === 401) {
                     this.alert = {
                         text: "You must be logged in to delete an item.",
                         title: "Error"
@@ -104,17 +112,6 @@ export default {
                     this.loading = false;
                     return;
                 }
-
-                const [, deleteItemError] = await handleFetch("/api/content/item", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
-                    },
-                    body: JSON.stringify({
-                        itemId: this.item.$id
-                    })
-                });
 
                 if (deleteItemError) {
                     this.alert = {
