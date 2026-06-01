@@ -152,6 +152,45 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
     }
 };
 
+export const passwordLogin = async (event) => {
+    const form = event.target;
+    const formData = new FormData(form);
+    const email = formData.get("email");
+    const password = formData.get("password");
+    // loading.value = true;
+
+    try {
+        await account.createEmailPasswordSession(email, password);
+    } catch (err) {
+        console.error("Login error:", err);
+
+        if (err.type === "user_more_factors_required") {
+            throw new Error("mfa-required");
+            // const totpChallengeResp = await createTOTPChallengeDialog();
+            
+            // if (totpChallengeResp.action === "success" || totpChallengeResp.action === "totp-removed") {
+            //     await finaliseLogin();
+            // } else {
+            //     error.value = {
+            //         type: "error",
+            //         icon: mdiAlert,
+            //         title: "Login Failed",
+            //         text: "TOTP verification failed."
+            //     };
+            // }
+        } else {
+            // error.value = {
+            //     type: "error",
+            //     icon: mdiAlert,
+            //     title: "Login Failed",
+            //     text: err.message || "An unexpected error occurred during login."
+            // };
+        }
+    } finally {
+        // loading.value = false;
+    }
+};
+
 export async function logOut() {
     try {
         await account.deleteSession({ sessionId: "current" });

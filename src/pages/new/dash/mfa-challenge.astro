@@ -1,0 +1,123 @@
+---
+import NewLayout from "@/layouts/NewLayout.astro";
+
+import { Button } from "@/components/starwind/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "@/components/starwind/card";
+
+import {
+    InputOtp,
+    InputOtpGroup,
+    InputOtpSeparator,
+    InputOtpSlot
+} from "@/components/starwind/input-otp";
+---
+
+<NewLayout title="Multi-Factor Authentication Challenge">
+    <section
+        class="flex min-h-[78svh] items-center justify-center bg-background px-4 py-10 sm:px-6"
+    >
+        <Card class="w-full max-w-md border-sidebar-border/60 bg-card shadow-sm">
+            <CardHeader class="space-y-2 text-center">
+                <CardTitle class="text-2xl tracking-tight"
+                    >Multi-Factor Authentication Challenge</CardTitle
+                >
+                <CardDescription>
+                    Enter the code from your authenticator app to continue.
+                </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+                <form class="space-y-5" id="login-form">
+                    <InputOtp maxLength={6} class="justify-center">
+                        <InputOtpGroup>
+                            <InputOtpSlot index={0} />
+                            <InputOtpSlot index={1} />
+                            <InputOtpSlot index={2} />
+                            <InputOtpSlot index={3} />
+                            <InputOtpSlot index={4} />
+                            <InputOtpSlot index={5} />
+                        </InputOtpGroup>
+                    </InputOtp>
+
+                    <Button
+                        type="submit"
+                        class="w-full"
+                        size="lg"
+                        id="login-button"
+                        variant="primary"
+                    >
+                        Sign in
+                    </Button>
+                </form>
+            </CardContent>
+
+            <CardFooter
+                class="justify-center pt-2 text-sm text-muted-foreground flex flex-col gap-2"
+            >
+                <span>
+                    Forgot your code?
+                    <a href="/new/dash/recover" class="text-foreground font-medium hover:underline">
+                        Recover your account
+                    </a>
+                </span>
+                <span>
+                    Want to sign in with a different account?
+                    <a href="/new/dash/login" class="text-foreground font-medium hover:underline">
+                        Back to login
+                    </a>
+                </span>
+            </CardFooter>
+        </Card>
+    </section>
+</NewLayout>
+
+<script>
+    import { account } from "@/appwrite";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectURL = urlParams.get("redirect") || "/dash/lists";
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        try {
+            await passwordLogin(event);
+            window.location.href = redirectURL;
+        } catch (err) {
+            console.log(err);
+            console.error("Login error:", err);
+            if (err.message === "mfa-required") {
+                const searchParams = new URLSearchParams({
+                    redirect: redirectURL
+                });
+
+                window.location.href = `/new/dash/mfa-challenge?${searchParams.toString()}`;
+            } else {
+                alert("Login failed: " + err);
+            }
+        }
+    };
+
+    try {
+        const accountInfo = await account.get();
+        console.log("Already logged in:", accountInfo);
+        // TODO: Check account, and redirect
+    } catch (err) {
+        if (err?.type === "user_more_factors_required") {
+            // Leave as is
+        } else {
+            console.log("Not logged in:", err);
+        }
+    }
+
+    const loginForm = document.getElementById("login-form");
+    const loginButton = document.getElementById("login-button");
+
+    loginForm.addEventListener("submit", handleSubmit);
+</script>

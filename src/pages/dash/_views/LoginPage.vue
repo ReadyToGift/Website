@@ -74,11 +74,11 @@
 </template>
 
 <script setup>
-import { init as initAuth, logOut } from "@/stores/auth";
 import { mdiAlert, mdiCheckCircle, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
 import { createTOTPChallengeDialog } from "@/stores/mfa";
+import { init as initAuth } from "@/stores/auth";
 import { LOGIN_METHODS } from "astro:env/client";
 import { shallowRef } from "vue";
 import { useRouter } from "vue-router";
@@ -112,9 +112,9 @@ const finaliseLogin = async () => {
     console.log("Login successful:", accountSession);
 
     await initAuth({ router, currentAccount: accountSession });
-            
+
     console.log("Redirecting to:", props.redirect);
-            
+
     error.value = {
         type: "success",
         icon: mdiCheckCircle,

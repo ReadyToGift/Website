@@ -1,18 +1,133 @@
 ---
 import NewLayout from "@/layouts/NewLayout.astro";
 
+import { Button } from "@/components/starwind/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "@/components/starwind/card";
 import { Input } from "@/components/starwind/input";
 import { Label } from "@/components/starwind/label";
 ---
 
 <NewLayout title="Login">
-    <div class="login" className="flex flex-col items-center justify-center h-screen">
-        <form>
-            <Label for="email">Email</Label>
-            <Input label="Email" type="email" name="email" required />
-            <Label for="password">Password</Label>
-            <Input label="Password" type="password" name="password" required />
-            <button type="submit">Login</button>
-        </form>
-    </div>
+    <section
+        class="flex min-h-[78svh] items-center justify-center bg-background px-4 py-10 sm:px-6"
+    >
+        <Card class="w-full max-w-md border-sidebar-border/60 bg-card shadow-sm">
+            <CardHeader class="space-y-2 text-center">
+                <CardTitle class="text-2xl tracking-tight">Welcome back</CardTitle>
+                <CardDescription> Sign in to continue managing your gift lists. </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+                <form class="space-y-5" id="login-form">
+                    <div class="space-y-2">
+                        <Label for="email">Email</Label>
+                        <Input
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                        />
+                    </div>
+
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-3">
+                            <Label for="password">Password</Label>
+                            <a
+                                href="/new/dash/forgot-password"
+                                class="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                                >Forgot password?</a
+                            >
+                        </div>
+                        <Input
+                            id="password"
+                            type="password"
+                            name="password"
+                            autocomplete="current-password"
+                            required
+                        />
+                    </div>
+
+                    <Button
+                        type="submit"
+                        class="w-full"
+                        size="lg"
+                        id="login-button"
+                        variant="primary"
+                    >
+                        Sign in
+                    </Button>
+                </form>
+            </CardContent>
+
+            <CardFooter class="justify-center pt-2 text-sm text-muted-foreground">
+                <span>
+                    New here?
+                    <a
+                        href="/new/dash/register"
+                        class="text-foreground font-medium hover:underline"
+                    >
+                        Create an account
+                    </a>
+                </span>
+            </CardFooter>
+        </Card>
+    </section>
 </NewLayout>
+
+<script>
+    import { account } from "@/appwrite";
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const redirectURL = urlParams.get("redirect") || "/dash/lists";
+
+    const redirectToMFA = () => {
+        const searchParams = new URLSearchParams({
+            redirect: redirectURL
+        });
+
+        window.location.href = `/new/dash/mfa-challenge?${searchParams.toString()}`;
+    };
+
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        try {
+            await account.createEmailPasswordSession(
+                event.target.email.value,
+                event.target.password.value
+            );
+            // window.location.href = redirectURL;
+            // TODO: Check account, and redirect
+        } catch (err) {
+            if (err?.type === "user_more_factors_required") {
+                redirectToMFA();
+            } else {
+                alert("Login failed: " + err);
+            }
+        }
+    };
+
+    try {
+        const accountInfo = await account.get();
+        console.log("Already logged in:", accountInfo);
+    } catch (err) {
+        if (err?.type === "user_more_factors_required") {
+            redirectToMFA();
+        } else {
+            console.log("Not logged in:", err);
+        }
+    }
+
+    const loginForm = document.getElementById("login-form");
+    const loginButton = document.getElementById("login-button");
+
+    loginForm.addEventListener("submit", handleSubmit);
+</script>
