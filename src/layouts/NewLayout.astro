@@ -1,7 +1,7 @@
 ---
 // import "@/styles/global.css";
 import "@/styles/starwind.css";
-import { SidebarContent, SidebarProvider, SidebarTrigger } from "@/components/starwind/sidebar";
+import { SidebarContent, SidebarProvider } from "@/components/starwind/sidebar";
 import Sidebar from "@/components/Sidebar.astro";
 
 const { title } = Astro.props;
@@ -15,13 +15,14 @@ const { title } = Astro.props;
         <title>{title} - Readyto.gift</title>
     </head>
     <body>
-        <SidebarProvider>
+        <SidebarProvider
+            style={{
+                "--sidebar-width": "14rem",
+                "--sidebar-width-icon": "4rem"
+            }}
+        >
             <Sidebar />
             <main class="bg-background flex flex-1 flex-col">
-                <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-                    <SidebarTrigger />
-                    <span class="text-muted-foreground text-sm">{title}</span>
-                </header>
                 <div class="flex-1 p-6">
                     <slot />
                 </div>
