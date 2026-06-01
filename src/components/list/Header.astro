@@ -1,0 +1,26 @@
+---
+import {
+    Card,
+    CardAction,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+import { Icon } from "astro-icon/components";
+
+const { list } = Astro.props;
+---
+
+<Card className="w-full my-4">
+    <CardHeader>
+        <CardTitle>{list.title || "Untitled List"}</CardTitle>
+        {list.description && <CardDescription>{list.description}</CardDescription>}
+        <CardAction>
+            <Button>Share <Icon name="mdi:share" /></Button>
+        </CardAction>
+    </CardHeader>
+</Card>

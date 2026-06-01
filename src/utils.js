@@ -7,15 +7,21 @@ export const priorityMap = {
     },
     low: {
         text: "Unsure",
-        icon: mdiEmoticonConfused
+        badgeClassName: "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+        icon: mdiEmoticonConfused,
+        iconId: "mdi:emoticon-confused"
     },
     medium: {
         text: "Nice to have",
-        icon: mdiEmoticon
+        badgeClassName: "bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
+        icon: mdiEmoticon,
+        iconId: "mdi:emoticon"
     },
     high: {
         text: "Would love it",
-        icon: mdiHeart
+        badgeClassName: "bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300",
+        icon: mdiHeart,
+        iconId: "mdi:heart"
     }
 };
 
