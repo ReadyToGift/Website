@@ -1,11 +1,11 @@
 import { createSessionClient } from "@/server/appwrite";
 
 export const JWT_COOKIE = "appwrite";
+export const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const getSessionClientFromRequest = ({ request }) => {
     try {
         const jwt = extractJwt({ request });
-        console.log("Extracted JWT from request:", jwt);
         if (!jwt) return null;
         const sessionClient = createSessionClient({ request });
         return sessionClient;

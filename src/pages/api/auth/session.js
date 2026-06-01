@@ -1,6 +1,5 @@
-import { JWT_COOKIE } from "@/server/auth";
+import { JWT_COOKIE, SESSION_COOKIE_MAX_AGE } from "@/server/auth";
 import { createSessionClient } from "@/server/appwrite";
-import { JWT_DURATION } from "astro:env/client";
 
 export const prerender = false;
 
@@ -43,7 +42,7 @@ export const POST = async ({ request, cookies }) => {
         secure: import.meta.env.PROD,
         sameSite: "lax",
         path: "/",
-        maxAge: JWT_DURATION
+        maxAge: SESSION_COOKIE_MAX_AGE
     });
 
     return new Response(JSON.stringify({ ok: true }), {

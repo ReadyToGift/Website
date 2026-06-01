@@ -26,6 +26,22 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/starwind/avatar";
 
 import { Icon } from "astro-icon/components";
+
+import { createAdminClient } from "@/server/appwrite";
+
+const adminClient = createAdminClient();
+
+const { user } = Astro.props;
+
+let avatarUrl = "";
+if (user) {
+    const avatarBuffer = await adminClient.avatars.getInitials({
+        name: user.name,
+        size: 128
+    });
+
+    avatarUrl = `data:image/png;base64,${Buffer.from(avatarBuffer).toString("base64")}`;
+}
 ---
 
 <Sidebar collapsible="icon">
@@ -64,73 +80,83 @@ import { Icon } from "astro-icon/components";
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarGroup>
+            <SidebarGroupLabel>Recently Viewed</SidebarGroupLabel>
+            <SidebarGroupContent>
+                <SidebarMenu>
+                    {user}
+                    <SidebarMenuItem>
+                        <SidebarMenuButton href="/dash/lists">
+                            <Icon name="mdi:format-list-bulleted" />
+                            <span>Lists</span>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroupContent>
+        </SidebarGroup>
     </SidebarContent>
     <SidebarFooter>
         <SidebarMenu>
-            <SidebarMenuItem>
-                <Dropdown>
-                    <DropdownTrigger asChild>
-                        <SidebarMenuButton size="lg">
-                            <Avatar class="size-10 shrink-0 rounded-lg">
-                                <AvatarImage
-                                    src="https://github.com/boston343.png"
-                                    alt="boston343"
-                                />
-                                <AvatarFallback class="rounded-lg">B3</AvatarFallback>
-                            </Avatar>
-                            <div class="grid flex-1 text-left text-sm leading-tight">
-                                <span class="truncate font-semibold">Boston343</span>
-                                <span class="text-sidebar-foreground/70 truncate text-xs"
-                                    >@boston343</span
-                                >
-                            </div>
-                            <Icon name="mdi:chevron-up" class="ml-auto size-4" />
-                        </SidebarMenuButton>
-                    </DropdownTrigger>
-                    <DropdownContent class="w-full min-w-48 rounded-lg" side="top">
-                        <DropdownLabel class="p-0 font-normal">
-                            <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                                <Avatar class="size-8 rounded-lg">
-                                    <AvatarImage
-                                        src="https://github.com/boston343.png"
-                                        alt="boston343"
-                                    />
-                                    <AvatarFallback class="rounded-lg">B3</AvatarFallback>
-                                </Avatar>
-                                <div class="grid flex-1 text-left text-sm leading-tight">
-                                    <span class="truncate font-semibold">boston343</span>
-                                    <span class="text-muted-foreground truncate text-xs"
-                                        >@boston343</span
-                                    >
-                                </div>
-                            </div>
-                        </DropdownLabel>
-                        <DropdownSeparator />
-                        <DropdownItem as="a" href="#">
-                            <Icon name="mdi:sparkles" class="mr-2 size-4" />
-                            Upgrade to Pro
-                        </DropdownItem>
-                        <DropdownSeparator />
-                        <DropdownItem as="a" href="#">
-                            <Icon name="mdi:badge" class="mr-2 size-4" />
-                            Account
-                        </DropdownItem>
-                        <DropdownItem as="a" href="#">
-                            <Icon name="mdi:credit-card" class="mr-2 size-4" />
-                            Billing
-                        </DropdownItem>
-                        <DropdownItem as="a" href="#">
-                            <Icon name="mdi:bell" class="mr-2 size-4" />
-                            Notifications
-                        </DropdownItem>
-                        <DropdownSeparator />
-                        <DropdownItem as="a" href="#">
-                            <Icon name="mdi:logout" class="mr-2 size-4" />
-                            Log out
-                        </DropdownItem>
-                    </DropdownContent>
-                </Dropdown>
-            </SidebarMenuItem>
+            {
+                user && (
+                    <SidebarMenuItem>
+                        <Dropdown>
+                            <DropdownTrigger asChild>
+                                <SidebarMenuButton size="lg">
+                                    <Avatar class="size-10 shrink-0 rounded-lg">
+                                        <AvatarImage src={avatarUrl} alt={user.name} />
+                                    </Avatar>
+                                    <div class="grid flex-1 text-left text-sm leading-tight">
+                                        <span class="truncate font-semibold">{user.name}</span>
+                                        <span class="text-sidebar-foreground/70 truncate text-xs">
+                                            {user.email}
+                                        </span>
+                                    </div>
+                                    <Icon name="mdi:chevron-up" class="ml-auto size-4" />
+                                </SidebarMenuButton>
+                            </DropdownTrigger>
+                            <DropdownContent class="w-full min-w-48 rounded-lg" side="top">
+                                <DropdownLabel class="p-0 font-normal">
+                                    <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                                        <Avatar class="size-8 rounded-lg">
+                                            <AvatarImage src={avatarUrl} alt={user.name} />
+                                        </Avatar>
+                                        <div class="grid flex-1 text-left text-sm leading-tight">
+                                            <span class="truncate font-semibold">{user.name}</span>
+                                            <span class="text-muted-foreground truncate text-xs">
+                                                {user.email}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </DropdownLabel>
+                                <DropdownSeparator />
+                                <DropdownItem as="a" href="#">
+                                    <Icon name="mdi:sparkles" class="mr-2 size-4" />
+                                    Upgrade to Pro
+                                </DropdownItem>
+                                <DropdownSeparator />
+                                <DropdownItem as="a" href="#">
+                                    <Icon name="mdi:badge" class="mr-2 size-4" />
+                                    Account
+                                </DropdownItem>
+                                <DropdownItem as="a" href="#">
+                                    <Icon name="mdi:credit-card" class="mr-2 size-4" />
+                                    Billing
+                                </DropdownItem>
+                                <DropdownItem as="a" href="#">
+                                    <Icon name="mdi:bell" class="mr-2 size-4" />
+                                    Notifications
+                                </DropdownItem>
+                                <DropdownSeparator />
+                                <DropdownItem as="a" href="#">
+                                    <Icon name="mdi:logout" class="mr-2 size-4" />
+                                    Log out
+                                </DropdownItem>
+                            </DropdownContent>
+                        </Dropdown>
+                    </SidebarMenuItem>
+                )
+            }
         </SidebarMenu>
     </SidebarFooter>
 </Sidebar>

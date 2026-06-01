@@ -1,6 +1,6 @@
 ---
 import { createAdminClient } from "@/server/appwrite";
-import { getSessionClientFromRequest } from "@/server/auth";
+import { JWT_COOKIE, getSessionClientFromRequest } from "@/server/auth";
 
 import { Query } from "node-appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
@@ -20,7 +20,16 @@ const { id } = Astro.params;
 export const prerender = false;
 
 const sessionClient = getSessionClientFromRequest({ request: Astro.request });
-const user = sessionClient ? await sessionClient.account.get() : null;
+let user = null;
+
+if (sessionClient) {
+    try {
+        user = await sessionClient.account.get();
+    } catch {
+        // JWT is missing/expired/invalid. Clear stale cookie and continue as guest.
+        Astro.cookies.delete(JWT_COOKIE, { path: "/" });
+    }
+}
 
 const adminClient = createAdminClient();
 
@@ -29,11 +38,6 @@ const list = await adminClient.tablesDB.getRow({
     tableId: APPWRITE_LIST_COLLECTION,
     rowId: id,
     queries: [Query.select(["*", "items.*"])]
-});
-
-console.log({
-    list,
-    user
 });
 
 if (!list || (list.private && (!user || list.author !== user.$id))) {
@@ -75,7 +79,7 @@ const itemsByPriceGroups = priceGroups
     .filter((group) => group.items.length > 0);
 ---
 
-<NewLayout title={list.title}>
+<NewLayout title={list.title} user={user}>
     <ListHeader list={list} />
     <!---
 

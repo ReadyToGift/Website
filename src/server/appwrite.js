@@ -17,6 +17,9 @@ export function createAdminClient() {
         get account() {
             return new appwriteSdk.Account(client);
         },
+        get avatars() {
+            return new appwriteSdk.Avatars(client);
+        },
         get user() {
             return new appwriteSdk.Users(client);
         },
