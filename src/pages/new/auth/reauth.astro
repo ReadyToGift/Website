@@ -1,0 +1,71 @@
+---
+import { APPWRITE_DEV_KEY, APPWRITE_ENDPOINT, APPWRITE_PROJECT } from "astro:env/client";
+import NewLayout from "@/layouts/NewLayout.astro";
+
+export const prerender = false;
+---
+
+<NewLayout title="Reauthenticating">
+    <section class="mx-auto mt-20 w-full max-w-xl px-4">
+        <div class="rounded-2xl border border-base-300 bg-base-100 p-8 text-center shadow-sm">
+            <h1 class="text-2xl font-semibold">Refreshing your session</h1>
+            <p class="mt-3 text-base-content/70"
+                >You will be redirected automatically in a moment.</p
+            >
+            <div class="mt-6 flex justify-center">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+            </div>
+        </div>
+    </section>
+</NewLayout>
+
+<script>
+    import { getJwt } from "@/stores/auth";
+
+    const normaliseRedirect = (value) => {
+        if (!value || typeof value !== "string") {
+            return "/new";
+        }
+
+        if (!value.startsWith("/") || value.startsWith("//")) {
+            return "/new";
+        }
+
+        if (value.startsWith("/new/auth/reauth")) {
+            return "/new";
+        }
+
+        return value;
+    };
+
+    const redirect = (path) => {
+        window.location.replace(path || "/new");
+    };
+
+    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    const redirectPath = normaliseRedirect(redirectParam);
+
+    const refreshSession = async () => {
+        try {
+            const jwt = await getJwt();
+            const setSessionResp = await fetch("/api/auth/session", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ jwt: jwt })
+            });
+
+            if (!setSessionResp.ok) {
+                throw new Error("Failed to set session");
+            }
+
+            redirect(redirectPath);
+        } catch {
+            await fetch("/api/auth/session", { method: "DELETE" });
+            redirect(redirectPath);
+        }
+    };
+
+    refreshSession();
+</script>

@@ -56,8 +56,20 @@ const shouldRefreshJwt = (jwt) => {
     return expiryMs - Date.now() <= REFRESH_WINDOW_MS;
 };
 
+const buildReauthUrl = (request) => {
+    const currentUrl = new URL(request.url);
+    const reauthUrl = new URL("/new/auth/reauth", currentUrl.origin);
+    reauthUrl.searchParams.set("redirect", `${currentUrl.pathname}${currentUrl.search}`);
+    return reauthUrl;
+};
+
 export const onRequest = defineMiddleware(async ({ request, cookies }, next) => {
     if (request.method !== "GET") {
+        return next();
+    }
+
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/new/auth/reauth")) {
         return next();
     }
 
@@ -65,6 +77,11 @@ export const onRequest = defineMiddleware(async ({ request, cookies }, next) => 
 
     if (!jwt) {
         return next();
+    }
+
+    const expiryMs = getJwtExpiryMs(jwt);
+    if (expiryMs && expiryMs <= Date.now()) {
+        return Response.redirect(buildReauthUrl(request), 302);
     }
 
     if (!shouldRefreshJwt(jwt)) {
