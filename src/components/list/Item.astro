@@ -7,9 +7,14 @@ import {
     APPWRITE_IMAGE_BUCKET
 } from "astro:env/client";
 
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { ButtonGroup, ButtonGroupSeparator, ButtonGroupText } from "@/components/ui/button-group";
+import { Badge } from "@/components/starwind/badge";
+import { Button, ButtonVariants } from "@/components/starwind/button";
+import {
+    ButtonGroup,
+    ButtonGroupSeparator,
+    ButtonGroupText
+} from "@/components/starwind/button-group";
+
 import {
     Card,
     CardAction,
@@ -18,7 +23,7 @@ import {
     CardFooter,
     CardHeader,
     CardTitle
-} from "@/components/ui/card";
+} from "@/components/starwind/card";
 
 import { Icon } from "astro-icon/components";
 
@@ -47,35 +52,26 @@ const previewImageUrl = imageURL(item);
 ---
 
 <Card key={item.$id}>
-    <CardHeader>
-        <CardTitle>{item.title || "Untitled Item"}</CardTitle>
-        <CardAction>
+    <CardHeader class="flex flex-col-reverse sm:flex-row sm:items-center gap-2">
+        <CardTitle class="w-full">{item.title || "Untitled Item"}</CardTitle>
+        <CardAction class="w-full sm:w-auto self-start sm:self-auto sm:mt-2">
             <ButtonGroup>
-                <ButtonGroup>
-                    <Button size="lg">
-                        Fullfill
-                        <Icon data-icon="inline-end" name="mdi:gift" />
-                    </Button>
-                </ButtonGroup>
-                <ButtonGroup>
-                    {
-                        item.url && (
-                            <Button asChild>
-                                <a
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class={buttonVariants()}
-                                >
-                                    View
-                                    <Icon data-icon="inline-end" name="mdi:open-in-new" />
-                                </a>
-                            </Button>
-                        )
-                    }
-                </ButtonGroup>
+                <Button variant="primary">
+                    Fullfill
+                    <Icon data-icon="inline-end" name="mdi:gift" />
+                </Button>
+                {
+                    item.url && (
+                        <ButtonGroupSeparator />
+                        <Button href={item.url} target="_blank" rel="noopener">
+                            View
+                            <Icon data-icon="inline-end" name="mdi:open-in-new" />
+                        </Button>
+                    )
+                }
             </ButtonGroup>
         </CardAction>
+        
     </CardHeader>
     <div
         class:list={[
@@ -102,12 +98,12 @@ const previewImageUrl = imageURL(item);
         }
     </div>
     {
-        (item.price && item.displayPrice) ||
+        (item.price !== 0 && item.displayPrice) ||
         item.fulfilledBy ||
         (item.priority && item.priority !== "none") ? (
             <CardFooter>
-                <div class="chips">
-                    {item.price && item.displayPrice && (
+                <div class="flex flex-wrap gap-2">
+                    {item.price !== 0 && item.displayPrice && (
                         <Badge variant="outline">
                             {currencyFormatter(list.currency).format(item.price)}
                         </Badge>
@@ -118,10 +114,7 @@ const previewImageUrl = imageURL(item);
                         </Badge>
                     )}
                     {item.priority && item.priority !== "none" && (
-                        <Badge
-                            variant="outline"
-                            className={convertPriority(item.priority).badgeClassName}
-                        >
+                        <Badge variant={convertPriority(item.priority).variant}>
                             <Icon
                                 data-icon="inline-start"
                                 name={convertPriority(item.priority).iconId}

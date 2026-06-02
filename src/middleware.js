@@ -58,18 +58,22 @@ const shouldRefreshJwt = (jwt) => {
 
 const buildReauthUrl = (request) => {
     const currentUrl = new URL(request.url);
-    const reauthUrl = new URL("/new/auth/reauth", currentUrl.origin);
+    const reauthUrl = new URL("/auth/reauth", currentUrl.origin);
     reauthUrl.searchParams.set("redirect", `${currentUrl.pathname}${currentUrl.search}`);
     return reauthUrl;
 };
 
-export const onRequest = defineMiddleware(async ({ request, cookies }, next) => {
+export const onRequest = defineMiddleware(async ({ request, cookies, locals }, next) => {
     if (request.method !== "GET") {
         return next();
     }
 
+    if (!import.meta.env.SSR) {
+        return next();
+    }
+
     const url = new URL(request.url);
-    if (url.pathname.startsWith("/new/auth/reauth")) {
+    if (url.pathname.startsWith("/auth/reauth")) {
         return next();
     }
 
@@ -84,15 +88,31 @@ export const onRequest = defineMiddleware(async ({ request, cookies }, next) => 
         return Response.redirect(buildReauthUrl(request), 302);
     }
 
+    let sessionClient;
+
+    try {
+        sessionClient = createSessionClient({ jwt });
+
+        const account = await sessionClient.account.get(); // TODO: Get account from cache with low ttl
+        if (!account) {
+            cookies.delete(JWT_COOKIE, { path: "/" });
+            return next();
+        }
+
+        locals.session = { sessionClient, account };
+    } catch {
+        cookies.delete(JWT_COOKIE, { path: "/" });
+        return next();
+    }
+
     if (!shouldRefreshJwt(jwt)) {
         return next();
     }
 
     try {
-        const sessionClient = createSessionClient({ jwt });
-        const jwtResp = await sessionClient.account.createJWT();
+        const newJwtResp = await sessionClient.account.createJWT();
 
-        cookies.set(JWT_COOKIE, jwtResp.jwt, {
+        cookies.set(JWT_COOKIE, newJwtResp.jwt, {
             httpOnly: true,
             secure: import.meta.env.PROD,
             sameSite: "lax",

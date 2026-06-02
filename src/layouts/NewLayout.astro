@@ -8,7 +8,7 @@ const { title, user } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class={user?.prefs?.darkMode ? "dark" : ""}>
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,7 +22,7 @@ const { title, user } = Astro.props;
                     <SidebarTrigger />
                     <span class="text-muted-foreground text-sm">{title}</span>
                 </header>
-                <div class="flex-1 p-6">
+                <div class="flex-1 p-6 content">
                     <slot />
                 </div>
             </main>
@@ -30,9 +30,10 @@ const { title, user } = Astro.props;
     </body>
 </html>
 
-<!-- <style lang="scss">
-    body {
+<style lang="scss" scoped>
+    .content {
+        width: 100%;
+        max-width: 1400px;
         margin: 0 auto;
-        max-width: 1200px;
     }
-</style> -->
+</style>

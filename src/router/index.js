@@ -14,7 +14,7 @@ if (!import.meta.env.SSR) {
             },
             {
                 path: "/list/:listId",
-                component: () => import("@/pages/list/_views/WishList.vue")
+                component: () => import("@/pages/_list/_views/WishList.vue")
             },
             {
                 path: "/dash/login",

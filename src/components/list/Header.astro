@@ -15,11 +15,19 @@ import { Icon } from "astro-icon/components";
 
 import { formatter as currencyFormatter } from "@/stores/currency";
 
-const { list } = Astro.props;
+import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
 
-const ownList = false; // Placeholder for whether the current user owns the list
-const communityItems = []; // Placeholder for items added by the community
-const spoilSurprises = false; // Placeholder for user preference on showing community items in total price
+const { list, user } = Astro.props;
+
+// TODO: Implement these
+const ownList = false;
+const communityItems = [];
+const spoilSurprises = false;
+let showTotalPrice = true;
+
+if (user && user.prefs) {
+    showTotalPrice = user.prefs.showTotalPrice || false;
+}
 
 const totalPrice = currencyFormatter(list.currency).format(
     list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
@@ -33,34 +41,51 @@ const totalPrice = currencyFormatter(list.currency).format(
     <CardHeader>
         <CardTitle>{list.title || "Untitled List"}</CardTitle>
         {list.description && <CardDescription>{list.description}</CardDescription>}
+    </CardHeader>
+
+    <CardContent class="pt-2">
         <CardAction>
             <Button>Share <Icon name="mdi:share" /></Button>
-        </CardAction>
-    </CardHeader>
-    <CardFooter>
-        <Badge variant="outline">
-            <Icon name="mdi:format-list-bulleted" data-icon="inline-start" />
-            {list.items ? list.items.length : 0}
-            {list.items && list.items.length === 1 ? " item" : " items"}
-        </Badge>
-        <Badge variant="outline">
             {
-                list.$updatedAt && (
-                    <>
-                        <Icon name="mdi:update" data-icon="inline-start" />
-                        Updated{" "}
-                        {new Date(list.$updatedAt).toLocaleDateString(undefined, {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric"
-                        })}
-                    </>
+                // (
+                //     // ownList && (
+                //     //     )
+                //     // <ListManagementButtons list={list} wishlistOwner="true" client:only="vue" />
+                // )
+            }
+        </CardAction>
+    </CardContent>
+
+    <CardFooter>
+        <div class="flex flex-wrap gap-2">
+            <Badge variant="outline">
+                <Icon name="mdi:format-list-bulleted" data-icon="inline-start" />
+                {list.items ? list.items.length : 0}
+                {list.items && list.items.length === 1 ? " item" : " items"}
+            </Badge>
+            <Badge variant="outline">
+                {
+                    list.$updatedAt && (
+                        <>
+                            <Icon name="mdi:update" data-icon="inline-start" />
+                            Updated{" "}
+                            {new Date(list.$updatedAt).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric"
+                            })}
+                        </>
+                    )
+                }
+            </Badge>
+            {
+                showTotalPrice && (
+                    <Badge variant="outline">
+                        <Icon name="mdi:invoice-list" data-icon="inline-start" />
+                        {totalPrice}
+                    </Badge>
                 )
             }
-        </Badge>
-        <Badge variant="outline">
-            <Icon name="mdi:invoice-list" data-icon="inline-start" />
-            {totalPrice}
-        </Badge>
+        </div>
     </CardFooter>
 </Card>

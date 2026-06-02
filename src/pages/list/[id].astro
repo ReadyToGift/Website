@@ -1,46 +1,54 @@
 ---
 import { createAdminClient } from "@/server/appwrite";
-import { JWT_COOKIE, getSessionClientFromRequest } from "@/server/auth";
 
 import { Query } from "node-appwrite";
 import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
 
 import NewLayout from "@/layouts/NewLayout.astro";
 
-import { Card } from "@/components/starwind/card";
-
 import ListHeader from "@/components/list/Header.astro";
-// import ItemCard from "@/components/list/Item.astro";
+import ItemCard from "@/components/list/Item.astro";
 
 import { Icon } from "astro-icon/components";
 
 import { formatter as currencyFormatter } from "@/stores/currency";
+import { undefined } from "astro:schema";
 
 const { id } = Astro.params;
 export const prerender = false;
 
-const sessionClient = getSessionClientFromRequest({ request: Astro.request });
-let user = null;
+let user;
+let list;
 
-if (sessionClient) {
-    try {
-        user = await sessionClient.account.get();
-    } catch {
-        // JWT is missing/expired/invalid. Clear stale cookie and continue as guest.
-        Astro.cookies.delete(JWT_COOKIE, { path: "/" });
+let sessionClient;
+let adminClient;
+
+if (Astro.locals.session) {
+    user = Astro.locals.session.account;
+
+    sessionClient = Astro.locals.session.sessionClient;
+
+    list = await sessionClient.tablesDB.getRow({
+        databaseId: APPWRITE_DB,
+        tableId: APPWRITE_LIST_COLLECTION,
+        rowId: id,
+        queries: [Query.select(["*", "items.*"])]
+    });
+} else {
+    adminClient = createAdminClient();
+    list = await adminClient.tablesDB.getRow({
+        databaseId: APPWRITE_DB,
+        tableId: APPWRITE_LIST_COLLECTION,
+        rowId: id,
+        queries: [Query.select(["*", "items.*"])]
+    });
+
+    if (list.private) {
+        list = null;
     }
 }
 
-const adminClient = createAdminClient();
-
-const list = await adminClient.tablesDB.getRow({
-    databaseId: APPWRITE_DB,
-    tableId: APPWRITE_LIST_COLLECTION,
-    rowId: id,
-    queries: [Query.select(["*", "items.*"])]
-});
-
-if (!list || (list.private && (!user || list.author !== user.$id))) {
+if (!list) {
     return new Response("Not Found", { status: 404 });
 }
 
@@ -121,23 +129,21 @@ if (user) {
 ---
 
 <NewLayout title={list.title} user={user}>
-    <ListHeader list={list} />
-    <!---
-
+    <ListHeader list={list} user={user} />
     <section class="mt-8">
         {
             itemsByPriceGroups.length ? (
                 itemsByPriceGroups.map((group) => (
                     <section key={group.title} class="mb-10">
-                        <div class="mb-4 flex items-center justify-between gap-3 rounded-3xl bg-base-200 p-4">
+                        <div class="mb-4 flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 rounded-3xl bg-base-200 p-3 sm:p-4">
                             <div>
-                                <h3 class="text-lg font-semibold">{group.title}</h3>
+                                <h3 class="text-base sm:text-lg font-semibold">{group.title}</h3>
                                 <p class="text-sm text-base-content/70">
                                     {group.items.length} item{group.items.length === 1 ? "" : "s"}
                                 </p>
                             </div>
                         </div>
-                        <div class="items flex flex-col gap-6">
+                        <div class="items flex flex-col gap-4 sm:gap-6">
                             {group.items.map((item) => (
                                 <ItemCard item={item} list={list} key={item.$id} />
                             ))}
@@ -145,21 +151,11 @@ if (user) {
                     </section>
                 ))
             ) : (
-                <Empty>
-                    <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                            <Icon name="mdi:format-list-bulleted" />
-                        </EmptyMedia>
-                        <EmptyTitle>No items yet</EmptyTitle>
-                        <EmptyDescription>
-                            Start adding items to your list to see them here.
-                        </EmptyDescription>
-                    </EmptyHeader>
-                    {/* <EmptyContent>
-                        <Button>Add data</Button>
-                    </EmptyContent> */}
-                </Empty>
+                <div class="rounded-2xl border border-base-300 bg-base-100 p-8 text-center shadow-sm">
+                    <h2 class="text-xl font-semibold">No items yet</h2>
+                    <p class="mt-3 text-base-content/70">This list doesn't have any items yet.</p>
+                </div>
             )
         }
-    </section> -->
+    </section>
 </NewLayout>

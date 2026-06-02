@@ -23,6 +23,10 @@ import {
     DropdownTrigger
 } from "@/components/starwind/dropdown";
 
+import { Button } from "@/components/starwind/button";
+
+import { Switch } from "@/components/starwind/switch";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/starwind/avatar";
 
 import { Icon } from "astro-icon/components";
@@ -83,6 +87,7 @@ if (user) {
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>
+
         {
             historyItems && historyItems.length > 0 && (
                 <SidebarGroup>
@@ -91,7 +96,7 @@ if (user) {
                         <SidebarMenu>
                             {historyItems.map((item) => (
                                 <SidebarMenuItem key={item.id}>
-                                    <SidebarMenuButton href={`/new/list/${item.id}`}>
+                                    <SidebarMenuButton href={`/list/${item.id}`}>
                                         <Avatar class="size-6 shrink-0 rounded-sm">
                                             <AvatarImage src={item.avatar} alt={item.title} />
                                         </Avatar>
@@ -145,6 +150,39 @@ if (user) {
                                     </div>
                                 </DropdownLabel>
                                 <DropdownSeparator />
+
+                                <div class="px-3 py-2">
+                                    <div class="py-2">
+                                        <Switch
+                                            id="quick-dark-mode"
+                                            label="Dark Mode"
+                                            variant="primary"
+                                            checked={user?.prefs?.darkMode}
+                                        />
+                                    </div>
+                                    <div class="py-2">
+                                        <Switch
+                                            id="quick-show-total"
+                                            label="Show Total Price"
+                                            variant="primary"
+                                            checked={user?.prefs?.showTotalPrice}
+                                        />
+                                    </div>
+                                    <div class="py-2">
+                                        <Switch
+                                            id="quick-spoil-surprises"
+                                            label="Spoil Surprises"
+                                            variant="primary"
+                                            checked={user?.prefs?.spoilSurprises}
+                                        />
+                                    </div>
+                                    <div class="flex justify-end pt-2">
+                                        <Button id="quick-save-prefs" size="sm">
+                                            Save
+                                        </Button>
+                                    </div>
+                                </div>
+
                                 <DropdownItem as="a" href="#">
                                     <Icon name="mdi:sparkles" class="mr-2 size-4" />
                                     Upgrade to Pro
@@ -175,3 +213,34 @@ if (user) {
         </SidebarMenu>
     </SidebarFooter>
 </Sidebar>
+
+<script>
+    import { account } from "@/appwrite";
+
+    const darkEl = document.getElementById("quick-dark-mode");
+    const totalEl = document.getElementById("quick-show-total");
+    const spoilEl = document.getElementById("quick-spoil-surprises");
+    const saveBtn = document.getElementById("quick-save-prefs");
+
+    const readAndSave = async () => {
+        const updated = {
+            darkMode: darkEl.getAttribute("aria-checked") === "true",
+            showTotalPrice: totalEl ? totalEl.getAttribute("aria-checked") === "true" : false,
+            spoilSurprises: spoilEl ? spoilEl.getAttribute("aria-checked") === "true" : false
+        };
+
+        const user = await account.get();
+
+        const newPrefs = Object.assign({}, user.prefs, updated);
+        if (user) {
+            await account.updatePrefs(newPrefs);
+        }
+        window.location.reload();
+    };
+
+    if (saveBtn)
+        saveBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            readAndSave();
+        });
+</script>

@@ -20,40 +20,26 @@ export const prerender = false;
 </NewLayout>
 
 <script>
-    import { getJwt } from "@/stores/auth";
-
-    const normaliseRedirect = (value) => {
-        if (!value || typeof value !== "string") {
-            return "/new";
-        }
-
-        if (!value.startsWith("/") || value.startsWith("//")) {
-            return "/new";
-        }
-
-        if (value.startsWith("/new/auth/reauth")) {
-            return "/new";
-        }
-
-        return value;
-    };
+    import { account } from "@/appwrite";
 
     const redirect = (path) => {
-        window.location.replace(path || "/new");
+        window.location.replace(path || "/dash/lists");
     };
 
-    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
-    const redirectPath = normaliseRedirect(redirectParam);
+    const redirectPath = new URLSearchParams(window.location.search).get("redirect");
 
     const refreshSession = async () => {
         try {
-            const jwt = await getJwt();
+            const jwtResp = await account.createJWT();
+            const jwt = jwtResp?.jwt;
+            if (!jwt) throw new Error("No JWT returned");
+
             const setSessionResp = await fetch("/api/auth/session", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({ jwt: jwt })
+                body: JSON.stringify({ jwt })
             });
 
             if (!setSessionResp.ok) {
