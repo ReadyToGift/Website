@@ -77,6 +77,47 @@ const itemsByPriceGroups = priceGroups
         };
     })
     .filter((group) => group.items.length > 0);
+
+if (user) {
+    let history = [];
+    // check all lists are accessible
+    if (user?.prefs?.history && user.prefs.history.length) {
+        const historyIDs = user.prefs.history
+            .map((i) => i.id)
+            .filter((id) => typeof id === "string");
+
+        const historyItems = await sessionClient.tablesDB.listRows({
+            databaseId: APPWRITE_DB,
+            tableId: APPWRITE_LIST_COLLECTION,
+            queries: [Query.equal("$id", historyIDs)]
+        });
+
+        history = historyItems.rows.map((row) => ({
+            id: row.$id,
+            avatar: sessionClient?.avatars.getInitials({
+                name: row.authorName
+            }),
+            title: row.title,
+            subtitle: `By ${row.authorName}`
+        }));
+    }
+
+    history.unshift({
+        id: id,
+        avatar: sessionClient.avatars.getInitials({
+            name: list.authorName
+        }),
+        title: list.title,
+        subtitle: `By ${list.authorName}`
+    });
+
+    history = history
+        .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
+        .slice(0, 10);
+
+    user.prefs.history = history;
+    await sessionClient.account.updatePrefs(user.prefs);
+}
 ---
 
 <NewLayout title={list.title} user={user}>

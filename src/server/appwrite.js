@@ -61,6 +61,12 @@ export const createSessionClient = ({ request, jwt }) => {
         get account() {
             return new appwriteClient.Account(client);
         },
+        get avatars() {
+            return new appwriteClient.Avatars(client);
+        },
+        get tablesDB() {
+            return new appwriteClient.TablesDB(client);
+        },
         jwt: jwt
     };
 };

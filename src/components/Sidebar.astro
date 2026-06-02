@@ -34,6 +34,7 @@ const adminClient = createAdminClient();
 const { user } = Astro.props;
 
 let avatarUrl = "";
+let historyItems = [];
 if (user) {
     const avatarBuffer = await adminClient.avatars.getInitials({
         name: user.name,
@@ -41,6 +42,8 @@ if (user) {
     });
 
     avatarUrl = `data:image/png;base64,${Buffer.from(avatarBuffer).toString("base64")}`;
+
+    historyItems = user.prefs?.history || [];
 }
 ---
 
@@ -80,20 +83,32 @@ if (user) {
                 </SidebarMenu>
             </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-            <SidebarGroupLabel>Recently Viewed</SidebarGroupLabel>
-            <SidebarGroupContent>
-                <SidebarMenu>
-                    {user}
-                    <SidebarMenuItem>
-                        <SidebarMenuButton href="/dash/lists">
-                            <Icon name="mdi:format-list-bulleted" />
-                            <span>Lists</span>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
-            </SidebarGroupContent>
-        </SidebarGroup>
+        {
+            historyItems && historyItems.length > 0 && (
+                <SidebarGroup>
+                    <SidebarGroupLabel>Recently Viewed</SidebarGroupLabel>
+                    <SidebarGroupContent>
+                        <SidebarMenu>
+                            {historyItems.map((item) => (
+                                <SidebarMenuItem key={item.id}>
+                                    <SidebarMenuButton href={`/new/list/${item.id}`}>
+                                        <Avatar class="size-6 shrink-0 rounded-sm">
+                                            <AvatarImage src={item.avatar} alt={item.title} />
+                                        </Avatar>
+                                        <div class="grid flex-1 text-left text-sm leading-tight">
+                                            <span class="truncate font-semibold">{item.title}</span>
+                                            <span class="text-sidebar-foreground/70 truncate text-xs">
+                                                {item.subtitle}
+                                            </span>
+                                        </div>
+                                    </SidebarMenuButton>
+                                </SidebarMenuItem>
+                            ))}
+                        </SidebarMenu>
+                    </SidebarGroupContent>
+                </SidebarGroup>
+            )
+        }
     </SidebarContent>
     <SidebarFooter>
         <SidebarMenu>
