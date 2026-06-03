@@ -113,6 +113,8 @@ export const GET = async (context) => {
                 );
             }
 
+            list.items = (list.items || []).filter((item) => !item.communityList);
+
             if (list.private && (!account || list.author !== account.$id)) {
                 return new Response(
                     JSON.stringify({
