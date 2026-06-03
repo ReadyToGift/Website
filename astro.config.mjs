@@ -135,20 +135,26 @@ export default defineConfig({
     },
 
     integrations: [icon(), vue({
-        appEntrypoint: "/src/pages/_app"
+        // appEntrypoint: "/src/pages/_app"
     }), sentry()],
 
     vite: {
-        plugins: [...vuetifyPlugins, tailwindcss()],
-        optimizeDeps: {
-            exclude: ["vuetify", "vite-plugin-vuetify"]
-        },
+        plugins: [tailwindcss()],
         resolve: {
-            noExternal: [/^vuetify/, /^vite-plugin-vuetify/]
+            alias: {
+                // Ensure Vite resolves 'prettier' to the Node ESM entry that exports resolveConfig
+                prettier: "prettier/index.mjs"
+            }
         },
-        ssr: {
-            noExternal: ["vuetify", "vite-plugin-vuetify"]
-        },
+        // optimizeDeps: {
+        //     exclude: ["vuetify", "vite-plugin-vuetify"]
+        // },
+        // resolve: {
+        //     noExternal: [/^vuetify/, /^vite-plugin-vuetify/]
+        // },
+        // ssr: {
+        //     noExternal: ["vuetify", "vite-plugin-vuetify"]
+        // },
         build: {
             // cssCodeSplit: true,
             rollupOptions: {

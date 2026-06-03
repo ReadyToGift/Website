@@ -2,7 +2,7 @@ import { account } from "@/appwrite";
 import { create as createDialog } from "./dialogs";
 import { markRaw } from "vue";
 
-import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
+import TotpChallenge from "@/components/vuetify/dialogs/account/mfa/totp/TotpChallenge.vue";
 
 export const createTOTPChallengeDialog = () => {
     return createDialog({

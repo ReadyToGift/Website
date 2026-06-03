@@ -134,12 +134,12 @@ import { VAlert, VDivider, VProgressCircular, VSpacer, VSwitch } from "vuetify/c
 import { avatars } from "@/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
 import { handleAuthFetch } from "@/utils/authFetch";
-import ListCard from "@/components/ListCard.vue";
-import ListItem from "@/components/ListItem.vue";
+import ListCard from "@/components/vuetify/ListCard.vue";
+import ListItem from "@/components/vuetify/ListItem.vue";
 import { mdiInformation  } from "@mdi/js";
-import ModifyItem from "@/components/dialogs/ModifyItem.vue";
+import ModifyItem from "@/components/vuetify/dialogs/ModifyItem.vue";
 import NotFound from "../../404/_NotFound.vue";
-import PWAPrompt from "@/components/PWAPrompt.vue";
+import PWAPrompt from "@/components/vuetify/PWAPrompt.vue";
 
 import { $prefs, addToHistory } from "@/stores/prefs";
 import { billing as billingStore, limits as limitsStore } from "@/stores/billing";

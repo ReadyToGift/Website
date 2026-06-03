@@ -301,10 +301,10 @@ import { useRouter } from "vue-router";
 import { useStore } from "@nanostores/vue";
 
 import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
-import CreateList from "@/components/dialogs/CreateList.vue";
+import CreateList from "@/components/vuetify/dialogs/CreateList.vue";
 import { limits as limitsStore } from "@/stores/billing";
-import ListCard from "@/components/ListCard.vue";
-import PWAPrompt from "@/components/PWAPrompt.vue";
+import ListCard from "@/components/vuetify/ListCard.vue";
+import PWAPrompt from "@/components/vuetify/PWAPrompt.vue";
 import validation from "@/utils/validation";
 
 const router = useRouter();

@@ -62,8 +62,8 @@ import { useStore } from "@nanostores/vue";
 
 import { account } from "@/appwrite";
 
-import MFA from "@/components/account/mfa/MFA.vue";
-import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
+import MFA from "@/components/vuetify/account/mfa/MFA.vue";
+import UpdateAccountField from "@/components/vuetify/account/UpdateAccountField.vue";
 
 const user = useStore(userStore);
 

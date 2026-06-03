@@ -47,8 +47,8 @@ import { useTheme } from "vuetify";
 
 import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
 
-import DashNav from "@/components/DashNav.vue";
-import GlobalDialogs from "@/components/GlobalDialogs.vue";
+import DashNav from "@/components/vuetify/DashNav.vue";
+import GlobalDialogs from "@/components/vuetify/GlobalDialogs.vue";
 
 import { init as initBilling } from "@/stores/billing";
 import { useStore } from "@nanostores/vue";
