@@ -45,14 +45,7 @@ const totalPrice = currencyFormatter(list.currency).format(
 
     <CardContent class="pt-2">
         <CardAction>
-            <Button>Share <Icon name="mdi:share" /></Button>
-            {
-                // (
-                //     // ownList && (
-                //     //     )
-                //     // <ListManagementButtons list={list} wishlistOwner="true" client:only="vue" />
-                // )
-            }
+            {(<ListManagementButtons list={list} wishlistOwner="true" client:only="vue" />)}
         </CardAction>
     </CardContent>
 

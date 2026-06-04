@@ -1,5 +1,5 @@
 import { aliases, mdi } from "vuetify/iconsets/mdi-svg";
-import { createVuetify } from "vuetify";
+// import { createVuetify } from "vuetify";
 import { md3 } from "vuetify/blueprints";
 
 const lightTheme = {
@@ -112,7 +112,7 @@ const darkTheme = {
     }
 };
 
-export default createVuetify({
+export const vuetifyOptions = {
     blueprint: md3,
     display: {
         mobileBreakpoint: "sm",
@@ -139,4 +139,4 @@ export default createVuetify({
             dark: darkTheme
         }
     }
-});
+};
