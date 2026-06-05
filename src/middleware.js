@@ -1,29 +1,12 @@
 import { defineMiddleware } from "astro:middleware";
 
+import { extractJwt, JWT_COOKIE, SESSION_COOKIE_MAX_AGE } from "@/server/auth";
 import { createSessionClient } from "@/server/appwrite";
 
-const REFRESH_WINDOW_MS = 2 * 60 * 1000;
-const JWT_COOKIE = "appwrite";
-const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+const REFRESH_WINDOW_MS = 2 * 60 * 1000; // 2 minutes left of 15 minute JWT lifetime
 
-const parseCookies = (cookies) => {
-    const map = new Map();
-    for (const cookie of cookies.split(";")) {
-        const [name, value] = cookie.split("=");
-        map.set(name.trim(), value ?? null);
-    }
-    return map;
-};
-
-const extractJwt = ({ request }) => {
-    const authHeader = request.headers.get("authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-        return authHeader.substring(7);
-    }
-
-    const cookies = parseCookies(request.headers.get("cookie") ?? "");
-    return cookies.get(JWT_COOKIE);
-};
+// Helper to create a 302 redirect to the reauth page for the current URL
+const redirectReauth = (request) => Response.redirect(buildReauthUrl(request), 302);
 
 const decodeBase64Url = (value) => {
     const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -85,7 +68,7 @@ export const onRequest = defineMiddleware(async ({ request, cookies, locals }, n
 
     const expiryMs = getJwtExpiryMs(jwt);
     if (expiryMs && expiryMs <= Date.now()) {
-        return Response.redirect(buildReauthUrl(request), 302);
+        return redirectReauth(request);
     }
 
     let sessionClient;
@@ -102,7 +85,8 @@ export const onRequest = defineMiddleware(async ({ request, cookies, locals }, n
         locals.session = { sessionClient, account };
     } catch {
         cookies.delete(JWT_COOKIE, { path: "/" });
-        return next();
+        // If initial validation fails (invalid/stale cookie), redirect to reauth
+        return redirectReauth(request);
     }
 
     if (!shouldRefreshJwt(jwt)) {
@@ -122,6 +106,9 @@ export const onRequest = defineMiddleware(async ({ request, cookies, locals }, n
     } catch {
         // Cookie is stale/invalid. Clearing prevents repeated failing auth attempts on SSR.
         cookies.delete(JWT_COOKIE, { path: "/" });
+        // If refresh fails, redirect the user to the reauth page so the client
+        // can attempt to create a new session and restore the cookie.
+        return redirectReauth(request);
     }
 
     return next();
