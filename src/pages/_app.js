@@ -14,11 +14,11 @@ export default async function setup(app) {
     const path = window.location.pathname;
     if (path.startsWith("/dash") || path.startsWith("/list")) {
         // Lazy-load Vuetify only for routes that need the Vue app
+
+        vuetifyOptions.theme.defaultTheme = isDarkMode ? "dark" : "light";
+
         const vuetify = createVuetify({
-            ...vuetifyOptions,
-            theme: {
-                defaultTheme: isDarkMode ? "dark" : "light"
-            }
+            ...vuetifyOptions
         });
         app.use(vuetify);
 

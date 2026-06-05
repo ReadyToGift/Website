@@ -79,11 +79,14 @@ const previewImageUrl = imageURL(item);
             previewImageUrl && "grid gap-4 sm:grid-cols-[1fr_220px] sm:items-start"
         ]}
     >
-        <CardContent className="px-0">
-            <p class="text-sm leading-relaxed text-muted-foreground">
-                {item.description || "No description yet."}
-            </p>
-        </CardContent>
+        { item.description && (
+            <CardContent className="px-0">
+                <p class="text-sm leading-relaxed text-muted-foreground">
+                    {item.description || "No description yet."}
+                </p>
+            </CardContent>
+            )
+        }
         {
             previewImageUrl && (
                 <div class="overflow-hidden rounded-lg bg-muted/30 p-2 shadow-sm sm:justify-self-end sm:w-full sm:max-w-[220px]">
