@@ -331,19 +331,35 @@ export default {
             }
 
             if (resp.action === "error") {
-                this.alert = {
+                await this.createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "OK"
+                        }
+                    ],
                     text: resp.data || "An unknown error occurred during auto-fill.",
-                    title: "Error"
-                };
+                    title: "Error",
+                    variant: "error"
+                });
                 return;
             }
 
             const autofillData = JSON.parse(resp.data);
             if (!autofillData) {
-                this.alert = {
+                await this.createDialog({
+                    actions: [
+                        {
+                            action: "close",
+                            color: "primary",
+                            text: "OK"
+                        }
+                    ],
                     text: "No data was returned from the auto-fill process.",
-                    title: "Error"
-                };
+                    title: "Error",
+                    variant: "error"
+                });
                 return;
             }
 
