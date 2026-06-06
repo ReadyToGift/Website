@@ -11,13 +11,13 @@
             :list="list"
             @updateList="$emit('updateList', $event)"
             @dialogClosed="menuOpen = false"
-            v-if="!$vuetify.display.mobile && wishlistOwner"
+            v-if="!$vuetify.display.mobile && isWishlistAuthor"
         />
 
         <v-dialog
             :max-width="$vuetify.display.mobile ? '100%' : '500px'"
-            v-model="quickcreateDialogOpen"
-            v-if="wishlistOwner"
+            v-model="quickCreateDialogOpen"
+            v-if="isWishlistAuthor"
         >
             <template v-slot:activator>
                 <v-btn
@@ -47,7 +47,7 @@
         <v-btn
             :prepend-icon="listSaved ? mdiStarOff : mdiStar"
             :variant="listSaved ? 'tonal' : 'outlined'"
-            v-if="!wishlistOwner"
+            v-if="!isWishlistAuthor"
             @click="saveList"
             :loading="listSaveLoading"
         >
@@ -65,7 +65,7 @@
         <DeleteList
             :list="list"
             @dialogClosed="menuOpen = false"
-            v-if="!$vuetify.display.mobile && wishlistOwner"
+            v-if="!$vuetify.display.mobile && isWishlistAuthor"
         />
 
         <v-snackbar
@@ -80,11 +80,11 @@
 </template>
 
 <script setup>
+import { computed, ref } from "vue";
 import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
 import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VDialog, VSnackbar } from "vuetify/components";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
-import { ref } from "vue";
 import validation from "@/utils/validation";
 
 import { $prefs, updatePrefs } from "@/stores/prefs";
@@ -115,10 +115,6 @@ const props = defineProps({
         default: () => ({}),
         type: Object
     },
-    listSaved: {
-        default: false,
-        type: Boolean
-    },
     itemLimitReached: {
         default: false,
         type: Boolean
@@ -127,10 +123,14 @@ const props = defineProps({
         default: "elevated",
         type: String
     },
-    wishlistOwner: {
+    isWishlistAuthor: {
         default: false,
         type: Boolean
     }
+});
+
+const listSaved = computed(() => {
+    return prefs.value.savedLists && prefs.value.savedLists.includes(props.list.$id);
 });
 
 let quickCreateError = ref({
@@ -138,7 +138,8 @@ let quickCreateError = ref({
     title: ""
 });
 
-let quickcreateDialogOpen = ref(false);
+let quickCreateDialogOpen = ref(false);
+let quickCreateURL = ref("");
 let listSaveLoading = ref(false);
 
 const copyListURL = async () => {
@@ -254,7 +255,7 @@ const quickCreate = async () => {
                 text: "The clipboard does not contain any valid URLs.",
                 title: "Invalid URL"
             };
-            quickcreateDialogOpen.value = true;
+            quickCreateDialogOpen.value = true;
         } else {
             emit("quickCreate", validURLs[0]);
         }
@@ -263,7 +264,7 @@ const quickCreate = async () => {
             text: "An error occurred while reading the clipboard: " + error.message,
             title: "Error"
         };
-        quickcreateDialogOpen.value = true;
+        quickCreateDialogOpen.value = true;
         console.error("Clipboard read error:", error);
     }
 };

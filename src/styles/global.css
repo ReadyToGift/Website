@@ -145,3 +145,8 @@
     @apply cursor-pointer;
   }
 }
+
+body {
+  scroll-behavior: smooth;
+  scroll-alignment: center;
+}

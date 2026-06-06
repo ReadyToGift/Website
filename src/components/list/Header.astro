@@ -20,18 +20,21 @@ import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vu
 const { list, user } = Astro.props;
 
 // TODO: Implement these
-const ownList = false;
+let isWishlistAuthor = false;
 const communityItems = [];
 const spoilSurprises = false;
 let showTotalPrice = true;
 
-if (user && user.prefs) {
-    showTotalPrice = user.prefs.showTotalPrice || false;
+if (user) {
+    isWishlistAuthor = list.author === user.$id;
+    if (user.prefs) {
+        showTotalPrice = user.prefs.showTotalPrice || false;
+    }
 }
 
 const totalPrice = currencyFormatter(list.currency).format(
     list.items.reduce((sum, item) => sum + (item.price || 0), 0) +
-        (!ownList || (ownList && spoilSurprises)
+        (!isWishlistAuthor || (isWishlistAuthor && spoilSurprises)
             ? communityItems.reduce((sum, item) => sum + (item.price || 0), 0)
             : 0)
 );
