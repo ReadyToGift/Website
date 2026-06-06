@@ -17,10 +17,12 @@ if (process.env.CF_PAGES) {
     adapter = cloudflare({
         sessionKVBindingName: "SESSION"
     });
+    console.log("Using Cloudflare adapter");
 } else {
     adapter = node({
         mode: "standalone"
     });
+    console.log("Using Node adapter");
 }
 
 // No server adapter — build static output
