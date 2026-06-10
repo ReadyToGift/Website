@@ -89,7 +89,16 @@
                 v-show="item.imageID || item.imageFile"
                 @change="fileUploaded"
                 @click:clear="fileRemoved"
-            />
+            >
+                <template #selection="{ fileNames }">
+                    <span v-if="existingImageFileLoading">
+                        Loading file details...
+                    </span>
+                    <span v-else>
+                        {{ fileNames.join(", ") }}
+                    </span>
+                </template>
+            </v-file-input>
             <v-btn
                 :prepend-icon="mdiUpload"
                 variant="tonal"
@@ -148,7 +157,7 @@
 
 <script setup>
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
-import { computed, ref, useTemplateRef } from "vue";
+import { computed, useTemplateRef } from "vue";
 import { VBtn, VFileInput, VForm, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
 import { getCurrency } from "@/stores/currency";
 import { priorityMap } from "@/utils";
@@ -161,9 +170,8 @@ const item = defineModel("item");
 
 const imageUploadInput = useTemplateRef("image-upload-input");
 
-let newFileUploaded = ref(false);
-
 const hasImageFile = computed(() => !!(item.value?.imageID || item.value?.imageFile));
+const existingImageFileLoading = computed(() => !!item.value?.imageFile?.existing && !!item.value.imageFile.loading);
 
 const uploadImage = () => {
     imageUploadInput.value.click();
@@ -172,7 +180,6 @@ const uploadImage = () => {
 const fileUploaded = (event) => {
     const file = event?.target?.files?.[0] || imageUploadInput.value?.files?.[0] || item.value?.imageFile;
     if (typeof File !== "undefined" && file instanceof File) {
-        newFileUploaded.value = true;
         if (item.value && item.value.imageID) {
             emit("file-state", "replaced");
         } else {

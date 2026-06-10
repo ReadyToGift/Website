@@ -221,7 +221,7 @@ export default {
                     this.previousValues = { ...this.modifiedItem };
 
                     if (this.item.imageID) {
-                        await this.loadExistingImageFile(this.item.imageID);
+                        this.loadExistingImageFile(this.item.imageID);
                     }
                 } else {
                     this.itemID = ID.unique();
@@ -432,6 +432,7 @@ export default {
 
             return {
                 existing: true,
+                loading: true,
                 name: "Current image",
                 size: 0,
                 type: "image/*"
