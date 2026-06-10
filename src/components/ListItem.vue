@@ -43,6 +43,7 @@
                 <ModifyItem
                     variant="outlined"
                     :item="item"
+                    :list="list"
                     :currency="currency"
                     @editItem="$emit('editItem', $event)"
                     :wishlistOwner="wishlistOwner"

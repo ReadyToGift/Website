@@ -197,6 +197,7 @@ export default {
         async dialogOpen(open) {
             this.errors = {};
             if (open === true) {
+                this.fileState = false;
                 if (this.itemLimitReached) {
                     this.dialogOpen = false;
                     this.$emit("itemLimitReached");
@@ -209,6 +210,7 @@ export default {
                         description: this.item.description,
                         displayPrice: this.item.displayPrice,
                         image: this.item.image,
+                        imageFile: this.getExistingImageFilePlaceholder(this.item.imageID),
                         imageID: this.item.imageID,
                         price: this.item.price,
                         priority: this.item.priority,
@@ -217,10 +219,15 @@ export default {
                     };
 
                     this.previousValues = { ...this.modifiedItem };
+
+                    if (this.item.imageID) {
+                        await this.loadExistingImageFile(this.item.imageID);
+                    }
                 } else {
                     this.itemID = ID.unique();
                 }
             } else {
+                this.fileState = false;
                 this.previousValues = {};
                 this.modifiedItem = {
                     description: "",
@@ -418,6 +425,59 @@ export default {
                 this.modifiedItem.image = null;
             }
         },
+        getExistingImageFilePlaceholder(imageID) {
+            if (!imageID) {
+                return null;
+            }
+
+            return {
+                existing: true,
+                name: "Current image",
+                size: 0,
+                type: "image/*"
+            };
+        },
+        async loadExistingImageFile(imageID) {
+            try {
+                const jwt = await getJwt();
+                if (!jwt) {
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    fileId: imageID,
+                    itemId: this.itemID
+                });
+
+                const [data, error] = await handleFetch(`/api/content/item/image?${params.toString()}`, {
+                    headers: {
+                        Authorization: `Bearer ${jwt}`
+                    }
+                });
+
+                if (error || !data?.file) {
+                    if (error) {
+                        console.error(error);
+                    }
+                    return;
+                }
+
+                if (this.modifiedItem.imageID !== imageID || this.fileState === "removed") {
+                    return;
+                }
+
+                const { file } = data;
+                this.modifiedItem.imageFile = {
+                    existing: true,
+                    lastModified: file.updatedAt ? new Date(file.updatedAt).getTime() : undefined,
+                    name: file.name || "Current image",
+                    size: file.size || 0,
+                    type: file.mimeType || "image/*"
+                };
+            } catch (error) {
+                console.error("Failed to load existing image metadata:", error);
+            }
+        },
         async uploadImageFile({ jwt }) {
             const formData = new FormData();
             formData.append("file", this.modifiedItem.imageFile);
@@ -475,9 +535,14 @@ export default {
 
                 if (this.modifiedItem.imageFile && !this.modifiedItem.imageID) {
                     this.uploadingFile = true;
-                    const fileUpload = await this.uploadImageFile({ jwt });
+                    let fileUpload;
 
-                    this.uploadingFile = false;
+                    try {
+                        fileUpload = await this.uploadImageFile({ jwt });
+                    } finally {
+                        this.uploadingFile = false;
+                    }
+
                     this.modifiedItem.imageID = fileUpload.$id;
                     this.modifiedItem.image = "";
                 }
@@ -517,6 +582,7 @@ export default {
 
                 result = createRespData.item;
             } catch (e) {
+                this.uploadingFile = false;
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
                     title: "Error"
@@ -572,9 +638,13 @@ export default {
 
                 if (["added", "replaced"].includes(this.fileState)) {
                     this.uploadingFile = true;
-                    const fileUpload = await this.uploadImageFile({ jwt });
+                    let fileUpload;
 
-                    this.uploadingFile = false;
+                    try {
+                        fileUpload = await this.uploadImageFile({ jwt });
+                    } finally {
+                        this.uploadingFile = false;
+                    }
 
                     this.modifiedItem.imageID = fileUpload.$id;
                     this.modifiedItem.image = "";
@@ -612,6 +682,7 @@ export default {
 
                 result = updateRespData.item;
             } catch (e) {
+                this.uploadingFile = false;
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
                     title: "Error"

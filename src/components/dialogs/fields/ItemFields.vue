@@ -81,9 +81,11 @@
                 v-model="item.imageFile"
                 accept=".png,.jpg,.jpeg,.webp"
                 label="Image"
-                clearable
+                :clearable="hasImageFile"
+                :persistent-clear="hasImageFile"
                 show-size="1000"
                 ref="image-upload-input"
+                truncate-length="48"
                 v-show="item.imageID || item.imageFile"
                 @change="fileUploaded"
                 @click:clear="fileRemoved"
@@ -146,7 +148,7 @@
 
 <script setup>
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
-import { ref, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { VBtn, VFileInput, VForm, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
 import { getCurrency } from "@/stores/currency";
 import { priorityMap } from "@/utils";
@@ -161,13 +163,15 @@ const imageUploadInput = useTemplateRef("image-upload-input");
 
 let newFileUploaded = ref(false);
 
+const hasImageFile = computed(() => !!(item.value?.imageID || item.value?.imageFile));
+
 const uploadImage = () => {
     imageUploadInput.value.click();
 };
 
-const fileUploaded = () => {
-    const file = imageUploadInput.value.files[0];
-    if (file) {
+const fileUploaded = (event) => {
+    const file = event?.target?.files?.[0] || imageUploadInput.value?.files?.[0] || item.value?.imageFile;
+    if (typeof File !== "undefined" && file instanceof File) {
         newFileUploaded.value = true;
         if (item.value && item.value.imageID) {
             emit("file-state", "replaced");
