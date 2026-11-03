@@ -54,18 +54,18 @@
 
             <div
                 class="items"
-                v-if="itemsByPriceGroups && itemsByPriceGroups.length"
+                v-if="itemGroups.length"
             >
                 <div
-                    class="item-price-group"
-                    v-for="priceGroup in itemsByPriceGroups"
-                    :key="priceGroup.price"
+                    class="item-group"
+                    v-for="itemGroup in itemGroups"
+                    :key="itemGroup.id"
                 >
-                    <h3>{{ priceGroup.title }}</h3>
+                    <h3>{{ itemGroup.title }}</h3>
                     <v-divider />
-                    <div class="item-price-group-items">
+                    <div class="item-group-items">
                         <ListItem
-                            v-for="item in priceGroup.items"
+                            v-for="item in itemGroup.items"
                             :key="item.$id"
                             :item="item"
                             :list="list"
@@ -209,16 +209,11 @@ export default {
         itemLimitReached() {
             return this.wishlistOwner && this.list.itemCount >= this.limits.itemsPerList && this.limits.itemsPerList != -1;
         },
-        itemsByPriceGroups() {
+        itemGroups() {
             if (!this.list) return [];
-            const items = [
-                ...this.list.items,
-                ...(!this.spoilSurprises && this.wishlistOwner ? [] : this.communityItems)
-            ];
+            const items = this.list.items || [];
 
-            if (!items || items.length === 0) return [];
-
-            const priceGroupItems = this.priceGroups
+            const groups = this.priceGroups
                 .map((price, index) => {
                     const lowerBound = index === 0 ? 0 : this.priceGroups[index - 1];
                     const upperBound = price;
@@ -232,12 +227,13 @@ export default {
                             .split(".")[0];
 
                     return {
+                        id: price,
                         items: items
                             .filter((item) => {
                                 if (
                                     !this.showFulfilled &&
                                     !this.wishlistOwner &&
-                                    (item.fulfillment || item.communityList)
+                                    item.fulfillment
                                 )
                                     return false; // skip it
                                 if ((item.price >= lowerBound && item.price < upperBound && item.price !== 0) || (item.price === 0 && upperBound === 0)) {
@@ -255,11 +251,10 @@ export default {
                                 }
                                 return a.title.localeCompare(b.title);
                             }),
-                        price,
                         title
                     };
                 })
-                .filter((priceGroup) => priceGroup.items.length);
+                .filter((group) => group.items.length);
 
             const itemsAboveLargestPriceGroup = items.filter((item) => {
                 if (!this.showFulfilled && !this.wishlistOwner && item.fulfillment)
@@ -270,18 +265,28 @@ export default {
             });
 
             if (itemsAboveLargestPriceGroup.length) {
-                priceGroupItems.push({
+                groups.push({
+                    id: "above",
                     items: itemsAboveLargestPriceGroup,
-                    price: "above",
                     title:
-                        this.currency
-                            .formatter(this.list.currency)
+                        this.currencyFormatter(this.list.currency)
                             .format(this.priceGroups[this.priceGroups.length - 1])
                             .split(".")[0] +
                         "+"
                 });
             }
-            return priceGroupItems;
+
+            if ((!this.wishlistOwner || this.spoilSurprises) && this.communityItems.length) {
+                groups.push({
+                    id: "contributed",
+                    items: [...this.communityItems].sort((a, b) =>
+                        this.sort === "price" ? a.price - b.price : a.title.localeCompare(b.title)
+                    ),
+                    title: "Gifts from others"
+                });
+            }
+
+            return groups;
         },
         spoilSurprises() {
             return this.prefs.spoilSurprises;
@@ -730,7 +735,7 @@ main {
 
     .items {
         margin-top: 1rem;
-        .item-price-group {
+        .item-group {
             h3 {
                 font-size: 2rem;
                 margin-top: 2rem;
@@ -738,7 +743,7 @@ main {
             hr {
                 margin: 0.5rem 0 1rem;
             }
-            .item-price-group-items {
+            .item-group-items {
                 display: flex;
                 flex-direction: column;
                 gap: 1rem;

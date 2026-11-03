@@ -2,7 +2,7 @@
     <v-card
         class="item"
         :data-fulfilled="
-            !!item.fulfillment && (!wishlistOwner || (wishlistOwner && spoilSurprises)) || (!!item.communityList && !(user && item.contributorId === user.$id))
+            !item.communityList && !!item.fulfillment && (!wishlistOwner || spoilSurprises)
         "
         variant="tonal"
         :data-item-id="item.$id"
