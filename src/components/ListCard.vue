@@ -139,7 +139,6 @@
                 :list="props.list"
                 :currency="list.currency"
                 :wishlistOwner="ownList"
-                :listSaved="props.listSaved"
                 :itemLimitReached="itemLimitReached"
                 @itemLimitReached="emit('itemLimitReached')"
                 @quickCreate="(data) => emit('quickCreate', data)"
@@ -160,7 +159,6 @@
                     :list="props.list"
                     :currency="list.currency"
                     :wishlistOwner="ownList"
-                    :listSaved="props.listSaved"
                     :itemLimitReached="itemLimitReached"
                     @itemLimitReached="emit('itemLimitReached')"
                     @quickCreate="(data) => emit('quickCreate', data)"
@@ -225,10 +223,6 @@ const props = defineProps({
     list: {
         required: true,
         type: Object
-    },
-    listSaved: {
-        default: false,
-        type: Boolean
     },
     itemLimitReached: {
         default: false,

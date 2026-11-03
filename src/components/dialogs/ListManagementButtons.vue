@@ -84,7 +84,7 @@ import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
 import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VDialog, VSnackbar } from "vuetify/components";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import validation from "@/utils/validation";
 
 import { $prefs, updatePrefs } from "@/stores/prefs";
@@ -115,10 +115,6 @@ const props = defineProps({
         default: () => ({}),
         type: Object
     },
-    listSaved: {
-        default: false,
-        type: Boolean
-    },
     itemLimitReached: {
         default: false,
         type: Boolean
@@ -132,6 +128,7 @@ const props = defineProps({
         type: Boolean
     }
 });
+const listSaved = computed(() => prefs.value.savedLists?.includes(props.list.$id) ?? false);
 
 let quickCreateError = ref({
     text: "",
@@ -161,7 +158,7 @@ const copyListURL = async () => {
 
 const saveList = async () => {
     listSaveLoading.value = true;
-    if (!user) {
+    if (!user.value) {
         listSaveLoading.value = false;
         createDialog({
             actions: [

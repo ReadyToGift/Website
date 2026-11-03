@@ -288,7 +288,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
 import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VChip, VDialog, VDivider, VList, VMenu, VSelect, VSheet, VSkeletonLoader, VSpacer, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
 import { account } from "@/appwrite";
@@ -318,7 +318,9 @@ const newUserPrefs = ref($prefs.get());
 const lists = ref([]);
 const loading = ref(true);
 const quickCreateURL = ref(false);
-const savedLists = ref([]);
+const savedLists = computed(() => lists.value.filter((list) =>
+    prefs.value.savedLists?.includes(list.$id)
+));
 const sorting = ref({
     typeOptions: [
         { name: "Title", value: "title" },
@@ -331,11 +333,11 @@ const tab = ref("public");
 const verificationDialog = ref(false);
 
 const privateLists = computed(() => {
-    return lists.value.filter((list) => list.private);
+    return lists.value.filter((list) => list.private && !prefs.value.savedLists?.includes(list.$id));
 });
 
 const publicLists = computed(() => {
-    return lists.value.filter((list) => !list.private);
+    return lists.value.filter((list) => !list.private && !prefs.value.savedLists?.includes(list.$id));
 });
 
 const createList = (data) => {
@@ -416,12 +418,7 @@ const getLists = async () => {
         return;
     }
 
-    savedLists.value = listsResponse.lists.filter((list) =>
-        prefs.value.savedLists?.includes(list.$id)
-    );
-    lists.value = listsResponse.lists.filter(
-        (list) => !prefs.value.savedLists?.includes(list.$id)
-    );
+    lists.value = listsResponse.lists;
 
     setListsCount({
         private: privateLists.value.length,
@@ -430,6 +427,13 @@ const getLists = async () => {
 
     loading.value = false;
 };
+
+watch(
+    () => prefs.value.savedLists,
+    () => {
+        if (user.value && !loading.value) getLists();
+    }
+);
 
 const setSortType = async (event) => {
     newUserPrefs.value.listSorting.type = event[0];

@@ -25,7 +25,6 @@
                 :list="list"
                 :communityItems="communityItems"
                 :spoilSurprises="spoilSurprises"
-                :list-saved="listSaved"
                 :quickCreateURL="quickCreateURL"
                 :own-list="wishlistOwner"
                 :itemLimitReached="itemLimitReached"
@@ -283,10 +282,6 @@ export default {
                 });
             }
             return priceGroupItems;
-        },
-        listSaved() {
-            if (!this.prefs.savedLists) return false;
-            return this.prefs.savedLists.includes(this.listId);
         },
         spoilSurprises() {
             return this.prefs.spoilSurprises;
