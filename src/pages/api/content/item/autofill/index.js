@@ -3,7 +3,7 @@ export const prerender = false;
 import { getLinkPreview } from "./_modules/link-preview-js.js";
 import getSite from "./_modules/get-site.js";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import { Polar } from "@polar-sh/sdk";
+import { createPolar } from "@polar-sh/sdk/2026-10";
 import { TidyURL } from "tidy-url";
 
 import { getUserAutofillMeter, getUserLimits } from "@/server/billing.js";
@@ -16,8 +16,8 @@ import { AUTOFILL_HTTP_PROXIES, AUTOFILL_PROXY_COUNTRY_PREFIX, AUTOFILL_PROXY_HO
 let polar;
 
 if (POLAR_ACCESS_TOKEN) {
-    polar = new Polar({
-        accessToken: POLAR_ACCESS_TOKEN
+    polar = createPolar({
+        accessToken: POLAR_ACCESS_TOKEN,
     });
 }
 

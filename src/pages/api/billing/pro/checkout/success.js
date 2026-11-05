@@ -1,11 +1,11 @@
 import { deleteCache } from "@/server/cache";
 export const prerender = false;
 import { ENABLE_BILLING } from "astro:env/client";
-import { Polar } from "@polar-sh/sdk";
+import { createPolar } from "@polar-sh/sdk/2026-10";
 import { POLAR_ACCESS_TOKEN } from "astro:env/server";
 
-const polar = new Polar({
-    accessToken: POLAR_ACCESS_TOKEN
+const polar = createPolar({
+    accessToken: POLAR_ACCESS_TOKEN,
 });
 
 export const GET = async (context) => {

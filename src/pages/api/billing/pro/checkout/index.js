@@ -1,12 +1,12 @@
 import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { createSessionClient } from "@/server/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
-import { Polar } from "@polar-sh/sdk";
+import { createPolar } from "@polar-sh/sdk/2026-10";
 
 export const prerender = false;
 
-const polar = new Polar({
-    accessToken: POLAR_ACCESS_TOKEN
+const polar = createPolar({
+    accessToken: POLAR_ACCESS_TOKEN,
 });
 
 const toPolarExternalCustomerId = (id) => {

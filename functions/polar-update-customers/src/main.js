@@ -1,8 +1,8 @@
 import { Client, Users } from "node-appwrite";
-import { Polar } from "@polar-sh/sdk";
+import { createPolar } from "@polar-sh/sdk/2026-10";
 
-const polar = new Polar({
-    accessToken: process.env["POLAR_ACCESS_TOKEN"] ?? ""
+const polar = createPolar({
+    accessToken: process.env["POLAR_ACCESS_TOKEN"] ?? "",
 });
 
 const organizationId = process.env["POLAR_ORG_ID"] ?? "";
