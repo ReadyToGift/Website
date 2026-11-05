@@ -15,7 +15,8 @@ import sentry from "@sentry/astro";
 export default defineConfig({
     site: "https://readyto.gift",
     adapter: cloudflare({
-        sessionKVBindingName: "SESSION"
+        sessionKVBindingName: "SESSION",
+        prerenderEnvironment: "node"
     }),
 
     devToolbar: {
