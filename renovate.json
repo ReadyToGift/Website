@@ -36,6 +36,14 @@
                 "/^@astrojs\\//"
             ],
             "groupName": "Astro"
+        },
+        {
+            "matchUpdateTypes": [
+                "pin",
+                "pinDigest"
+            ],
+            "groupName": "Pin dependencies",
+            "groupSlug": "pin-dependencies"
         }
     ],
     "baseBranchPatterns": [
