@@ -52,3 +52,13 @@ minimumReleaseAgeExclude:
     - vite@8.3.6
     - vue@3.5.45
     - wrangler@4.158.0
+
+overrides:
+    esbuild@<=0.24.2: '>=0.25.0'
+    undici@<6.23.0: '>=6.23.0'
+    glob@>=9.0.0 <=14.0.1: ^14.0.2
+    minimatch@>=7.0.0 <11.0.1: ^11.0.1
+    minimatch@>=9.0.0 <9.0.6: '>=9.0.6'
+    minimatch@>=9.0.0 <9.0.7: '>=9.0.7'
+    undici@<6.24.0: '>=6.24.0'
+    '@opentelemetry/api': 1.9.1
