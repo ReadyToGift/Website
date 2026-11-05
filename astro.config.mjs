@@ -118,7 +118,9 @@ export default defineConfig({
         vue({
             appEntrypoint: "/src/pages/_app"
         }),
-        sentry()
+        sentry({
+            telemetry: false
+        })
     ],
 
     vite: {
