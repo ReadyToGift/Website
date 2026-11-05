@@ -1,23 +1,27 @@
 import { createClient } from "redis";
 import { REDIS_HOST } from "astro:env/server";
+import { env } from "cloudflare:workers";
 
-const cloudflareEnv = process.env.CF_PAGES
-    ? await import("cloudflare:workers").then((mod) => mod.env)
-    : null;
+let cloudflareKV = env.CACHE;
+let redis;
+let fallbackCache = new Map();
 
-const cloudflareKV = cloudflareEnv ? cloudflareEnv.CACHE : null;
+if (REDIS_HOST) {
+    cacheType = "redis";
 
-const redis = REDIS_HOST
-    ? createClient({ url: `redis://${REDIS_HOST}:6379` })
-    : null;
+    redis = cacheType === "Redis"
+        ? createClient({ url: `redis://${REDIS_HOST}:6379` })
+        : null;
 
-if (redis) {
     redis.on("error", (err) => console.error("Redis Client Error", err));
     redis.connect().then(
         () => console.log("Connected to Redis"),
         (err) => console.error("Error connecting to Redis:", err)
     );
 }
+
+const cacheType = cloudflareKV ? "KV" : (REDIS_HOST ? "Redis" : "Fallback");
+
 
 export const setCache = async (key, value, ttl) => {
     try {
@@ -31,6 +35,12 @@ export const setCache = async (key, value, ttl) => {
             });
         } else if (cloudflareKV) {
             await cloudflareKV.put(key, JSON.stringify({
+                data: value,
+                ttl,
+                exp: new Date().getTime() + ttl
+            }));
+        } else {
+            fallbackCache.set(key, JSON.stringify({
                 data: value,
                 ttl,
                 exp: new Date().getTime() + ttl
@@ -49,6 +59,8 @@ export const getCache = async (key) => {
             value = await redis.get(key);
         } else if (cloudflareKV) {
             value = await cloudflareKV.get(key);
+        } else {
+            value = fallbackCache.get(key);
         }
 
         if (value) {
@@ -75,6 +87,8 @@ export const deleteCache = async (key) => {
             await redis.del(key);
         } else if (cloudflareKV) {
             await cloudflareKV.delete(key);
+        } else {
+            fallbackCache.delete(key);
         }
     } catch (err) {
         console.error("Error deleting cache:", err);

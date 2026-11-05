@@ -9,28 +9,14 @@ const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((
 );
 
 import cloudflare from "@astrojs/cloudflare";
-import node from "@astrojs/node";
 import sentry from "@sentry/astro";
-
-let adapter;
-if (process.env.CF_PAGES) {
-    adapter = cloudflare({
-        sessionKVBindingName: "SESSION"
-    });
-    console.log("Using Cloudflare adapter");
-} else {
-    adapter = node({
-        mode: "standalone"
-    });
-    console.log("Using Node adapter");
-}
-
-// No server adapter — build static output
 
 // https://astro.build/config
 export default defineConfig({
     site: "https://readyto.gift",
-    adapter,
+    adapter: cloudflare({
+        sessionKVBindingName: "SESSION"
+    }),
 
     devToolbar: {
         enabled: false
@@ -49,11 +35,8 @@ export default defineConfig({
         schema: {
             APPWRITE_PROJECT: envField.string({ context: "client", access: "public" }),
             APPWRITE_ENDPOINT: envField.string({
-               
                 context: "client",
-               
                 access: "public",
-               
                 default: "https://cloud.appwrite.io/v1"
            
             }),
