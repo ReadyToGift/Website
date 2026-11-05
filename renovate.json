@@ -1,4 +1,30 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:base"],
+    "extends": [
+        "config:best-practices",
+        "group:all"
+    ],
+    "timezone": "Europe/London",
+    "lockFileMaintenance": {
+        "enabled": true,
+        "automerge": true,
+        "automergeType": "branch",
+        "schedule": [
+            "every 2 weeks before 9am on friday"
+        ]
+    },
+    "vulnerabilityAlerts": {
+        "enabled": true
+    },
+    "packageRules": [
+        {
+            "matchManagers": [
+                "npm"
+            ],
+            "minimumReleaseAge": "7 days"
+        }
+    ],
+    "baseBranchPatterns": [
+        "master"
+    ]
 }
