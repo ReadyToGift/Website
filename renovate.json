@@ -22,6 +22,20 @@
                 "npm"
             ],
             "minimumReleaseAge": "7 days"
+        },
+        {
+            "matchPackageNames": [
+                "appwrite",
+                "node-appwrite"
+            ],
+            "groupName": "Appwrite"
+        },
+        {
+            "matchPackageNames": [
+                "astro",
+                "/^@astrojs\\//"
+            ],
+            "groupName": "Astro"
         }
     ],
     "baseBranchPatterns": [
