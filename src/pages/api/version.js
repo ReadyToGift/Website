@@ -1,12 +1,13 @@
+import { CF_PAGES_COMMIT_SHA } from "astro:env/server";
+
 export const prerender = true;
 
 export const GET = async () => {
     const buildDate = new Date().toISOString();
-    const lastCommit = __BUILD_COMMIT__;
 
     return new Response(
         JSON.stringify({
-            commit: lastCommit,
+            commit: CF_PAGES_COMMIT_SHA,
             buildDate,
         }),
         {

@@ -1,4 +1,5 @@
 // @ts-check
+import { execFileSync } from "node:child_process";
 import { defineConfig, envField } from "astro/config";
 
 import vue from "@astrojs/vue";
@@ -111,7 +112,8 @@ export default defineConfig({
             AUTOFILL_PROXY_PASSWORD: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 }),
-            REDIS_HOST: envField.string({ context: "server", access: "secret", optional: true })
+            REDIS_HOST: envField.string({ context: "server", access: "secret", optional: true }),
+            CF_PAGES_COMMIT_SHA: envField.string({ context: "server", access: "public", optional: true })
         }
     },
 
@@ -128,11 +130,6 @@ export default defineConfig({
     ],
 
     vite: {
-        define: {
-            __BUILD_COMMIT__: JSON.stringify(
-                process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || "unknown"
-            )
-        },
         plugins: [...vuetifyPlugins],
         optimizeDeps: {
             exclude: ["vuetify", "vite-plugin-vuetify"]
