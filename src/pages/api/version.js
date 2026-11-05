@@ -1,4 +1,4 @@
-import { CF_PAGES_COMMIT_SHA } from "astro:env/client";
+import { BUILD_COMMIT } from "astro:env/client";
 
 export const prerender = true;
 
@@ -7,7 +7,7 @@ export const GET = async () => {
 
     return new Response(
         JSON.stringify({
-            commit: CF_PAGES_COMMIT_SHA,
+            commit: BUILD_COMMIT,
             buildDate,
         }),
         {

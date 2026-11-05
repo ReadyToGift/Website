@@ -12,6 +12,21 @@ const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map((
 import cloudflare from "@astrojs/cloudflare";
 import sentry from "@sentry/astro";
 
+const buildCommit =
+    process.env.CF_PAGES_COMMIT_SHA ||
+    process.env.GITHUB_SHA ||
+    process.env.COMMIT_SHA ||
+    (() => {
+        try {
+            return execFileSync("git", ["rev-parse", "HEAD"], {
+                encoding: "utf8",
+                stdio: ["ignore", "pipe", "ignore"]
+            }).trim();
+        } catch {
+            return "unknown";
+        }
+    })();
+
 // https://astro.build/config
 export default defineConfig({
     site: "https://readyto.gift",
@@ -113,7 +128,7 @@ export default defineConfig({
             AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 }),
             REDIS_HOST: envField.string({ context: "server", access: "secret", optional: true }),
-            CF_PAGES_COMMIT_SHA: envField.string({ context: "client", access: "public", optional: true })
+            BUILD_COMMIT: envField.string({ context: "server", access: "public", default: buildCommit })
         }
     },
 
