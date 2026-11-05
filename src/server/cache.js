@@ -1,50 +1,53 @@
-import { createClient } from "redis";
 import { REDIS_HOST } from "astro:env/server";
 import { env } from "cloudflare:workers";
+import { createClient } from "redis";
 
-let cloudflareKV = env.CACHE;
+const cloudflareKV = env.CACHE;
 let redis;
-let fallbackCache = new Map();
+const fallbackCache = new Map();
 
 if (REDIS_HOST) {
-    cacheType = "redis";
-
-    redis = cacheType === "Redis"
-        ? createClient({ url: `redis://${REDIS_HOST}:6379` })
-        : null;
+    redis = createClient({ url: `redis://${REDIS_HOST}:6379` });
 
     redis.on("error", (err) => console.error("Redis Client Error", err));
     redis.connect().then(
         () => console.log("Connected to Redis"),
-        (err) => console.error("Error connecting to Redis:", err)
+        (err) => console.error("Error connecting to Redis:", err),
     );
 }
-
-const cacheType = cloudflareKV ? "KV" : (REDIS_HOST ? "Redis" : "Fallback");
-
 
 export const setCache = async (key, value, ttl) => {
     try {
         if (redis) {
-            await redis.set(key, JSON.stringify({
-                data: value,
-                ttl,
-                exp: new Date().getTime() + ttl
-            }), {
-                EX: ttl / 1000
-            });
+            await redis.set(
+                key,
+                JSON.stringify({
+                    data: value,
+                    ttl,
+                    exp: Date().now + ttl,
+                }),
+                {
+                    EX: ttl / 1000,
+                },
+            );
         } else if (cloudflareKV) {
-            await cloudflareKV.put(key, JSON.stringify({
-                data: value,
-                ttl,
-                exp: new Date().getTime() + ttl
-            }));
+            await cloudflareKV.put(
+                key,
+                JSON.stringify({
+                    data: value,
+                    ttl,
+                    exp: Date().now + ttl,
+                }),
+            );
         } else {
-            fallbackCache.set(key, JSON.stringify({
-                data: value,
-                ttl,
-                exp: new Date().getTime() + ttl
-            }));
+            fallbackCache.set(
+                key,
+                JSON.stringify({
+                    data: value,
+                    ttl,
+                    exp: Date().now + ttl,
+                }),
+            );
         }
         console.log(`Set ${key} in cache`);
     } catch (err) {
@@ -66,7 +69,7 @@ export const getCache = async (key) => {
         if (value) {
             value = JSON.parse(value);
 
-            if (value.exp < new Date().getTime()) {
+            if (value.exp < Date().now) {
                 value = null;
                 console.log(`${key} expired`);
             } else {
@@ -74,7 +77,6 @@ export const getCache = async (key) => {
                 return value.data;
             }
         }
-
     } catch (err) {
         console.error("Error getting cache:", err);
         return null;
