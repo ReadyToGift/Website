@@ -113,7 +113,7 @@ export default defineConfig({
             AUTOFILL_PROXY_HOST: envField.string({ context: "server", access: "secret", optional: true }),
             AUTOFILL_PROXY_ATTEMPTS: envField.number({ context: "client", access: "public", default: 3 }),
             REDIS_HOST: envField.string({ context: "server", access: "secret", optional: true }),
-            CF_PAGES_COMMIT_SHA: envField.string({ context: "server", access: "public", optional: true })
+            CF_PAGES_COMMIT_SHA: envField.string({ context: "client", access: "public", optional: true })
         }
     },
 

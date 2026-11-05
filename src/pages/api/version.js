@@ -1,4 +1,4 @@
-import { CF_PAGES_COMMIT_SHA } from "astro:env/server";
+import { CF_PAGES_COMMIT_SHA } from "astro:env/client";
 
 export const prerender = true;
 
