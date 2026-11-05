@@ -1,6 +1,7 @@
 // Modifed from https://github.com/OP-Engineering/link-preview-js
 import * as cheerio from "cheerio";
 import AbortController from "abort-controller";
+import fetch from "cross-fetch";
 import { CONSTANTS } from "./constants.js";
 import getSite from "./get-site.js";
 import urlObj from "url";

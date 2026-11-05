@@ -1,4 +1,5 @@
 import { Buffer } from "buffer";
+import fetch from "cross-fetch";
 import imageSize from "image-size";
 
 const minimumImageSize = 100; // Minimum width or height in pixels
