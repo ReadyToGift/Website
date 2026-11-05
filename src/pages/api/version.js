@@ -2,8 +2,7 @@ export const prerender = true;
 
 export const GET = async () => {
     const buildDate = new Date().toISOString();
-    const lastCommit =
-        process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA;
+    const lastCommit = __BUILD_COMMIT__;
 
     return new Response(
         JSON.stringify({

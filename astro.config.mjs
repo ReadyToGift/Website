@@ -120,11 +120,19 @@ export default defineConfig({
             appEntrypoint: "/src/pages/_app"
         }),
         sentry({
-            telemetry: false
+            telemetry: false,
+            sourcemaps: {
+                disable: true
+            }
         })
     ],
 
     vite: {
+        define: {
+            __BUILD_COMMIT__: JSON.stringify(
+                process.env.CF_PAGES_COMMIT_SHA || process.env.GITHUB_SHA || "unknown"
+            )
+        },
         plugins: [...vuetifyPlugins],
         optimizeDeps: {
             exclude: ["vuetify", "vite-plugin-vuetify"]
