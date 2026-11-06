@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:24-slim AS base
+FROM --platform=linux/amd64 node:26-slim@sha256:5adad64f9a1fca2d51972caa65983634c8a774eb300d72b20f7f2a0f60368072 AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
