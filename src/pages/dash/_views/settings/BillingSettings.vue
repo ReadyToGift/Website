@@ -144,7 +144,7 @@
                             </v-btn>
                             <v-btn
                                 :loading="!billing.billingLoaded"
-                                :href="billing.session ? billing.session.customerPortalUrl : ''"
+                                :href="billing.session ? billing.session.customer_portal_url : ''"
                                 target="_blank"
                                 v-else
                             >
@@ -204,23 +204,23 @@
                     :loading="!billing.billingLoaded"
                 >
                     <template v-if="billing.pro && billing.pro.status === 'active'">
-                        <template v-if="billing.pro.cancelAtPeriodEnd">
-                            Cancels on {{ formatDate(billing.pro.currentPeriodEnd) }}
+                        <template v-if="billing.pro.cancel_at_period_end">
+                            Cancels on {{ formatDate(billing.pro.current_period_end) }}
                         </template>
                         <template v-else>
-                            Renews on {{ formatDate(billing.pro.currentPeriodEnd) }} for
-                            <strong>{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurringInterval }}
+                            Renews on {{ formatDate(billing.pro.current_period_end) }} for
+                            <strong>{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurring_interval }}
                                 <span
                                     class="originalPrice"
-                                    v-if="billing.pro.product.prices && billing.pro.product.prices[0].priceAmount > billing.pro.amount"
+                                    v-if="billing.pro.product.prices && billing.pro.product.prices[0].price_amount > billing.pro.amount"
                                 >
-                                    {{ formatPrice(billing.pro.product.prices[0].priceAmount, billing.pro.product.prices[0].priceCurrency) }}/{{ billing.pro.product.prices[0].recurringInterval }}
+                                    {{ formatPrice(billing.pro.product.prices[0].price_amount, billing.pro.product.prices[0].price_currency) }}/{{ billing.pro.product.prices[0].recurring_interval }}
                                 </span>
                             </strong>
                         </template>
                     </template>
                     <template v-else-if="billing.inactiveSubscription">
-                        Ended on {{ formatDate(billing.inactiveSubscription.endedAt) }}.
+                        Ended on {{ formatDate(billing.inactiveSubscription.ended_at) }}.
                     </template>
                 </v-skeleton-loader>
             </v-card-subtitle>
@@ -230,7 +230,7 @@
                     :loading="!billing.billingLoaded"
                 >
                     <v-btn
-                        :href="billing.session ? billing.session.customerPortalUrl : ''"
+                        :href="billing.session ? billing.session.customer_portal_url : ''"
                         target="_blank"
                     >
                         Open billing portal
@@ -308,10 +308,10 @@ const loadProPrice = async () => {
 
         const price = proProduct.price;
 
-        const formattedPrice = formatPrice(price.priceAmount, price.priceCurrency);
+        const formattedPrice = formatPrice(price.price_amount, price.price_currency);
 
         proLoading.value = false;
-        proPrice.value = formattedPrice + "/" + price.recurringInterval;
+        proPrice.value = formattedPrice + "/" + price.recurring_interval;
 
         return proPrice.value;
     } catch (error) {

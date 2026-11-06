@@ -16,17 +16,16 @@ export const GET = async (context) => {
         const { searchParams } = new URL(context.request.url);
         const customerSessionToken = searchParams.get("customer_session_token");
 
-        const customer = await polar.customerPortal.customers.get({
-            customerSession: customerSessionToken
+        const customerSessionPolar = createPolar({
+            accessToken: customerSessionToken
         });
+        const customer = await customerSessionPolar.customerPortal.customers.get();
 
-        const customerData = await polar.customers.get({
-            id: customer.id
-        });
+        const customerData = await polar.customers.get(customer.id);
 
         await Promise.all([
-            deleteCache(`polarSubscriptions:${customerData.externalId}`),
-            deleteCache(`polarCustomerSession:${customerData.externalId}`),
+            deleteCache(`polarSubscriptions:${customerData.external_id}`),
+            deleteCache(`polarCustomerSession:${customerData.external_id}`),
             deleteCache(`polarBenefitGrants:${customerData.id}`)
         ]);
 

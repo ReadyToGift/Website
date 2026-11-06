@@ -28,14 +28,12 @@ export const GET = async () => {
         let pro = await getCache("pro");
 
         if (!pro) {
-            pro = await polar.products.get({
-                id: POLAR_PRO_PRODUCT_ID
-            });
+            pro = await polar.products.get(POLAR_PRO_PRODUCT_ID);
             
             await setCache("pro", pro, 60 * 60 * 1000); // Cache for 1 hour
         }
         
-        const prices = pro.prices.filter((price) => !price.isArchived);
+        const prices = pro.prices.filter((price) => !price.is_archived);
 
         if (!prices || prices.length === 0) {
             return new Response(

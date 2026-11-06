@@ -64,13 +64,13 @@ export const POST = async (context) => {
 
         try {
             checkout = await polar.checkouts.create({
-                embedOrigin: websiteDomain,
-                externalCustomerId: toPolarExternalCustomerId(account.$id),
+                embed_origin: websiteDomain,
+                external_customer_id: toPolarExternalCustomerId(account.$id),
                 products: [
                     POLAR_PRO_PRODUCT_ID
                 ],
-                successUrl: websiteDomain + "/api/billing/pro/checkout/success",
-                cancelUrl: websiteDomain + "/dash/settings/billing?status=cancel"
+                success_url: websiteDomain + "/api/billing/pro/checkout/success",
+                cancel_url: websiteDomain + "/dash/settings/billing?status=cancel"
             });
         } catch (err) {
             console.error(err);

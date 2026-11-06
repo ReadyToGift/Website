@@ -52,9 +52,7 @@ export const getLimits = (benefitNames) => {
 export const getCustomerId = async ({ externalCustomerId }) => {
     const normalizedExternalCustomerId = toPolarExternalCustomerId(externalCustomerId);
 
-    const customer = await polar.customers.getExternal({
-        externalId: normalizedExternalCustomerId
-    }).catch((error) => {
+    const customer = await polar.customers.getExternal(normalizedExternalCustomerId).catch((error) => {
         console.log(error);
         throw new Error("Error getting customer", { cause: error });
     });
@@ -74,13 +72,13 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
     
     if (!subscriptions) {
         subscriptions = await polar.subscriptions.list({
-            externalCustomerId: normalizedExternalCustomerId
+            external_customer_id: normalizedExternalCustomerId
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting subscriptions", { cause: error });
         });
         
-        subscriptions = subscriptions.result.items;
+        subscriptions = subscriptions.items;
         
         await setCache(`polarSubscriptions:${normalizedExternalCustomerId}`, subscriptions, 1 * 60 * 1000);
     }
@@ -94,7 +92,7 @@ export const getCustomerSession = async ({ externalCustomerId }) => {
 
     if (!session) {
         session = await polar.customerSessions.create({
-            externalCustomerId: normalizedExternalCustomerId
+            external_customer_id: normalizedExternalCustomerId
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting customer session", { cause: error });
@@ -110,13 +108,13 @@ export const getBenefitGrants = async ({ customerId }) => {
     
     if (!benefitGrants) {
         const benefitsResp = await polar.benefitGrants.list({
-            customerId: customerId
+            customer_id: customerId
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting benefit grants", { cause: error });
         });
         
-        benefitGrants = benefitsResp.result.items.filter((benefit) => benefit.isGranted);
+        benefitGrants = benefitsResp.items.filter((benefit) => benefit.is_granted);
     
         await setCache(`polarBenefitGrants:${customerId}`, benefitGrants, 1 * 60 * 1000);
     }
@@ -129,32 +127,26 @@ export const getUserAutofillMeter = async ({ externalCustomerId }) => {
 
     if (!autofillMeter) {
         const metersResp = await polar.customerMeters.list({
-            externalCustomerId: toPolarExternalCustomerId(externalCustomerId),
-            meterId: POLAR_AUTOFILL_METER_ID
+            external_customer_id: toPolarExternalCustomerId(externalCustomerId),
+            meter_id: POLAR_AUTOFILL_METER_ID
         }).catch((error) => {
             console.log(error);
             throw new Error("Error getting autofill meter", { cause: error });
         });
 
-        autofillMeter = metersResp.result.items[0];
+        autofillMeter = metersResp.items[0];
 
         await setCache(`polarCustomerAutofillMeter:${externalCustomerId}`, autofillMeter, 60 * 1000);
     }
 
-    const { consumedUnits } = autofillMeter;
-
-    return {
-        consumedUnits
-    };
+    return autofillMeter;
 };
 
 export const getProProduct = async () => {
     const product = await getCache(`polarProduct:${POLAR_PRO_PRODUCT_ID}`);
 
     if (!product) {
-        const productResp = await polar.products.get({
-            id: POLAR_PRO_PRODUCT_ID
-        }).catch((error) => {
+        const productResp = await polar.products.get(POLAR_PRO_PRODUCT_ID).catch((error) => {
             console.log(error);
             throw new Error("Error getting product", { cause: error });
         });

@@ -212,7 +212,7 @@ const getPreview = async ({
                     events: [
                         {
                             name: "autofill",
-                            externalCustomerId,
+                            external_customer_id: externalCustomerId,
                             metadata: {
                                 itemID,
                                 imageFound: data.images ? true : false,
@@ -310,7 +310,7 @@ export const POST = async (context) => {
             
             if (ENABLE_BILLING && !autofillEnabled) {
                 const autofillMeter = await getUserAutofillMeter({ externalCustomerId: account.$id });
-                consumedUnits = autofillMeter.consumedUnits;
+                consumedUnits = autofillMeter.consumed_units;
             
                 if (consumedUnits < AUTOFILL_FREE_ALLOWANCE && AUTOFILL_FREE_ALLOWANCE > 0) {
                     autofillEnabled = true;
