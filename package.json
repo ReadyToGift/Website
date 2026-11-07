@@ -15,7 +15,8 @@
         "make:lists-public-read": "node scripts/make-items-public-read.js",
         "db:generate": "drizzle-kit generate",
         "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
-        "db:studio:prod": "drizzle-kit studio"
+        "db:studio:prod": "drizzle-kit studio",
+        "auth-db:generate": "pnpm dlx auth@latest generate --output ./src/auth-schema.js && biome check ./src/auth-schema.js --fix"
     },
     "dependencies": {
         "@astrojs/cloudflare": "^14.4.6",

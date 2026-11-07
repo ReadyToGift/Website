@@ -15,6 +15,13 @@
       "when": 1794074629706,
       "tag": "0001_better-auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794075487246,
+      "tag": "0002_quick_lady_ursula",
+      "breakpoints": true
     }
   ]
 }
