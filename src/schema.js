@@ -80,6 +80,14 @@ export const autofills = sqliteTable("autofills", {
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });
 
+export const userPreferences = sqliteTable("userPreferences", {
+    id: text("id")
+        .primaryKey()
+        .$defaultFn(() => uuidv7()),
+    user: text("user").references(() => user.id),
+    prefs: text("prefs"),
+});
+
 export const listRelations = relations(lists, ({ many, one }) => ({
     authorUser: one(user, {
         fields: [lists.author],
@@ -111,3 +119,13 @@ export const fulfillmentRelations = relations(fulfillments, ({ one }) => ({
         references: [items.id],
     }),
 }));
+
+export const userPreferencesRelations = relations(
+    userPreferences,
+    ({ one }) => ({
+        user: one(user, {
+            fields: [userPreferences.user],
+            references: [user.id],
+        }),
+    }),
+);
