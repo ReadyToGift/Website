@@ -1,8 +1,6 @@
 <template>
     <template v-if="ENABLE_BILLING">
-        <v-card
-            variant="tonal"
-        >   
+        <v-card variant="tonal">
             <table class="pricing">
                 <thead>
                     <tr>
@@ -13,23 +11,13 @@
                 </thead>
                 <tbody>
                     <tr>
+                        <td>Price</td>
                         <td>
-                            Price
+                            <v-chip rounded="pill"> Free forever </v-chip>
                         </td>
                         <td>
-                            <v-chip rounded="pill">
-                                Free forever
-                            </v-chip>
-                        </td>
-                        <td>
-                            <v-chip
-                                rounded="pill" 
-                                color="primary"
-                            >
-                                <template
-                                    v-slot:prepend
-                                    v-if="proLoading"
-                                >
+                            <v-chip rounded="pill" color="primary">
+                                <template v-slot:prepend v-if="proLoading">
                                     <v-progress-circular
                                         indeterminate
                                         size="20"
@@ -37,99 +25,96 @@
                                         class="mr-2"
                                     />
                                 </template>
-                                <template
-                                    v-if="proLoading"
-                                >
-                                    Loading
-                                </template>
+                                <template v-if="proLoading"> Loading </template>
                                 <template v-else>
-                                    {{ proPrice }} + tax
+                                    {{ proPrice }}
+                                    + tax
                                 </template>
                             </v-chip>
                         </td>
                     </tr>
                     <tr>
+                        <td>Public lists</td>
                         <td>
-                            Public lists
+                            <p class="value">
+                                {{
+                                    allLimits.free.publicLists === -1
+                                        ? "Unlimited"
+                                        : allLimits.free.publicLists
+                                }}
+                            </p>
+                            <p class="name">Public Lists</p>
                         </td>
                         <td>
                             <p class="value">
-                                {{ allLimits.free.publicLists === -1 ? 'Unlimited' : allLimits.free.publicLists }}
+                                {{
+                                    allLimits.pro.publicLists === -1
+                                        ? "Unlimited"
+                                        : allLimits.pro.publicLists
+                                }}
                             </p>
-                            <p class="name">
-                                Public Lists
-                            </p>
-                        </td>
-                        <td>
-                            <p class="value">
-                                {{ allLimits.pro.publicLists === -1 ? 'Unlimited' : allLimits.pro.publicLists }}
-                            </p>
-                            <p class="name">
-                                Public Lists
-                            </p>
+                            <p class="name">Public Lists</p>
                         </td>
                     </tr>
                     <tr>
+                        <td>Private lists</td>
                         <td>
-                            Private lists
+                            <p class="value">
+                                {{
+                                    allLimits.free.privateLists === -1
+                                        ? "Unlimited"
+                                        : allLimits.free.privateLists
+                                }}
+                            </p>
+                            <p class="name">Private Lists</p>
                         </td>
                         <td>
                             <p class="value">
-                                {{ allLimits.free.privateLists === -1 ? 'Unlimited' : allLimits.free.privateLists }}
+                                {{
+                                    allLimits.pro.privateLists === -1
+                                        ? "Unlimited"
+                                        : allLimits.pro.privateLists
+                                }}
                             </p>
-                            <p class="name">
-                                Private Lists
-                            </p>
-                        </td>
-                        <td>
-                            <p class="value">
-                                {{ allLimits.pro.privateLists === -1 ? 'Unlimited' : allLimits.pro.privateLists }}
-                            </p>
-                            <p class="name">
-                                Private Lists
-                            </p>
+                            <p class="name">Private Lists</p>
                         </td>
                     </tr>
                     <tr>
+                        <td>Items per list</td>
                         <td>
-                            Items per list
+                            <p class="value">
+                                {{
+                                    allLimits.free.itemsPerList === -1
+                                        ? "Unlimited"
+                                        : allLimits.free.itemsPerList
+                                }}
+                            </p>
+                            <p class="name">Items per list</p>
                         </td>
                         <td>
                             <p class="value">
-                                {{allLimits.free.itemsPerList === -1 ? 'Unlimited' : allLimits.free.itemsPerList }}
+                                {{
+                                    allLimits.pro.itemsPerList === -1
+                                        ? "Unlimited"
+                                        : allLimits.pro.itemsPerList
+                                }}
                             </p>
-                            <p class="name">
-                                Items per list
-                            </p>
-                        </td>
-                        <td>
-                            <p class="value">
-                                {{ allLimits.pro.itemsPerList === -1 ? 'Unlimited' : allLimits.pro.itemsPerList }}
-                            </p>
-                            <p class="name">
-                                Items per list
-                            </p>
+                            <p class="name">Items per list</p>
                         </td>
                     </tr>
                     <tr>
+                        <td>Autofill</td>
                         <td>
-                            Autofill
+                            <p class="value">
+                                {{ allLimits.free.autofill ? "✅" : "❌" }}
+                            </p>
+                            <p class="name">Autofill</p>
                         </td>
                         <td>
                             <p class="value">
-                                {{ allLimits.free.autofill ? '✅' : '❌' }}
+                                {{ allLimits.pro.autofill ? "✅" : "❌" }}
                             </p>
-                            <p class="name">
-                                Autofill
-                            </p>
-                        </td>
-                        <td>
-                            <p class="value">
-                                {{ allLimits.pro.autofill ? '✅' : '❌' }}
-                            </p>
-                            <p class="name">
-                                Autofill
-                            </p>
+                            <p class="name">Autofill</p>
                         </td>
                     </tr>
                     <tr class="buttons">
@@ -144,7 +129,11 @@
                             </v-btn>
                             <v-btn
                                 :loading="!billing.billingLoaded"
-                                :href="billing.session ? billing.session.customer_portal_url : ''"
+                                :href="
+                                    billing.session
+                                        ? billing.session.customer_portal_url
+                                        : ''
+                                "
                                 target="_blank"
                                 v-else
                             >
@@ -159,22 +148,17 @@
                             >
                                 Upgrade to Pro
                             </v-btn>
-                            <v-btn
-                                disabled
-                                variant="outlined"
-                                v-else
-                            >
+                            <v-btn disabled variant="outlined" v-else>
                                 Already on pro
                             </v-btn>
                         </td>
                     </tr>
                     <tr>
-                        <td
-                            class="disclaimer"
-                            colspan="3"
-                        >
+                        <td class="disclaimer" colspan="3">
                             <p>
-                                Please contact support if you have any questions, or if you require higher limits than those listed here.
+                                Please contact support if you have any
+                                questions, or if you require higher limits than
+                                those listed here.
                             </p>
                         </td>
                     </tr>
@@ -184,8 +168,13 @@
         <v-card
             class="mt-4 subscription-details"
             variant="tonal"
-            v-if="(!billing.billingLoaded || billing.pro || billing.inactiveSubscription) && !billingDetailsFailure"
-        > 
+            v-if="
+                (!billing.billingLoaded ||
+                    billing.pro ||
+                    billing.inactiveSubscription) &&
+                !billingDetailsFailure
+            "
+        >
             <v-card-title>
                 Manage
                 <template v-if="!billing.billingLoaded">
@@ -203,24 +192,49 @@
                     type="paragraph"
                     :loading="!billing.billingLoaded"
                 >
-                    <template v-if="billing.pro && billing.pro.status === 'active'">
+                    <template
+                        v-if="billing.pro && billing.pro.status === 'active'"
+                    >
                         <template v-if="billing.pro.cancel_at_period_end">
-                            Cancels on {{ formatDate(billing.pro.current_period_end) }}
+                            Cancels on
+                            {{ formatDate(billing.pro.current_period_end) }}
                         </template>
                         <template v-else>
-                            Renews on {{ formatDate(billing.pro.current_period_end) }} for
-                            <strong>{{ formatPrice(billing.pro.amount, billing.pro.currency) }}/{{ billing.pro.recurring_interval }}
+                            Renews on
+                            {{ formatDate(billing.pro.current_period_end) }} for
+                            <strong
+                                >{{
+                                    formatPrice(
+                                        billing.pro.amount,
+                                        billing.pro.currency,
+                                    )
+                                }}/{{ billing.pro.recurring_interval }}
                                 <span
                                     class="originalPrice"
-                                    v-if="billing.pro.product.prices && billing.pro.product.prices[0].price_amount > billing.pro.amount"
+                                    v-if="
+                                        billing.pro.product.prices &&
+                                        billing.pro.product.prices[0]
+                                            .price_amount > billing.pro.amount
+                                    "
                                 >
-                                    {{ formatPrice(billing.pro.product.prices[0].price_amount, billing.pro.product.prices[0].price_currency) }}/{{ billing.pro.product.prices[0].recurring_interval }}
+                                    {{
+                                        formatPrice(
+                                            billing.pro.product.prices[0]
+                                                .price_amount,
+                                            billing.pro.product.prices[0]
+                                                .price_currency,
+                                        )
+                                    }}/{{
+                                        billing.pro.product.prices[0]
+                                            .recurring_interval
+                                    }}
                                 </span>
                             </strong>
                         </template>
                     </template>
                     <template v-else-if="billing.inactiveSubscription">
-                        Ended on {{ formatDate(billing.inactiveSubscription.ended_at) }}.
+                        Ended on
+                        {{ formatDate(billing.inactiveSubscription.ended_at) }}.
                     </template>
                 </v-skeleton-loader>
             </v-card-subtitle>
@@ -230,7 +244,11 @@
                     :loading="!billing.billingLoaded"
                 >
                     <v-btn
-                        :href="billing.session ? billing.session.customer_portal_url : ''"
+                        :href="
+                            billing.session
+                                ? billing.session.customer_portal_url
+                                : ''
+                        "
                         target="_blank"
                     >
                         Open billing portal
@@ -251,32 +269,38 @@
         />
     </template>
     <template v-else>
-        <v-card
-            variant="tonal"
-        >
-            <v-card-title>
-                Billing is not enabled
-            </v-card-title>
-            <v-card-text>
-                Billing features are not enabled.
-            </v-card-text>
+        <v-card variant="tonal">
+            <v-card-title> Billing is not enabled </v-card-title>
+            <v-card-text> Billing features are not enabled. </v-card-text>
         </v-card>
     </template>
 </template>
 
 <script setup>
-import { onMounted, shallowRef } from "vue";
-
-import { allLimits as allLimitsStore, billing as billingStore, getBillingDetails, getProCheckout, getProProduct, init as initBilling } from "@/stores/billing";
-import { create as createDialog } from "@/stores/dialogs";
-import { useStore } from "@nanostores/vue";
-
-import { mdiAlert } from "@mdi/js";
-
-import { VAlert, VBtn, VCard, VCardSubtitle, VCardText, VCardTitle, VChip, VProgressCircular, VSkeletonLoader } from "vuetify/components";
-
 import { ENABLE_BILLING } from "astro:env/client";
-
+import { mdiAlert } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import { onMounted, shallowRef } from "vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardSubtitle,
+    VCardText,
+    VCardTitle,
+    VChip,
+    VProgressCircular,
+    VSkeletonLoader,
+} from "vuetify/components";
+import {
+    allLimits as allLimitsStore,
+    billing as billingStore,
+    getBillingDetails,
+    getProCheckout,
+    getProProduct,
+    init as initBilling,
+} from "@/stores/billing";
+import { create as createDialog } from "@/stores/dialogs";
 
 const billing = useStore(billingStore);
 const allLimits = useStore(allLimitsStore);
@@ -295,7 +319,7 @@ const formatPrice = (price, currency) => {
     const formattedPrice = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: currency,
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
     }).format(price / 100);
 
     return formattedPrice;
@@ -308,7 +332,10 @@ const loadProPrice = async () => {
 
         const price = proProduct.price;
 
-        const formattedPrice = formatPrice(price.price_amount, price.price_currency);
+        const formattedPrice = formatPrice(
+            price.price_amount,
+            price.price_currency,
+        );
 
         proLoading.value = false;
         proPrice.value = formattedPrice + "/" + price.recurring_interval;
@@ -326,7 +353,7 @@ const formatDate = (timestamp) => {
     return date.toLocaleDateString("en-US", {
         year: "numeric",
         month: "long",
-        day: "numeric"
+        day: "numeric",
     });
 };
 
@@ -346,9 +373,9 @@ const getProCheckoutURL = async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
-            ]
+                    text: "OK",
+                },
+            ],
         });
     }
 };
@@ -358,7 +385,6 @@ onMounted(async () => {
     getProCheckoutURL();
     const billingDetailsResp = await getBillingDetails();
     if (billingDetailsResp === false) billingDetailsFailure.value = true;
-
 
     if (status === "success") {
         await initBilling();
@@ -370,9 +396,9 @@ onMounted(async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
-            ]
+                    text: "OK",
+                },
+            ],
         });
     } else if (status === "canceled") {
         createDialog({
@@ -382,13 +408,12 @@ onMounted(async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
-            ]
+                    text: "OK",
+                },
+            ],
         });
     }
 });
-
 </script>
 
 <style lang="scss" scoped>

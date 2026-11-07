@@ -1,13 +1,8 @@
 <template>
     <div class="page-content">
         <h1>Settings</h1>
-        <v-sheet
-            elevation="0"
-        >
-            <v-tabs
-                color="primary"
-                v-model="tab"
-            >
+        <v-sheet elevation="0">
+            <v-tabs color="primary" v-model="tab">
                 <v-tab
                     value="account"
                     to="/dash/settings/account"
@@ -23,18 +18,10 @@
                 >
                     Billing
                 </v-tab>
-                <v-tab
-                    value="about"
-                    to="/dash/about"
-                >
-                    About
-                </v-tab>
+                <v-tab value="about" to="/dash/about"> About </v-tab>
             </v-tabs>
             <v-tabs-window v-model="tab">
-                <v-tabs-window-item
-                    value="account"
-                    class="pt-4"
-                >
+                <v-tabs-window-item value="account" class="pt-4">
                     <AccountSettings />
                 </v-tabs-window-item>
                 <v-tabs-window-item
@@ -44,10 +31,7 @@
                 >
                     <BillingSettings />
                 </v-tabs-window-item>
-                <v-tabs-window-item
-                    value="about"
-                    class="pt-4"
-                >
+                <v-tabs-window-item value="about" class="pt-4">
                     <AboutPage />
                 </v-tabs-window-item>
             </v-tabs-window>
@@ -56,15 +40,20 @@
 </template>
 
 <script setup>
-import { VSheet, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
+import { ENABLE_BILLING } from "astro:env/client";
+import { useStore } from "@nanostores/vue";
+import { shallowRef } from "vue";
+import {
+    VSheet,
+    VTab,
+    VTabs,
+    VTabsWindow,
+    VTabsWindowItem,
+} from "vuetify/components";
+import { user as userStore } from "@/stores/auth";
 import AboutPage from "./settings/AboutPage.vue";
 import AccountSettings from "./settings/AccountSettings.vue";
 import BillingSettings from "./settings/BillingSettings.vue";
-import { shallowRef } from "vue";
-import { user as userStore } from "@/stores/auth";
-import { useStore } from "@nanostores/vue";
-
-import { ENABLE_BILLING } from "astro:env/client";
 
 const user = useStore(userStore);
 

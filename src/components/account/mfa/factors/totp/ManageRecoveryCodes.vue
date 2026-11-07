@@ -1,8 +1,5 @@
 <template>
-    <v-list-item
-        :prepend-icon="icon"
-        @click="manageCodes"
-    >
+    <v-list-item :prepend-icon="icon" @click="manageCodes">
         {{ title }}
     </v-list-item>
 </template>
@@ -10,27 +7,30 @@
 <script setup>
 import { markRaw } from "vue";
 import { VListItem } from "vuetify/components";
-
-import { createTOTPChallengeDialog, getRecoveryCodes,regenerateRecoveryCodes } from "@/stores/mfa";
 import { create as createDialog } from "@/stores/dialogs";
-    
+import {
+    createTOTPChallengeDialog,
+    getRecoveryCodes,
+    regenerateRecoveryCodes,
+} from "@/stores/mfa";
+
 import RecoveryCodes from "./RecoveryCodes.vue";
 
 const props = defineProps({
     action: {
         required: true,
-        type: String
+        type: String,
     },
     icon: {
         default: null,
         required: false,
-        type: String
+        type: String,
     },
     title: {
         default: null,
         required: false,
-        type: String
-    }
+        type: String,
+    },
 });
 
 const manageCodes = async () => {
@@ -40,17 +40,17 @@ const manageCodes = async () => {
                 {
                     action: "close",
                     color: "error",
-                    text: "Cancel"
+                    text: "Cancel",
                 },
                 {
                     action: "close",
                     color: "primary",
-                    text: "Continue"
-                }
+                    text: "Continue",
+                },
             ],
             async: true,
             text: "Regenerating your recovery codes will invalidate your existing codes. Are you sure you want to continue?",
-            title: "Regenerate Recovery Codes"
+            title: "Regenerate Recovery Codes",
         });
         if (warningDialogResp.action === "Cancel") {
             return;
@@ -59,7 +59,10 @@ const manageCodes = async () => {
 
     const totpChallengeResp = await createTOTPChallengeDialog();
 
-    if (totpChallengeResp.action === "cancel" || totpChallengeResp.action === "totp-removed") {
+    if (
+        totpChallengeResp.action === "cancel" ||
+        totpChallengeResp.action === "totp-removed"
+    ) {
         return;
     }
 
@@ -72,15 +75,15 @@ const manageCodes = async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             component: markRaw(RecoveryCodes),
             props: {
-                recoveryCodes: recoveryCodes
+                recoveryCodes: recoveryCodes,
             },
             text: "Your recovery codes have been regenerated successfully. Make sure to store them in a safe place.",
-            title: "Recovery Codes Regenerated"
+            title: "Recovery Codes Regenerated",
         });
     } else {
         recoveryCodes = await getRecoveryCodes();
@@ -89,17 +92,16 @@ const manageCodes = async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             component: markRaw(RecoveryCodes),
             props: {
-                recoveryCodes: recoveryCodes
+                recoveryCodes: recoveryCodes,
             },
             text: "Your recovery codes have been retrieved successfully. Make sure to store them in a safe place.",
-            title: "Recovery Codes Retrieved"
+            title: "Recovery Codes Retrieved",
         });
     }
-
 };
 </script>

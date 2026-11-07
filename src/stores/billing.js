@@ -1,16 +1,15 @@
-import { computed, map } from "nanostores";
-import { getJwt } from "./auth";
-import { handleFetch } from "@/utils/handleFetch";
-import { userLists } from "./userLists";
-
 import {
     AUTOFILL_FREE_ALLOWANCE,
     ENABLE_BILLING,
     FREE_TIER_ENABLE_AUTOFILL,
     FREE_TIER_ITEMS_PER_LIST,
     FREE_TIER_PRIVATE_LIST_LIMIT,
-    FREE_TIER_PUBLIC_LIST_LIMIT
+    FREE_TIER_PUBLIC_LIST_LIMIT,
 } from "astro:env/client";
+import { computed, map } from "nanostores";
+import { handleFetch } from "@/utils/handleFetch";
+import { getJwt } from "./auth";
+import { userLists } from "./userLists";
 
 export const billing = map({
     billingLoaded: false,
@@ -18,29 +17,29 @@ export const billing = map({
     session: null,
     isPro: false,
     pro: null,
-    inactiveSubscription: null
+    inactiveSubscription: null,
 });
 
 const getFreeLimits = () => ({
     publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
     privateLists: FREE_TIER_PRIVATE_LIST_LIMIT,
     itemsPerList: FREE_TIER_ITEMS_PER_LIST,
-    autofill: FREE_TIER_ENABLE_AUTOFILL
+    autofill: FREE_TIER_ENABLE_AUTOFILL,
 });
 
 export const limits = map({
-    ...getFreeLimits()
+    ...getFreeLimits(),
 });
 
 export const allLimits = map({
     free: limits.get(),
-    pro: limits.get()
+    pro: limits.get(),
 });
 
 export const autofillUsage = map({
     totalAllowance: AUTOFILL_FREE_ALLOWANCE,
     usedAllowance: 0,
-    remainingAllowance: AUTOFILL_FREE_ALLOWANCE
+    remainingAllowance: AUTOFILL_FREE_ALLOWANCE,
 });
 
 export const setUsedAutofillAllowance = (used) => {
@@ -72,7 +71,12 @@ const applyLimits = ({ isPro, proLimits }) => {
 
 export const getBillingDetails = async () => {
     console.log(ENABLE_BILLING);
-    console.log("Fetching billing details..." + (ENABLE_BILLING ? "Billing is enabled" : "Billing is disabled, using free limits"));
+    console.log(
+        "Fetching billing details..." +
+            (ENABLE_BILLING
+                ? "Billing is enabled"
+                : "Billing is disabled, using free limits"),
+    );
     if (!ENABLE_BILLING) {
         console.log("Billing is disabled, using free limits");
         applyLimits({ isPro: false });
@@ -86,8 +90,8 @@ export const getBillingDetails = async () => {
     try {
         const [billingResp, billingError] = await handleFetch("/api/billing", {
             headers: {
-                "Authorization": `Bearer ${jwt}`
-            }
+                Authorization: `Bearer ${jwt}`,
+            },
         });
 
         if (billingError) {
@@ -101,9 +105,9 @@ export const getBillingDetails = async () => {
             subscriptions,
             autofillMeter,
             proLimits,
-            pro: isPro
+            pro: isPro,
         } = billingResp;
-    
+
         billing.setKey("session", customerSession);
         billing.setKey("subscriptions", subscriptions);
         billing.setKey("isPro", isPro);
@@ -112,10 +116,14 @@ export const getBillingDetails = async () => {
 
         applyLimits({ isPro, proLimits });
 
-        const activeSubscription = subscriptions.find((sub) => sub.status === "active");
+        const activeSubscription = subscriptions.find(
+            (sub) => sub.status === "active",
+        );
         billing.setKey("pro", activeSubscription);
 
-        const inactiveSubscription = subscriptions.find((sub) => sub.status === "canceled");
+        const inactiveSubscription = subscriptions.find(
+            (sub) => sub.status === "canceled",
+        );
         billing.setKey("inactiveSubscription", inactiveSubscription);
         billing.setKey("billingLoaded", true);
         return true;
@@ -144,12 +152,15 @@ export const getProCheckout = async () => {
     const jwt = await getJwt();
     if (!jwt) return console.error("Unable to get jwt for user.");
 
-    const [proCheckout, proCheckoutError] = await handleFetch("/api/billing/pro/checkout", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    });
+    const [proCheckout, proCheckoutError] = await handleFetch(
+        "/api/billing/pro/checkout",
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${jwt}`,
+            },
+        },
+    );
 
     if (proCheckoutError) {
         console.error("Failed to fetch Pro checkout:", proCheckoutError);
@@ -157,7 +168,6 @@ export const getProCheckout = async () => {
     }
 
     return proCheckout.url;
-
 };
 
 export const getProProduct = async () => {
@@ -175,20 +185,29 @@ export const getProProduct = async () => {
     }
 };
 
-export const publicListLimitReached = computed([limits, userLists], (limitsState, userListsState) => {
-    if (limitsState.publicLists === -1) {
-        return false;
-    }
-    return limitsState.publicLists <= (userListsState.listCount?.public || 0);
-});
+export const publicListLimitReached = computed(
+    [limits, userLists],
+    (limitsState, userListsState) => {
+        if (limitsState.publicLists === -1) {
+            return false;
+        }
+        return (
+            limitsState.publicLists <= (userListsState.listCount?.public || 0)
+        );
+    },
+);
 
-export const privateListLimitReached = computed([limits, userLists], (limitsState, userListsState) => {
-    if (limitsState.privateLists === -1) {
-        return false;
-    }
-    return limitsState.privateLists <= (userListsState.listCount?.private || 0);
-});
-
+export const privateListLimitReached = computed(
+    [limits, userLists],
+    (limitsState, userListsState) => {
+        if (limitsState.privateLists === -1) {
+            return false;
+        }
+        return (
+            limitsState.privateLists <= (userListsState.listCount?.private || 0)
+        );
+    },
+);
 
 export default {
     billing,
@@ -199,5 +218,5 @@ export default {
     publicListLimitReached,
     privateListLimitReached,
     autofillUsage,
-    setUsedAutofillAllowance
+    setUsedAutofillAllowance,
 };

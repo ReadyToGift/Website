@@ -1,9 +1,5 @@
 <template>
-    <v-form
-        class="d-flex flex-column ga-4"
-        validate-on="blur"
-        @submit.prevent
-    >
+    <v-form class="d-flex flex-column ga-4" validate-on="blur" @submit.prevent>
         <v-text-field
             label="Title"
             v-model.trim="item.title"
@@ -12,12 +8,23 @@
             :autofocus="!item.url"
             :rules="[() => !!item.title || 'Title is required']"
             hide-details="auto"
-            :base-color="previousValues.title && previousValues.title !== item.title ? 'primary' : undefined"
-            :color="previousValues.title && previousValues.title !== item.title ? 'primary' : undefined"
+            :base-color="
+                previousValues.title && previousValues.title !== item.title
+                    ? 'primary'
+                    : undefined
+            "
+            :color="
+                previousValues.title && previousValues.title !== item.title
+                    ? 'primary'
+                    : undefined
+            "
         >
             <template #details>
                 <RevertPrompt
-                    v-if="previousValues.title && previousValues.title !== item.title"
+                    v-if="
+                        previousValues.title &&
+                        previousValues.title !== item.title
+                    "
                     :previous-value="previousValues.title"
                     @revert="revertValue('title')"
                 />
@@ -33,12 +40,25 @@
             hint="This field supports markdown!"
             class="mb-2"
             hide-details="auto"
-            :base-color="previousValues.description && previousValues.description !== item.description ? 'primary' : undefined"
-            :color="previousValues.description && previousValues.description !== item.description ? 'primary' : undefined"
+            :base-color="
+                previousValues.description &&
+                previousValues.description !== item.description
+                    ? 'primary'
+                    : undefined
+            "
+            :color="
+                previousValues.description &&
+                previousValues.description !== item.description
+                    ? 'primary'
+                    : undefined
+            "
         >
             <template #details>
                 <RevertPrompt
-                    v-if="previousValues.description && previousValues.description !== item.description"
+                    v-if="
+                        previousValues.description &&
+                        previousValues.description !== item.description
+                    "
                     :previous-value="previousValues.description"
                     @revert="revertValue('description')"
                 />
@@ -52,8 +72,16 @@
             :rules="[validateUrl]"
             :error-messages="errors.url"
             hide-details="auto"
-            :base-color="previousValues.url && previousValues.url !== item.url ? 'primary' : undefined"
-            :color="previousValues.url && previousValues.url !== item.url ? 'primary' : undefined"
+            :base-color="
+                previousValues.url && previousValues.url !== item.url
+                    ? 'primary'
+                    : undefined
+            "
+            :color="
+                previousValues.url && previousValues.url !== item.url
+                    ? 'primary'
+                    : undefined
+            "
         >
             <template #details>
                 <RevertPrompt
@@ -63,9 +91,7 @@
                 />
             </template>
         </v-text-field>
-        <div
-            class="image"
-        >
+        <div class="image">
             <v-text-field
                 type="url"
                 label="Image"
@@ -120,15 +146,28 @@
             :prefix="getCurrency(currency).symbol"
             :prepend-icon="mdiCash"
             hide-details="auto"
-            :base-color="previousValues.price && previousValues.price !== item.price ? 'primary' : undefined"
-            :color="previousValues.price && previousValues.price !== item.price ? 'primary' : undefined"
+            :base-color="
+                previousValues.price && previousValues.price !== item.price
+                    ? 'primary'
+                    : undefined
+            "
+            :color="
+                previousValues.price && previousValues.price !== item.price
+                    ? 'primary'
+                    : undefined
+            "
             persistent-hint
-            hint="Leave this blank or set it to 0 to place it in the &quot;Flexible Gifts&quot; category"
+            hint='Leave this blank or set it to 0 to place it in the "Flexible Gifts" category'
         >
             <template #details>
                 <RevertPrompt
-                    v-if="previousValues.price && previousValues.price !== item.price"
-                    :previous-value="getCurrency(currency).symbol + previousValues.price"
+                    v-if="
+                        previousValues.price &&
+                        previousValues.price !== item.price
+                    "
+                    :previous-value="
+                        getCurrency(currency).symbol + previousValues.price
+                    "
                     @revert="revertValue('price')"
                 />
             </template>
@@ -146,7 +185,7 @@
             :items="
                 Object.entries(priorityMap).map((priority) => ({
                     title: priority[1].text,
-                    value: priority[0]
+                    value: priority[0],
                 }))
             "
             v-if="wishlistOwner"
@@ -158,10 +197,18 @@
 <script setup>
 import { mdiCash, mdiFileLink, mdiImage, mdiLink, mdiUpload } from "@mdi/js";
 import { computed, useTemplateRef } from "vue";
-import { VBtn, VFileInput, VForm, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
+import {
+    VBtn,
+    VFileInput,
+    VForm,
+    VSelect,
+    VSwitch,
+    VTextarea,
+    VTextField,
+} from "vuetify/components";
+import RevertPrompt from "@/components/RevertPrompt.vue";
 import { getCurrency } from "@/stores/currency";
 import { priorityMap } from "@/utils";
-import RevertPrompt from "@/components/RevertPrompt.vue";
 import validation from "@/utils/validation";
 
 const emit = defineEmits(["file-state"]);
@@ -170,15 +217,22 @@ const item = defineModel("item");
 
 const imageUploadInput = useTemplateRef("image-upload-input");
 
-const hasImageFile = computed(() => !!(item.value?.imageID || item.value?.imageFile));
-const existingImageFileLoading = computed(() => !!item.value?.imageFile?.existing && !!item.value.imageFile.loading);
+const hasImageFile = computed(
+    () => !!(item.value?.imageID || item.value?.imageFile),
+);
+const existingImageFileLoading = computed(
+    () => !!item.value?.imageFile?.existing && !!item.value.imageFile.loading,
+);
 
 const uploadImage = () => {
     imageUploadInput.value.click();
 };
 
 const fileUploaded = (event) => {
-    const file = event?.target?.files?.[0] || imageUploadInput.value?.files?.[0] || item.value?.imageFile;
+    const file =
+        event?.target?.files?.[0] ||
+        imageUploadInput.value?.files?.[0] ||
+        item.value?.imageFile;
     if (typeof File !== "undefined" && file instanceof File) {
         if (item.value && item.value.imageID) {
             emit("file-state", "replaced");
@@ -195,24 +249,24 @@ const fileRemoved = () => {
 const props = defineProps({
     currency: {
         required: true,
-        type: String
+        type: String,
     },
     errors: {
         default: () => ({}),
-        type: Object
+        type: Object,
     },
     previousValues: {
         default: () => ({}),
-        type: Object
+        type: Object,
     },
     uploadingFile: {
         default: false,
-        type: Boolean
+        type: Boolean,
     },
     wishlistOwner: {
         default: false,
-        type: Boolean
-    }
+        type: Boolean,
+    },
 });
 
 const validateUrl = (url) => {
@@ -236,7 +290,7 @@ const revertValue = (field) => {
     justify-content: space-between;
     gap: 0.5rem;
 
-    @media screen and (max-width: 768px){
+    @media screen and (max-width: 768px) {
         flex-direction: column;
         gap: 1rem;
 

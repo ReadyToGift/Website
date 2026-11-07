@@ -1,24 +1,16 @@
 <template>
     <v-list-item :prepend-icon="mdiClockCheck">
-        <v-list-item-title> Time-based One-Time Password (TOTP) </v-list-item-title>
+        <v-list-item-title>
+            Time-based One-Time Password (TOTP)
+        </v-list-item-title>
         <template #append>
-            <v-btn
-                :disabled="true"
-                v-if="loading"
-            >
+            <v-btn :disabled="true" v-if="loading">
                 Loading
                 <template v-slot:append>
-                    <v-progress-circular
-                        indeterminate
-                        size="16"
-                        width="2"
-                    />
+                    <v-progress-circular indeterminate size="16" width="2" />
                 </template>
             </v-btn>
-            <v-dialog
-                v-model="dialogOpen"
-                v-else
-            >
+            <v-dialog v-model="dialogOpen" v-else>
                 <template v-slot:activator>
                     <v-btn
                         :icon="mdiPlusThick"
@@ -58,11 +50,7 @@
                                 transition="fade-transition"
                                 v-model="menuOpen"
                             >
-                                <v-list
-                                    density="compact"
-                                    rounded="lg"
-                                    slim
-                                >
+                                <v-list density="compact" rounded="lg" slim>
                                     <ManageRecoveryCodes
                                         action="get"
                                         :icon="mdiDownload"
@@ -97,15 +85,18 @@
                                         :step="1"
                                         :error="errors[0]"
                                     >
-                                        <template #title> Authenticator setup </template>
+                                        <template #title>
+                                            Authenticator setup
+                                        </template>
                                         <template #content>
                                             <p v-if="!errors[0]">
-                                                Scan the QR code or paste the secret into your
-                                                authenticator to begin.
+                                                Scan the QR code or paste the
+                                                secret into your authenticator
+                                                to begin.
                                                 <img
                                                     :src="totpQrcode"
                                                     class="totp-qrcode mt-4"
-                                                />
+                                                >
                                                 <v-text-field
                                                     :value="totpSecret"
                                                     readonly=""
@@ -115,19 +106,28 @@
                                                     hint="Copy this into your authenticator if you are unable to scan the above QR code!"
                                                     persistent-hint=""
                                                 >
-                                                    <template v-slot:append-inner>
+                                                    <template
+                                                        v-slot:append-inner
+                                                    >
                                                         <v-btn
-                                                            :icon="mdiContentCopy"
+                                                            :icon="
+                                                                mdiContentCopy
+                                                            "
                                                             size="small"
                                                             variant="tonal"
-                                                            @click="copyTotpSecret"
+                                                            @click="
+                                                                copyTotpSecret
+                                                            "
                                                         />
 
                                                         <v-snackbar
-                                                            v-model="totpUriCopySnackbar"
+                                                            v-model="
+                                                                totpUriCopySnackbar
+                                                            "
                                                             width="max-content"
                                                         >
-                                                            Copied MFA secret to clipboard!
+                                                            Copied MFA secret to
+                                                            clipboard!
                                                         </v-snackbar>
                                                     </template>
                                                 </v-text-field>
@@ -148,11 +148,14 @@
                                         :step="2"
                                         :error="errors[1]"
                                     >
-                                        <template #title> Verify authenticator </template>
+                                        <template #title>
+                                            Verify authenticator
+                                        </template>
                                         <template #content>
                                             <p>
-                                                Enter the 6-digit code generated by your
-                                                authenticator app to verify setup.
+                                                Enter the 6-digit code generated
+                                                by your authenticator app to
+                                                verify setup.
                                             </p>
                                             <v-otp-input
                                                 class="d-block"
@@ -175,20 +178,31 @@
                                         :icon="mdiCheck"
                                         :step="3"
                                     >
-                                        <template #title> Setup complete! </template>
+                                        <template #title>
+                                            Setup complete!
+                                        </template>
                                         <template #content>
-                                            <p>Two factor authentication is now all set up!</p>
                                             <p>
-                                                Below are your recovery codes, which are used to
-                                                recover your account if you lose access to your
-                                                authenticator.<br />
-                                                Please save these codes in a secure location.
+                                                Two factor authentication is now
+                                                all set up!
+                                            </p>
+                                            <p>
+                                                Below are your recovery codes,
+                                                which are used to recover your
+                                                account if you lose access to
+                                                your authenticator.<br>
+                                                Please save these codes in a
+                                                secure location.
                                             </p>
                                             <v-card
                                                 class="recovery-codes-container mt-4"
                                                 variant="tonal"
                                             >
-                                                <RecoveryCodes :recoveryCodes="recoveryCodes" />
+                                                <RecoveryCodes
+                                                    :recoveryCodes="
+                                                        recoveryCodes
+                                                    "
+                                                />
                                             </v-card>
                                             <v-btn
                                                 color="primary"
@@ -214,7 +228,9 @@
                                 text
                                 @click="dialogOpen = false"
                                 color="error"
-                            > Cancel </v-btn>
+                            >
+                                Cancel
+                            </v-btn>
                             <v-spacer />
                         </v-card-actions>
                     </v-card>
@@ -225,8 +241,6 @@
 </template>
 
 <script setup>
-import { account, avatars } from "@/appwrite";
-import { computed, reactive, shallowRef, watch } from "vue";
 import {
     mdiCheck,
     mdiClockCheck,
@@ -237,16 +251,42 @@ import {
     mdiRefresh,
     mdiShieldCheck,
     mdiShieldKey,
-    mdiTrashCan
+    mdiTrashCan,
 } from "@mdi/js";
-import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VCardTitle, VDialog, VIcon, VList, VListItem, VListItemTitle, VMenu, VOtpInput, VProgressCircular, VSnackbar, VSpacer, VTextField, VTimeline } from "vuetify/components";
 import { useStore } from "@nanostores/vue";
-
-import { completeMFAchallenge, createTOTPChallengeDialog, regenerateRecoveryCodes } from "@/stores/mfa";
-import { mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
-
+import { computed, reactive, shallowRef, watch } from "vue";
+import {
+    VBtn,
+    VBtnGroup,
+    VCard,
+    VCardActions,
+    VCardText,
+    VCardTitle,
+    VDialog,
+    VIcon,
+    VList,
+    VListItem,
+    VListItemTitle,
+    VMenu,
+    VOtpInput,
+    VProgressCircular,
+    VSnackbar,
+    VSpacer,
+    VTextField,
+    VTimeline,
+} from "vuetify/components";
+import { account, avatars } from "@/appwrite";
 import ExpanderStep from "@/components/ExpanderStep.vue";
+import {
+    mfaFactors as mfaFactorsStore,
+    user as userStore,
+} from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import {
+    completeMFAchallenge,
+    createTOTPChallengeDialog,
+    regenerateRecoveryCodes,
+} from "@/stores/mfa";
 import ManageRecoveryCodes from "./ManageRecoveryCodes.vue";
 import RecoveryCodes from "./RecoveryCodes.vue";
 
@@ -256,8 +296,8 @@ const user = useStore(userStore);
 const props = defineProps({
     loading: {
         type: Boolean,
-        default: false
-    }
+        default: false,
+    },
 });
 
 const dialogOpen = shallowRef(false);
@@ -296,18 +336,18 @@ const removeTOTP = async () => {
         const challengeResp = await createTOTPChallengeDialog();
         if (challengeResp.action === "success") {
             await account.deleteMFAAuthenticator({
-                type: "totp"
+                type: "totp",
             });
 
             await account.updateMFA({
-                mfa: false
+                mfa: false,
             });
 
             const factors = await account.listMFAFactors();
             mfaFactorsStore.set(factors);
             userStore.set({
                 ...user.value,
-                mfa: false
+                mfa: false,
             });
 
             await createDialog({
@@ -315,14 +355,14 @@ const removeTOTP = async () => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 async: true,
                 fullscreen: false,
                 maxWidth: "90%",
                 text: "Your TOTP authenticator has been successfully removed from your account.",
-                title: "TOTP Removed"
+                title: "TOTP Removed",
             });
         }
     } catch (error) {
@@ -332,11 +372,12 @@ const removeTOTP = async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
-            message: "There was an error removing your TOTP authenticator. Please try again.",
-            title: "Error"
+            message:
+                "There was an error removing your TOTP authenticator. Please try again.",
+            title: "Error",
         });
     }
 };
@@ -348,7 +389,7 @@ const enableTOTP = async () => {
 
         await account.updateMFAAuthenticator({
             otp: totpInput.value,
-            type: "totp"
+            type: "totp",
         });
 
         const factors = await account.listMFAFactors();
@@ -369,7 +410,7 @@ watch(dialogOpen, async (nowOpen) => {
         }
         try {
             const totpResponse = await account.createMfaAuthenticator({
-                type: "totp"
+                type: "totp",
             });
 
             totpSecret.value = totpResponse.secret;
@@ -378,7 +419,7 @@ watch(dialogOpen, async (nowOpen) => {
                 download: false,
                 margin: 0,
                 size: 800,
-                text: totpResponse.uri
+                text: totpResponse.uri,
             });
         } catch (error) {
             errors[0] = error.message;

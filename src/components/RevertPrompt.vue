@@ -3,10 +3,7 @@
         @click="$emit('revert')"
         class="d-flex ga-4 align-center font-weight-bold text-surface-variant cursor-pointer"
     >
-        <v-icon
-            size="x-small"
-            color="primary"
-        >
+        <v-icon size="x-small" color="primary">
             {{ mdiUndoVariant }}
         </v-icon>
         <span>
@@ -22,7 +19,7 @@ import { VIcon } from "vuetify/components";
 defineProps({
     previousValue: {
         required: true,
-        type: [String, Number, Object, Array]
-    }
+        type: [String, Number, Object, Array],
+    },
 });
 </script>

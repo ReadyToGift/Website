@@ -1,7 +1,12 @@
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_ITEM_COLLECTION } from "astro:env/client";
+import {
+    APPWRITE_DB,
+    APPWRITE_FULFILLMENT_COLLECTION,
+    APPWRITE_ITEM_COLLECTION,
+} from "astro:env/client";
 export const prerender = false;
-import { createAdminClient, createSessionClient } from "@/server/appwrite";
+
 import { Query } from "node-appwrite";
+import { createAdminClient, createSessionClient } from "@/server/appwrite";
 
 const getOptionalAccount = async (request) => {
     try {
@@ -18,10 +23,13 @@ export const POST = async (context) => {
         const { itemId, name } = await context.request.json();
 
         if (!itemId || typeof itemId !== "string") {
-            return new Response(JSON.stringify({ message: "Invalid item ID" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Invalid item ID" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         let adminClient;
@@ -29,10 +37,13 @@ export const POST = async (context) => {
             adminClient = createAdminClient();
         } catch (err) {
             console.log(err);
-            return new Response(JSON.stringify({ message: "Error creating admin client" }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Error creating admin client" }),
+                {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         let item;
@@ -41,28 +52,36 @@ export const POST = async (context) => {
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_ITEM_COLLECTION,
                 rowId: itemId,
-                queries: [Query.select(["*", "list.*"])]
+                queries: [Query.select(["*", "list.*"])],
             });
         } catch (err) {
             console.log(err);
-            return new Response(JSON.stringify({ message: "Error fetching item" }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Error fetching item" }),
+                {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         if (!item) {
             return new Response(JSON.stringify({ message: "Item not found" }), {
                 status: 404,
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
             });
         }
 
         if (item.communityList) {
-            return new Response(JSON.stringify({ message: "Community items cannot be fulfilled" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({
+                    message: "Community items cannot be fulfilled",
+                }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         const list = item.list;
@@ -70,28 +89,39 @@ export const POST = async (context) => {
         if (list?.private && (!account || list.author !== account.$id)) {
             return new Response(JSON.stringify({ message: "Unauthorized" }), {
                 status: 403,
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
             });
         }
 
         if (account && list?.author === account.$id) {
-            return new Response(JSON.stringify({ message: "List owners cannot fulfill their own items" }), {
-                status: 403,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({
+                    message: "List owners cannot fulfill their own items",
+                }),
+                {
+                    status: 403,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         const existing = await adminClient.tablesDB.listRows({
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_FULFILLMENT_COLLECTION,
-            queries: [Query.equal("item", itemId), Query.limit(1)]
+            queries: [Query.equal("item", itemId), Query.limit(1)],
         });
 
         if (existing.total > 0) {
-            return new Response(JSON.stringify({ message: "This item is already fulfilled. Please refresh the page." }), {
-                status: 409,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({
+                    message:
+                        "This item is already fulfilled. Please refresh the page.",
+                }),
+                {
+                    status: 409,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         const created = await adminClient.tablesDB.createRow({
@@ -100,27 +130,30 @@ export const POST = async (context) => {
             rowId: "unique()",
             data: {
                 item: itemId,
-                name: name || null
-            }
+                name: name || null,
+            },
         });
 
         const fulfillment = await adminClient.tablesDB.getRow({
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_FULFILLMENT_COLLECTION,
             rowId: created.$id,
-            queries: [Query.select(["*", "item.*"])]
+            queries: [Query.select(["*", "item.*"])],
         });
 
         return new Response(JSON.stringify({ fulfillment }), {
             status: 200,
-            headers: { "Content-Type": "application/json" }
+            headers: { "Content-Type": "application/json" },
         });
     } catch (err) {
         console.log(err);
-        return new Response(JSON.stringify({ message: "Internal server error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-        });
+        return new Response(
+            JSON.stringify({ message: "Internal server error" }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
     }
 };
 
@@ -134,10 +167,13 @@ export const DELETE = async (context) => {
             adminClient = createAdminClient();
         } catch (err) {
             console.log(err);
-            return new Response(JSON.stringify({ message: "Error creating admin client" }), {
-                status: 500,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Error creating admin client" }),
+                {
+                    status: 500,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         let targetFulfillmentId = fulfillmentId;
@@ -146,31 +182,37 @@ export const DELETE = async (context) => {
             const existing = await adminClient.tablesDB.listRows({
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_FULFILLMENT_COLLECTION,
-                queries: [Query.equal("item", itemId), Query.limit(1)]
+                queries: [Query.equal("item", itemId), Query.limit(1)],
             });
 
             targetFulfillmentId = existing.rows?.[0]?.$id;
         }
 
         if (!targetFulfillmentId) {
-            return new Response(JSON.stringify({ message: "Fulfillment not found" }), {
-                status: 404,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Fulfillment not found" }),
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         const fulfillment = await adminClient.tablesDB.getRow({
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_FULFILLMENT_COLLECTION,
             rowId: targetFulfillmentId,
-            queries: [Query.select(["*", "item.*", "item.list.*"])]
+            queries: [Query.select(["*", "item.*", "item.list.*"])],
         });
 
         if (!fulfillment) {
-            return new Response(JSON.stringify({ message: "Fulfillment not found" }), {
-                status: 404,
-                headers: { "Content-Type": "application/json" }
-            });
+            return new Response(
+                JSON.stringify({ message: "Fulfillment not found" }),
+                {
+                    status: 404,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         }
 
         const list = fulfillment.item?.list;
@@ -178,25 +220,31 @@ export const DELETE = async (context) => {
         if (list?.private && (!account || list.author !== account.$id)) {
             return new Response(JSON.stringify({ message: "Unauthorized" }), {
                 status: 403,
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
             });
         }
 
         await adminClient.tablesDB.deleteRow({
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_FULFILLMENT_COLLECTION,
-            rowId: targetFulfillmentId
+            rowId: targetFulfillmentId,
         });
 
-        return new Response(JSON.stringify({ message: "Item unfulfilled successfully" }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" }
-        });
+        return new Response(
+            JSON.stringify({ message: "Item unfulfilled successfully" }),
+            {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
     } catch (err) {
         console.log(err);
-        return new Response(JSON.stringify({ message: "Internal server error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" }
-        });
+        return new Response(
+            JSON.stringify({ message: "Internal server error" }),
+            {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+            },
+        );
     }
 };

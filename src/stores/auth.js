@@ -1,24 +1,24 @@
-import { account, avatars } from "@/appwrite";
+import { persistentAtom } from "@nanostores/persistent";
 import { atom } from "nanostores";
+import { account, avatars } from "@/appwrite";
 import { createTOTPChallengeDialog } from "./mfa";
 import { loadPrefs } from "./prefs";
-import { persistentAtom } from "@nanostores/persistent";
 
 export const user = atom(null);
 export const mfaFactors = atom([]);
-export const previouslyLoggedInUserID = persistentAtom("previouslyLoggedInUserID", null);
+export const previouslyLoggedInUserID = persistentAtom(
+    "previouslyLoggedInUserID",
+    null,
+);
 export const authInitialized = atom(false);
 let initPromise = null;
 
 const dev = process.env.NODE_ENV === "development";
 
-
 // Store jwt in localStorage for dev only
-let appwriteJwtExp = dev ?
-    persistentAtom("appwriteJwtExp", "") : atom("");
+const appwriteJwtExp = dev ? persistentAtom("appwriteJwtExp", "") : atom("");
 
-let appwriteJwt = dev ?
-    persistentAtom("appwriteJwt", "") : atom("");
+const appwriteJwt = dev ? persistentAtom("appwriteJwt", "") : atom("");
 
 if (dev) {
     if (appwriteJwt.get() && appwriteJwtExp.get() < new Date().getTime()) {
@@ -59,14 +59,17 @@ export const getJwt = async () => {
 export const setUser = ({ user: userData }) => {
     user.set({
         ...user.get(),
-        account: userData
+        account: userData,
     });
 };
 
 const redirectToLogin = (router) => {
     const currentUrl = encodeURIComponent(window.location.pathname);
     if (router) {
-        router.push({ path: "/dash/login", query: { redirect: window.location.pathname } });
+        router.push({
+            path: "/dash/login",
+            query: { redirect: window.location.pathname },
+        });
     } else {
         window.location.href = `/dash/login?redirect=${currentUrl}`;
     }
@@ -106,7 +109,9 @@ const runInit = async ({ currentAccount = null } = {}) => {
 
     user.set({
         ...currentAccount,
-        avatar: currentAccount?.name ? avatars.getInitials(currentAccount.name) : null
+        avatar: currentAccount?.name
+            ? avatars.getInitials(currentAccount.name)
+            : null,
     });
     authInitialized.set(true);
 };
@@ -166,5 +171,5 @@ export async function logOut() {
 export default {
     init,
     user,
-    logOut
+    logOut,
 };

@@ -15,7 +15,7 @@
         <v-card :title="dialog.title">
             <v-card-text v-if="dialog.text">
                 <p
-                    v-for="line in dialog.text.split('\n')"
+                    v-for="line in dialog.text.split("\n")"
                     :key="line"
                 >
                     {{ line }}
@@ -45,10 +45,19 @@
 
 
 <script setup>
-import { close as closeDialog, dialogs as dialogsStore } from "@/stores/dialogs";
-import { VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { computed } from "vue";
 import { useStore } from "@nanostores/vue";
+import { computed } from "vue";
+import {
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
+import {
+    close as closeDialog,
+    dialogs as dialogsStore,
+} from "@/stores/dialogs";
 
 const dialogs = useStore(dialogsStore);
 
@@ -66,7 +75,7 @@ const dialogEmits = computed(() => {
             }
 
             return [dialog.id, emits];
-        })
+        }),
     );
 });
 

@@ -35,10 +35,7 @@
                         {{ quickCreateError.text }}
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn
-                            text="OK"
-                            @click="isActive.value = false"
-                        />
+                        <v-btn text="OK" @click="isActive.value = false" />
                     </v-card-actions>
                 </v-card>
             </template>
@@ -54,11 +51,7 @@
             {{ listSaved ? "Unsave" : "Save" }}
         </v-btn>
 
-        <v-btn
-            variant="outlined"
-            :prepend-icon="mdiShare"
-            @click="copyListURL"
-        >
+        <v-btn variant="outlined" :prepend-icon="mdiShare" @click="copyListURL">
             Share
         </v-btn>
 
@@ -81,58 +74,72 @@
 
 <script setup>
 import { mdiClipboard, mdiShare, mdiStar, mdiStarOff } from "@mdi/js";
-import { VBtn, VBtnGroup, VCard, VCardActions, VCardText, VDialog, VSnackbar } from "vuetify/components";
-import DeleteList from "./DeleteList.vue";
-import EditList from "./EditList.vue";
+import { useStore } from "@nanostores/vue";
 import { computed, ref } from "vue";
-import validation from "@/utils/validation";
+import {
+    VBtn,
+    VBtnGroup,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+    VSnackbar,
+} from "vuetify/components";
+import { user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
 
 import { $prefs, updatePrefs } from "@/stores/prefs";
-import { create as createDialog } from "@/stores/dialogs";
-import { user as userStore } from "@/stores/auth";
-import { useStore } from "@nanostores/vue";
+import validation from "@/utils/validation";
+import DeleteList from "./DeleteList.vue";
+import EditList from "./EditList.vue";
 
 const user = useStore(userStore);
 const prefs = useStore($prefs);
-
 
 const shareButtonSnackbarOpen = ref(false);
 
 const menuOpen = ref(false);
 
-const emit = defineEmits(["newItem", "updateList", "quickCreate", "itemLimitReached"]);
+const emit = defineEmits([
+    "newItem",
+    "updateList",
+    "quickCreate",
+    "itemLimitReached",
+]);
 
 const props = defineProps({
     class: {
         default: "",
-        type: String
+        type: String,
     },
     currency: {
         required: true,
-        type: String
+        type: String,
     },
     list: {
         default: () => ({}),
-        type: Object
+        type: Object,
     },
     itemLimitReached: {
         default: false,
-        type: Boolean
+        type: Boolean,
     },
     variant: {
         default: "elevated",
-        type: String
+        type: String,
     },
     wishlistOwner: {
         default: false,
-        type: Boolean
-    }
+        type: Boolean,
+    },
 });
-const listSaved = computed(() => prefs.value.savedLists?.includes(props.list.$id) ?? false);
+const listSaved = computed(
+    () => prefs.value.savedLists?.includes(props.list.$id) ?? false,
+);
 
 let quickCreateError = ref({
     text: "",
-    title: ""
+    title: "",
 });
 
 let quickcreateDialogOpen = ref(false);
@@ -143,7 +150,7 @@ const copyListURL = async () => {
     if (navigator.share) {
         try {
             await navigator.share({
-                url: listURL
+                url: listURL,
             });
 
             return;
@@ -166,30 +173,32 @@ const saveList = async () => {
                     action: "close",
                     color: "primary",
                     text: "Log In",
-                    to: `/dash/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`
+                    to: `/dash/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`,
                 },
                 {
                     action: "close",
                     color: "default",
-                    text: "Cancel"
-                }
+                    text: "Cancel",
+                },
             ],
             fullscreen: true,
             text: "Log In to save this list for later, as well as to create your own lists!",
             title: "Log In Required",
-            variant: "info"
+            variant: "info",
         });
         return;
     }
-    if (prefs.value.savedLists && prefs.value.savedLists.includes(props.list.$id)) {
+    if (
+        prefs.value.savedLists &&
+        prefs.value.savedLists.includes(props.list.$id)
+    ) {
         // Unsave list
         try {
             await updatePrefs({
                 ...prefs.value,
                 savedLists: prefs.value.savedLists.filter(
-                    (listId) => listId !== props.list.$id
-                )
-
+                    (listId) => listId !== props.list.$id,
+                ),
             });
             listSaveLoading.value = false;
         } catch (error) {
@@ -199,21 +208,21 @@ const saveList = async () => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text:
                     "An error occurred while trying to unsave this list. Please try again later. " +
                     error.message,
                 title: "Error",
-                variant: "error"
+                variant: "error",
             });
         }
     } else {
         try {
             await updatePrefs({
                 ...prefs.value,
-                savedLists: [...prefs.value.savedLists, props.list.$id]
+                savedLists: [...prefs.value.savedLists, props.list.$id],
             });
             listSaveLoading.value = false;
         } catch (error) {
@@ -223,14 +232,14 @@ const saveList = async () => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text:
                     "An error occurred while trying to save this list. Please try again later. " +
                     error.message,
                 title: "Error",
-                variant: "error"
+                variant: "error",
             });
         }
     }
@@ -249,7 +258,7 @@ const quickCreate = async () => {
         if (!validURLs || validURLs.length === 0) {
             quickCreateError.value = {
                 text: "The clipboard does not contain any valid URLs.",
-                title: "Invalid URL"
+                title: "Invalid URL",
             };
             quickcreateDialogOpen.value = true;
         } else {
@@ -257,8 +266,10 @@ const quickCreate = async () => {
         }
     } catch (error) {
         quickCreateError.value = {
-            text: "An error occurred while reading the clipboard: " + error.message,
-            title: "Error"
+            text:
+                "An error occurred while reading the clipboard: " +
+                error.message,
+            title: "Error",
         };
         quickcreateDialogOpen.value = true;
         console.error("Clipboard read error:", error);

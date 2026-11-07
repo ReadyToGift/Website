@@ -52,12 +52,19 @@
                         elevation="2"
                         variant="tonal"
                     >
-                        You have reached your private list allowance.<br/><br/>
-                        Please make some of your other lists public, or delete some of your lists.<br />
+                        You have reached your private list allowance.<br><br>
+                        Please make some of your other lists public, or delete
+                        some of your lists.<br>
                         <template v-if="ENABLE_BILLING">
                             <template v-if="!billing.isPro">
-                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
-                                <br/>
+                                Alternatively, upgrade to create up to
+                                {{
+                                    allLimits.pro.privateLists > 0
+                                        ? allLimits.pro.privateLists
+                                        : "&infin;"
+                                }}
+                                private lists.
+                                <br>
                                 <v-btn
                                     to="/dash/settings/billing"
                                     color="warning"
@@ -67,8 +74,9 @@
                                 </v-btn>
                             </template>
                             <template v-else>
-                                Alternatively, contact support if you'd like this limit raised.
-                                <br/>
+                                Alternatively, contact support if you'd like
+                                this limit raised.
+                                <br>
                                 <v-btn
                                     to="/contact"
                                     color="warning"
@@ -78,7 +86,6 @@
                                 </v-btn>
                             </template>
                         </template>
-                        
                     </v-alert>
                     <v-alert
                         v-if="!newList.private && publicListLimitReached"
@@ -88,12 +95,19 @@
                         elevation="2"
                         variant="tonal"
                     >
-                        You have reached your public list allowance.<br/><br/>
-                        Please make some of your other lists private, or delete some of your lists.<br />
+                        You have reached your public list allowance.<br><br>
+                        Please make some of your other lists private, or delete
+                        some of your lists.<br>
                         <template v-if="ENABLE_BILLING">
                             <template v-if="!billing.isPro">
-                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
-                                <br/>
+                                Alternatively, upgrade to create up to
+                                {{
+                                    allLimits.pro.privateLists > 0
+                                        ? allLimits.pro.privateLists
+                                        : "&infin;"
+                                }}
+                                public lists.
+                                <br>
                                 <v-btn
                                     to="/dash/settings/billing"
                                     color="warning"
@@ -103,8 +117,9 @@
                                 </v-btn>
                             </template>
                             <template v-else>
-                                Alternatively, contact support if you'd like this limit raised.
-                                <br/>
+                                Alternatively, contact support if you'd like
+                                this limit raised.
+                                <br>
                                 <v-btn
                                     to="/contact"
                                     color="warning"
@@ -117,17 +132,17 @@
                     </v-alert>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="primary"
                         text="Create"
                         @click="createList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="(!newList.private && publicListLimitReached) || (newList.private && privateListLimitReached)"
+                        :disabled="
+                            (!newList.private && publicListLimitReached) ||
+                            (newList.private && privateListLimitReached)
+                        "
                     />
                 </v-card-actions>
             </v-card>
@@ -136,23 +151,27 @@
 </template>
 
 <script>
+import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert, mdiPlus } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
+import { useStore } from "@nanostores/vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-
+import { getJwt } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
     privateListLimitReached as privateListLimitReachedStore,
-    publicListLimitReached as publicListLimitReachedStore
+    publicListLimitReached as publicListLimitReachedStore,
 } from "@/stores/billing";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
 import { userLists as userListsStore } from "@/stores/userLists";
-import { useStore } from "@nanostores/vue";
-
-import { ENABLE_BILLING } from "astro:env/client";
-
+import { handleFetch } from "@/utils/handleFetch";
 
 export default {
     title: "ListDialog",
@@ -163,25 +182,25 @@ export default {
         VCard,
         VCardText,
         VCardActions,
-        VBtn
+        VBtn,
     },
     props: {
         disabled: {
             type: Boolean,
-            default: false
+            default: false,
         },
         list: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         private: {
             type: Boolean,
-            default: false
+            default: false,
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -196,13 +215,13 @@ export default {
                 description: "",
                 private: this.private,
                 shortUrl: null,
-                title: ""
+                title: "",
             },
             publicListLimitReached: useStore(publicListLimitReachedStore),
             privateListLimitReached: useStore(privateListLimitReachedStore),
             userLists: useStore(userListsStore),
             billing: useStore(billingStore),
-            allLimits: useStore(allLimitsStore)
+            allLimits: useStore(allLimitsStore),
         };
     },
     watch: {
@@ -218,10 +237,10 @@ export default {
                     description: "",
                     private: false,
                     shortUrl: null,
-                    title: ""
+                    title: "",
                 };
             }
-        }
+        },
     },
     methods: {
         async createList() {
@@ -230,7 +249,7 @@ export default {
             if (this.newList.title === "") {
                 this.alert = {
                     text: "Title is required.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -241,44 +260,48 @@ export default {
             if (!jwt) {
                 this.alert = {
                     text: "You must be logged in to create a list.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
             }
 
-            const [createListData, createListError] = await handleFetch("/api/content/list", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwt}`
+            const [createListData, createListError] = await handleFetch(
+                "/api/content/list",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`,
+                    },
+                    body: JSON.stringify({
+                        ...this.newList,
+                    }),
                 },
-                body: JSON.stringify({
-                    ...this.newList
-                })
-            });
+            );
 
             if (createListError) {
                 this.alert = {
-                    text: createListError.message || "An unknown error occurred.",
-                    title: "Error"
+                    text:
+                        createListError.message || "An unknown error occurred.",
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
             }
             this.$emit("createList", {
-                list: createListData.list
+                list: createListData.list,
             });
 
             this.newList = {
                 description: "",
                 shortUrl: "",
-                title: ""
+                title: "",
             };
 
             this.dialogOpen = false;
             this.loading = false;
-        }
-    }
+        },
+    },
 };
 </script>

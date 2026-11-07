@@ -1,10 +1,13 @@
 <template>
-    <v-app
-        :theme="prefs?.darkMode ? 'dark' : 'light'"
-    >
+    <v-app :theme="prefs?.darkMode ? 'dark' : 'light'">
         <DashNav />
         <v-main>
-            <router-view v-if="!loading && (!routeRequiresAuth || (routeRequiresAuth && !!user))" />
+            <router-view
+                v-if="
+                    !loading &&
+                    (!routeRequiresAuth || (routeRequiresAuth && !!user))
+                "
+            />
             <GlobalDialogs />
             <v-snackbar
                 v-model="showUpdatePrompt"
@@ -15,13 +18,12 @@
                 :timeout="-1"
             >
                 <div class="snackbar-content update-available">
-                    <span>A new version of the app is available.<br/>Please refresh to ensure the best experience.</span>
+                    <span
+                        >A new version of the app is available.<br>Please
+                        refresh to ensure the best experience.</span
+                    >
                     <div class="buttons">
-                        <v-btn
-                            color="white"
-                            text
-                            @click="refreshApp"
-                        >
+                        <v-btn color="white" text @click="refreshApp">
                             Refresh
                         </v-btn>
                         <v-btn
@@ -39,26 +41,24 @@
 </template>
 
 <script setup>
+import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
+import { useStore } from "@nanostores/vue";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import { useTheme } from "vuetify";
+import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
 import "vuetify/styles";
 import "@/assets/main.scss";
-import { computed, onMounted, ref, watch } from "vue";
-import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
-import { useTheme } from "vuetify";
-
-import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
-
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
-
-import { init as initBilling } from "@/stores/billing";
-import { useStore } from "@nanostores/vue";
-
-import { appInstalled, deferredPrompt } from "@/stores/pwa";
-import { showUpdatePrompt as showUpdatePromptStore, startVersionCheck } from "@/stores/version";
-import { useRouter } from "vue-router";
-
 import { init as initAuth, user as userStore } from "@/stores/auth";
+import { init as initBilling } from "@/stores/billing";
 import { $prefs } from "@/stores/prefs";
+import { appInstalled, deferredPrompt } from "@/stores/pwa";
+import {
+    showUpdatePrompt as showUpdatePromptStore,
+    startVersionCheck,
+} from "@/stores/version";
 
 const loading = ref(true);
 
@@ -93,7 +93,7 @@ watch(
     () => prefs.darkMode,
     () => {
         setThemeColor();
-    }
+    },
 );
 
 window.addEventListener("beforeinstallprompt", (e) => {
@@ -126,7 +126,6 @@ onMounted(async () => {
     startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });
 </script>
-
 
 <style scoped>
 .v-application {
@@ -189,7 +188,7 @@ nav a:first-of-type {
         gap: 1rem;
     }
 
-    @media screen and (max-width: 768px){
+    @media screen and (max-width: 768px) {
         flex-direction: column;
         align-items: stretch;
     }

@@ -1,7 +1,7 @@
-import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
-import { createSessionClient } from "@/server/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
+import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";
+import { createSessionClient } from "@/server/appwrite";
 
 export const prerender = false;
 
@@ -14,20 +14,19 @@ const toPolarExternalCustomerId = (id) => {
     return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
 };
 
-
 export const POST = async (context) => {
     try {
         if (!ENABLE_BILLING) {
             return new Response(
                 JSON.stringify({
-                    message: "Billing is disabled"
+                    message: "Billing is disabled",
                 }),
                 {
                     status: 404,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -39,14 +38,14 @@ export const POST = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Unauthenticated"
+                    message: "Unauthenticated",
                 }),
                 {
                     status: 401,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -54,9 +53,9 @@ export const POST = async (context) => {
 
         if (!account) {
             return new Response(null, {
-                status: 401
+                status: 401,
             });
-        };
+        }
 
         const websiteDomain = "http://localhost:4321";
 
@@ -66,31 +65,31 @@ export const POST = async (context) => {
             checkout = await polar.checkouts.create({
                 embed_origin: websiteDomain,
                 external_customer_id: toPolarExternalCustomerId(account.$id),
-                products: [
-                    POLAR_PRO_PRODUCT_ID
-                ],
-                success_url: websiteDomain + "/api/billing/pro/checkout/success",
-                cancel_url: websiteDomain + "/dash/settings/billing?status=cancel"
+                products: [POLAR_PRO_PRODUCT_ID],
+                success_url:
+                    websiteDomain + "/api/billing/pro/checkout/success",
+                cancel_url:
+                    websiteDomain + "/dash/settings/billing?status=cancel",
             });
         } catch (err) {
             console.error(err);
             return new Response(null, {
-                status: 400
+                status: 400,
             });
         }
 
         return new Response(
             JSON.stringify({
-                url: checkout.url
+                url: checkout.url,
             }),
             {
-                status: 200
-            }
+                status: 200,
+            },
         );
     } catch (error) {
         console.log(error);
         return new Response(null, {
-            status: 500
+            status: 500,
         });
     }
 };

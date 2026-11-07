@@ -15,11 +15,7 @@
             >
                 Edit
             </v-btn>
-            <v-btn
-                v-bind="activatorProps"
-                :icon="mdiPencil"
-                v-else
-            />
+            <v-btn v-bind="activatorProps" :icon="mdiPencil" v-else />
         </template>
 
         <template v-slot:default="{ isActive }">
@@ -41,19 +37,28 @@
                         :text="alert.text"
                     />
                     <v-alert
-                        v-if="editedList.private && privateListLimitReached.value"
+                        v-if="
+                            editedList.private && privateListLimitReached.value
+                        "
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
                         elevation="2"
                         variant="tonal"
                     >
-                        You have reached your private list allowance.<br/><br/>
-                        Please make some of your other lists public, or delete some of your lists.<br />
+                        You have reached your private list allowance.<br><br>
+                        Please make some of your other lists public, or delete
+                        some of your lists.<br>
                         <template v-if="ENABLE_BILLING">
                             <template v-if="!billing.isPro">
-                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} private lists.
-                                <br/>
+                                Alternatively, upgrade to create up to
+                                {{
+                                    allLimits.pro.privateLists > 0
+                                        ? allLimits.pro.privateLists
+                                        : "&infin;"
+                                }}
+                                private lists.
+                                <br>
                                 <v-btn
                                     to="/dash/settings/billing"
                                     color="warning"
@@ -63,8 +68,9 @@
                                 </v-btn>
                             </template>
                             <template v-else>
-                                Alternatively, contact support if you'd like this limit raised.
-                                <br/>
+                                Alternatively, contact support if you'd like
+                                this limit raised.
+                                <br>
                                 <v-btn
                                     to="/contact"
                                     color="warning"
@@ -74,22 +80,30 @@
                                 </v-btn>
                             </template>
                         </template>
-                        
                     </v-alert>
                     <v-alert
-                        v-if="!editedList.private && publicListLimitReached.value"
+                        v-if="
+                            !editedList.private && publicListLimitReached.value
+                        "
                         type="warning"
                         border="start"
                         class="mt-4 min-w-0 overflow-visible flex-shrink-1"
                         elevation="2"
                         variant="tonal"
                     >
-                        You have reached your public list allowance.<br/><br/>
-                        Please make some of your other lists private, or delete some of your lists.<br />
+                        You have reached your public list allowance.<br><br>
+                        Please make some of your other lists private, or delete
+                        some of your lists.<br>
                         <template v-if="ENABLE_BILLING">
                             <template v-if="!billing.isPro">
-                                Alternatively, upgrade to create up to {{ allLimits.pro.privateLists > 0 ? allLimits.pro.privateLists : "&infin;" }} public lists.
-                                <br/>
+                                Alternatively, upgrade to create up to
+                                {{
+                                    allLimits.pro.privateLists > 0
+                                        ? allLimits.pro.privateLists
+                                        : "&infin;"
+                                }}
+                                public lists.
+                                <br>
                                 <v-btn
                                     to="/dash/settings/billing"
                                     color="warning"
@@ -99,8 +113,9 @@
                                 </v-btn>
                             </template>
                             <template v-else>
-                                Alternatively, contact support if you'd like this limit raised.
-                                <br/>
+                                Alternatively, contact support if you'd like
+                                this limit raised.
+                                <br>
                                 <v-btn
                                     to="/contact"
                                     color="warning"
@@ -113,17 +128,19 @@
                     </v-alert>
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="primary"
                         text="Save"
                         @click="updateList"
                         variant="elevated"
                         :loading="loading"
-                        :disabled="(!editedList.private && publicListLimitReached.value) || (editedList.private && privateListLimitReached.value)"
+                        :disabled="
+                            (!editedList.private &&
+                                publicListLimitReached.value) ||
+                            (editedList.private &&
+                                privateListLimitReached.value)
+                        "
                     />
                 </v-card-actions>
             </v-card>
@@ -132,21 +149,28 @@
 </template>
 
 <script>
+import { ENABLE_BILLING } from "astro:env/client";
+import { mdiAlert, mdiPencil } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
+import ListFields from "@/components/dialogs/fields/ListFields.vue";
+import { getJwt, user as userStore } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
     privateListLimitReached as privateListLimitReachedStore,
-    publicListLimitReached as publicListLimitReachedStore
+    publicListLimitReached as publicListLimitReachedStore,
 } from "@/stores/billing";
-import { getJwt, user as userStore } from "@/stores/auth";
-import { mdiAlert, mdiPencil } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { adjustCount } from "@/stores/userLists";
 import { create as createDialog } from "@/stores/dialogs";
-import { ENABLE_BILLING } from "astro:env/client";
+import { adjustCount } from "@/stores/userLists";
 import { handleFetch } from "@/utils/handleFetch";
-import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
@@ -157,17 +181,17 @@ export default {
         VCard,
         VCardText,
         VCardActions,
-        VAlert
+        VAlert,
     },
     props: {
         list: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -185,7 +209,7 @@ export default {
             publicListLimitReached: useStore(publicListLimitReachedStore),
             privateListLimitReached: useStore(privateListLimitReachedStore),
             allLimits: useStore(allLimitsStore),
-            billing: useStore(billingStore)
+            billing: useStore(billingStore),
         };
     },
     watch: {
@@ -196,7 +220,7 @@ export default {
                     description: this.list.description,
                     private: this.list.private,
                     shortUrl: this.list.shortUrl,
-                    title: this.list.title
+                    title: this.list.title,
                 };
                 this.previousValues = { ...this.editedList };
                 this.listId = this.list.$id;
@@ -208,7 +232,7 @@ export default {
                 this.editedList = {};
                 this.previousValues = {};
             }
-        }
+        },
     },
     methods: {
         async updateList() {
@@ -223,18 +247,18 @@ export default {
                         {
                             action: "close",
                             text: "Cancel",
-                            variant: "text"
+                            variant: "text",
                         },
                         {
                             action: "close",
                             color: "primary",
                             text: "Continue",
-                            variant: "elevated"
-                        }
+                            variant: "elevated",
+                        },
                     ],
                     async: true,
                     text: "Making your list private will remove its short URL, and delete any community-added items. Are you sure you want to proceed? Making a list public again will not restore these items.",
-                    title: "Warning"
+                    title: "Warning",
                 });
 
                 if (resp.action !== "Continue") {
@@ -247,30 +271,34 @@ export default {
             if (!jwt) {
                 this.alert = {
                     text: "You must be logged in to edit a list.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
             }
 
-            const [editedListResponse, editedListError] = await handleFetch("/api/content/list", {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${jwt}`
+            const [editedListResponse, editedListError] = await handleFetch(
+                "/api/content/list",
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${jwt}`,
+                    },
+                    body: JSON.stringify({
+                        listId: this.listId,
+                        updateData: this.editedList,
+                    }),
                 },
-                body: JSON.stringify({
-                    listId: this.listId,
-                    updateData: this.editedList
-                })
-            });
+            );
 
             let listResponse;
 
             if (editedListError) {
                 this.alert = {
-                    text: editedListError.message || "An unknown error occurred.",
-                    title: "Error"
+                    text:
+                        editedListError.message || "An unknown error occurred.",
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -279,7 +307,7 @@ export default {
             }
 
             this.$emit("updateList", {
-                list: listResponse.list
+                list: listResponse.list,
             });
 
             if (this.previousValues.private !== this.editedList.private) {
@@ -294,7 +322,7 @@ export default {
 
             this.loading = false;
             this.dialogOpen = false;
-        }
-    }
+        },
+    },
 };
 </script>

@@ -12,7 +12,7 @@ export const extractJwt = ({ request }) => {
             const cookies = parseCookies(request.headers.get("cookie") ?? "");
             jwt = cookies.get(JWT_COOKIE);
         }
-        
+
         if (!jwt) {
             throw new Error("jwt not found in Authorization header or cookie");
         }

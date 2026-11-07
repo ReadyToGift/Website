@@ -2,18 +2,22 @@
     <v-card
         title="Try the app!"
         variant="tonal"
-        v-if="!locallyDismissed && deferredPrompt && prefs.hidePWAInstallPrompt !== true"
+        v-if="
+            !locallyDismissed &&
+            deferredPrompt &&
+            prefs.hidePWAInstallPrompt !== true
+        "
     >
         <v-card-text pt="4">
             <p>
-                Add this website as an app to your home screen for a better experience.
+                Add this website as an app to your home screen for a better
+                experience.
             </p>
             <p>
-                It even allows for sharing links directly to the app to add them to your wishlist!
+                It even allows for sharing links directly to the app to add them
+                to your wishlist!
             </p>
-            <div
-                class="buttons mt-5 d-flex flex-wrap ga-3"
-            >
+            <div class="buttons mt-5 d-flex flex-wrap ga-3">
                 <v-btn
                     variant="elevated"
                     color="primary"
@@ -35,11 +39,7 @@
                         transition="fade-transition"
                         v-model="menuOpen"
                     >
-                        <v-list
-                            density="compact"
-                            rounded="lg"
-                            slim
-                        >
+                        <v-list density="compact" rounded="lg" slim>
                             <v-list-item @click="dismissForDevice">
                                 For this device
                             </v-list-item>
@@ -55,13 +55,24 @@
 </template>
 
 <script setup>
-import { $prefs, updatePrefs } from "@/stores/prefs";
-import { appInstalled, deferredPrompt as deferredPromptStore, locallyDismissed as locallyDismissedStore } from "@/stores/pwa";
-import { VBtn, VCard, VCardText, VList, VListItem, VMenu } from "vuetify/components";
-import { create as createDialog } from "@/stores/dialogs";
 import { mdiMenuDown } from "@mdi/js";
-import { ref } from "vue";
 import { useStore } from "@nanostores/vue";
+import { ref } from "vue";
+import {
+    VBtn,
+    VCard,
+    VCardText,
+    VList,
+    VListItem,
+    VMenu,
+} from "vuetify/components";
+import { create as createDialog } from "@/stores/dialogs";
+import { $prefs, updatePrefs } from "@/stores/prefs";
+import {
+    appInstalled,
+    deferredPrompt as deferredPromptStore,
+    locallyDismissed as locallyDismissedStore,
+} from "@/stores/pwa";
 
 const prefs = useStore($prefs);
 const locallyDismissed = useStore(locallyDismissedStore);
@@ -87,11 +98,11 @@ const dismissForever = async () => {
             {
                 action: "close",
                 color: "primary",
-                text: "OK"
-            }
+                text: "OK",
+            },
         ],
         text: "The PWA install prompt will no longer show for this account. You can still install the app from your browser's menu.",
-        title: "Prompt dismissed"
+        title: "Prompt dismissed",
     });
     menuOpen.value = false;
 };
@@ -103,11 +114,11 @@ const dismissForDevice = () => {
             {
                 action: "close",
                 color: "primary",
-                text: "OK"
-            }
+                text: "OK",
+            },
         ],
         text: "The PWA install prompt will no longer show for this device. You can still install the app from your browser's menu.",
-        title: "Prompt dismissed"
+        title: "Prompt dismissed",
     });
     menuOpen.value = false;
 };

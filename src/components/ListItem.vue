@@ -2,20 +2,21 @@
     <v-card
         class="item"
         :data-fulfilled="
-            !item.communityList && !!item.fulfillment && (!wishlistOwner || spoilSurprises)
+            !item.communityList &&
+            !!item.fulfillment &&
+            (!wishlistOwner || spoilSurprises)
         "
         variant="tonal"
         :data-item-id="item.$id"
     >
         <div class="item-header">
             <h2>{{ item.title }}</h2>
-            <v-btn-group
-                base-color="primary"
-                divided
-                rounded="pill"
-            >
+            <v-btn-group base-color="primary" divided rounded="pill">
                 <FulfillItem
-                    v-if="!item.communityList &&!wishlistOwner || (wishlistOwner && spoilSurprises && !item.communityList)"
+                    v-if="
+                        (!item.communityList && !wishlistOwner) ||
+                        (wishlistOwner && spoilSurprises && !item.communityList)
+                    "
                     :item="item"
                     @fulfillItem="$emit('fulfillItem', $event)"
                     @unfulfillItem="$emit('unfulfillItem', item.$id)"
@@ -47,7 +48,10 @@
                     :currency="currency"
                     @editItem="$emit('editItem', $event)"
                     :wishlistOwner="wishlistOwner"
-                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
+                    v-if="
+                        (wishlistOwner && !item.communityList) ||
+                        (user && item.contributorId === user.$id)
+                    "
                 />
                 <MoveItem
                     variant="outlined"
@@ -61,7 +65,10 @@
                     variant="outlined"
                     :item="item"
                     @removeItem="$emit('removeItem', $event)"
-                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
+                    v-if="
+                        (wishlistOwner && !item.communityList) ||
+                        (user && item.contributorId === user.$id)
+                    "
                 />
             </v-btn-group>
         </div>
@@ -71,10 +78,7 @@
                 :source="item.description"
                 class="item-description"
             />
-            <div
-                class="item-image"
-                v-if="imageURL"
-            >
+            <div class="item-image" v-if="imageURL">
                 <v-img
                     :src="imageURL"
                     alt=""
@@ -91,12 +95,18 @@
                     height="200"
                     loading="lazy"
                     v-else
-                />
+                >
             </div>
         </div>
         <template
             v-slot:actions
-            v-if="item.fulfilledBy || item.price || item.priority !== 'none' || item.url || item.communityList"
+            v-if="
+                item.fulfilledBy ||
+                item.price ||
+                item.priority !== 'none' ||
+                item.url ||
+                item.communityList
+            "
         >
             <div class="item-footer">
                 <div class="chips">
@@ -115,7 +125,9 @@
                         variant="elevated"
                         rounded
                     >
-                        <span>{{ currencyFormatter(this.currency).format(item.price) }}</span>
+                        <span>{{
+                            currencyFormatter(this.currency).format(item.price)
+                        }}</span>
                     </v-chip>
                     <v-chip
                         v-if="item.priority !== 'none' && item.priority"
@@ -156,41 +168,45 @@
 </template>
 
 <script>
-import { APPWRITE_ENDPOINT, APPWRITE_IMAGE_BUCKET, APPWRITE_PROJECT } from "astro:env/client";
+import {
+    APPWRITE_ENDPOINT,
+    APPWRITE_IMAGE_BUCKET,
+    APPWRITE_PROJECT,
+} from "astro:env/client";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import VueMarkdown from "vue-markdown-render";
 import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
 import { avatars } from "@/appwrite";
-import { convertPriority } from "@/utils";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
-import ModifyItem from "./dialogs/ModifyItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
-import validation from "@/utils/validation";
-import VueMarkdown from "vue-markdown-render";
+import { user as userStore } from "@/stores/auth";
+import { formatter as currencyFormatter } from "@/stores/currency";
 
 import { $prefs } from "@/stores/prefs";
-import { formatter as currencyFormatter } from "@/stores/currency";
-import { user as userStore } from "@/stores/auth";
-import { useStore } from "@nanostores/vue";
+import { convertPriority } from "@/utils";
+import validation from "@/utils/validation";
+import ModifyItem from "./dialogs/ModifyItem.vue";
 
 export default {
     props: {
         currency: {
             type: String,
-            required: true
+            required: true,
         },
         item: {
             type: Object,
-            required: true
+            required: true,
         },
         list: {
             type: Object,
-            required: true
+            required: true,
         },
         wishlistOwner: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     components: {
         DeleteItem,
@@ -202,7 +218,7 @@ export default {
         VCard,
         VBtnGroup,
         VChip,
-        VImg
+        VImg,
     },
     data() {
         return {
@@ -213,7 +229,7 @@ export default {
             mdiWeb,
             validation,
             user: useStore(userStore),
-            prefs: useStore($prefs)
+            prefs: useStore($prefs),
         };
     },
     computed: {
@@ -223,7 +239,7 @@ export default {
                     const params = new URLSearchParams({
                         project: APPWRITE_PROJECT,
                         output: "png",
-                        height: "400"
+                        height: "400",
                     });
 
                     return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_IMAGE_BUCKET}/files/${this.item.imageID}/preview?${params.toString()}`;
@@ -239,7 +255,7 @@ export default {
         },
         spoilSurprises() {
             return this.prefs.spoilSurprises;
-        }
+        },
     },
     methods: {
         getWebsiteHostname(url) {
@@ -254,8 +270,8 @@ export default {
                 console.error(error);
                 return null;
             }
-        }
-    }
+        },
+    },
 };
 </script>
 

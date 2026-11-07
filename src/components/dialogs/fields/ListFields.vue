@@ -9,7 +9,9 @@
     >
         <template #details>
             <RevertPrompt
-                v-if="previousValues.title && previousValues.title !== list.title"
+                v-if="
+                    previousValues.title && previousValues.title !== list.title
+                "
                 :previous-value="previousValues.title"
                 @revert="revertValue('title')"
             />
@@ -25,7 +27,10 @@
     >
         <template #details>
             <RevertPrompt
-                v-if="previousValues.description && previousValues.description !== list.description"
+                v-if="
+                    previousValues.description &&
+                    previousValues.description !== list.description
+                "
                 :previous-value="previousValues.description"
                 @revert="revertValue('description')"
             />
@@ -37,14 +42,17 @@
         :items="
             currencies.map((currency) => ({
                 title: currency.code,
-                value: currency.code
+                value: currency.code,
             }))
         "
         hide-details="auto"
     >
         <template #details>
             <RevertPrompt
-                v-if="previousValues.currency && previousValues.currency !== list.currency"
+                v-if="
+                    previousValues.currency &&
+                    previousValues.currency !== list.currency
+                "
                 :previous-value="previousValues.currency"
                 @revert="revertValue('currency')"
             />
@@ -58,14 +66,19 @@
         persistent-hint
         @input="shortUrlChanged"
         :hint="
-            list.shortUrl ? `Your short URL will be: ${origin}/${list.shortUrl}` : `Set a memorable short URL for your list`
+            list.shortUrl
+                ? `Your short URL will be: ${origin}/${list.shortUrl}`
+                : `Set a memorable short URL for your list`
         "
         hide-details="auto"
         :disabled="list.private"
     >
         <template #details>
             <RevertPrompt
-                v-if="previousValues.shortUrl && previousValues.shortUrl !== list.shortUrl"
+                v-if="
+                    previousValues.shortUrl &&
+                    previousValues.shortUrl !== list.shortUrl
+                "
                 :previous-value="previousValues.shortUrl"
                 @revert="revertValue('shortUrl')"
             />
@@ -83,10 +96,16 @@
 </template>
 
 <script setup>
-import { VLabel, VSelect, VSwitch, VTextarea, VTextField } from "vuetify/components";
 import { computed } from "vue";
-import { currencies } from "@/stores/currency";
+import {
+    VLabel,
+    VSelect,
+    VSwitch,
+    VTextarea,
+    VTextField,
+} from "vuetify/components";
 import RevertPrompt from "@/components/RevertPrompt.vue";
+import { currencies } from "@/stores/currency";
 
 const list = defineModel("list");
 
@@ -95,13 +114,15 @@ const origin = computed(() => window.location.origin);
 const props = defineProps({
     previousValues: {
         default: () => ({}),
-        type: Object
-    }
+        type: Object,
+    },
 });
 
 const shortUrlChanged = () => {
-    if (list.value.shortUrl === "") return list.value.shortUrl = null;
-    list.value.shortUrl = list.value.shortUrl.toLowerCase().replace(/[^a-z0-9-_]/g, "");
+    if (list.value.shortUrl === "") return (list.value.shortUrl = null);
+    list.value.shortUrl = list.value.shortUrl
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/g, "");
 };
 
 const revertValue = (field) => {

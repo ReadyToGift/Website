@@ -40,7 +40,7 @@
                 variant="tonal"
                 :prepend-icon="methodsData[method].icon"
                 @click="methodsData[method].login()"
-                v-for="method in methods.filter((method) => method !== 'password')"
+                v-for="method in methods.filter((method) => method !== "password")"
                 :key="method"
             >Login with {{ methodsData[method].name }}</v-btn>
             <v-alert
@@ -74,20 +74,20 @@
 </template>
 
 <script setup>
-import { init as initAuth, logOut } from "@/stores/auth";
-import { mdiAlert, mdiCheckCircle, mdiGithub } from "@mdi/js";
-import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
-import { account } from "@/appwrite";
-import { createTOTPChallengeDialog } from "@/stores/mfa";
 import { LOGIN_METHODS } from "astro:env/client";
+import { mdiAlert, mdiCheckCircle, mdiGithub } from "@mdi/js";
 import { shallowRef } from "vue";
 import { useRouter } from "vue-router";
+import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
+import { account } from "@/appwrite";
+import { init as initAuth, logOut } from "@/stores/auth";
+import { createTOTPChallengeDialog } from "@/stores/mfa";
 
 const props = defineProps({
     redirect: {
         default: "/dash/lists",
-        type: String
-    }
+        type: String,
+    },
 });
 
 const router = useRouter();
@@ -103,8 +103,8 @@ const methodsData = {
             // TODO: Fix
             window.location.href = `/api/auth/oauth/github?redirect=${encodeURIComponent(props.redirect)}`;
         },
-        name: "Github"
-    }
+        name: "Github",
+    },
 };
 
 const finaliseLogin = async () => {
@@ -112,14 +112,14 @@ const finaliseLogin = async () => {
     console.log("Login successful:", accountSession);
 
     await initAuth({ router, currentAccount: accountSession });
-            
+
     console.log("Redirecting to:", props.redirect);
-            
+
     error.value = {
         type: "success",
         icon: mdiCheckCircle,
         title: "Login Successful",
-        text: "You have been logged in successfully."
+        text: "You have been logged in successfully.",
     };
 
     await router.push({ path: props.redirect });
@@ -140,15 +140,18 @@ const passwordLogin = async (event) => {
 
         if (err.type === "user_more_factors_required") {
             const totpChallengeResp = await createTOTPChallengeDialog();
-            
-            if (totpChallengeResp.action === "success" || totpChallengeResp.action === "totp-removed") {
+
+            if (
+                totpChallengeResp.action === "success" ||
+                totpChallengeResp.action === "totp-removed"
+            ) {
                 await finaliseLogin();
             } else {
                 error.value = {
                     type: "error",
                     icon: mdiAlert,
                     title: "Login Failed",
-                    text: "TOTP verification failed."
+                    text: "TOTP verification failed.",
                 };
             }
         } else {
@@ -156,7 +159,8 @@ const passwordLogin = async (event) => {
                 type: "error",
                 icon: mdiAlert,
                 title: "Login Failed",
-                text: err.message || "An unexpected error occurred during login."
+                text:
+                    err.message || "An unexpected error occurred during login.",
             };
         }
     } finally {

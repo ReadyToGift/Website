@@ -1,7 +1,11 @@
+import {
+    APPWRITE_DEV_KEY,
+    APPWRITE_ENDPOINT,
+    APPWRITE_PROJECT,
+} from "astro:env/client";
+import { APPWRITE_KEY } from "astro:env/server";
 import * as appwriteClient from "appwrite";
 import * as appwriteSdk from "node-appwrite";
-import { APPWRITE_DEV_KEY, APPWRITE_ENDPOINT, APPWRITE_PROJECT } from "astro:env/client";
-import { APPWRITE_KEY } from "astro:env/server";
 
 import { extractJwt } from "./auth";
 
@@ -31,7 +35,7 @@ export function createAdminClient() {
         },
         get storage() {
             return new appwriteSdk.Storage(client);
-        }
+        },
     };
 }
 
@@ -39,7 +43,7 @@ export const createSessionClient = ({ request, jwt }) => {
     const client = new appwriteClient.Client()
         .setEndpoint(APPWRITE_ENDPOINT)
         .setProject(APPWRITE_PROJECT);
-    
+
     if (APPWRITE_DEV_KEY) {
         client.setDevKey(APPWRITE_DEV_KEY);
     }
@@ -58,10 +62,9 @@ export const createSessionClient = ({ request, jwt }) => {
         get account() {
             return new appwriteClient.Account(client);
         },
-        jwt: jwt
+        jwt: jwt,
     };
 };
-
 
 export const requireAuth = async (context) => {
     let sessionClient;
@@ -72,14 +75,14 @@ export const requireAuth = async (context) => {
 
         return new Response(
             JSON.stringify({
-                message: "Unauthenticated"
+                message: "Unauthenticated",
             }),
             {
                 status: 401,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 
@@ -87,9 +90,9 @@ export const requireAuth = async (context) => {
 
     if (!account) {
         return new Response(null, {
-            status: 401
+            status: 401,
         });
-    };
+    }
 
     return { sessionClient, account };
 };

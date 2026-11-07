@@ -1,9 +1,7 @@
 <template>
     <div class="page-content">
         <h1>Start Recovery</h1>
-        <div
-            class="recovery"
-        >
+        <div class="recovery">
             <v-form @submit.prevent="startRecovery">
                 <v-text-field
                     v-model="recoveryDetails.email"
@@ -11,11 +9,9 @@
                     type="email"
                     autofocus
                 />
-                <v-btn
-                    type="submit"
-                    color="primary"
-                    :loading="loadingRecovery"
-                >Start</v-btn>
+                <v-btn type="submit" color="primary" :loading="loadingRecovery"
+                    >Start</v-btn
+                >
             </v-form>
             <v-alert
                 :type="alert.type || 'error'"
@@ -29,24 +25,26 @@
             />
             <p>
                 Remember your login?
-                <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
+                <router-link :to="{ path: '/dash/login', query: { redirect } }"
+                    >Login here</router-link
+                >
             </p>
         </div>
     </div>
 </template>
 
 <script>
+import { LOGIN_METHODS } from "astro:env/client";
 import { mdiAlert, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
-import { LOGIN_METHODS } from "astro:env/client";
 
 export default {
     components: {
         VForm,
         VTextField,
         VBtn,
-        VAlert
+        VAlert,
     },
     data() {
         return {
@@ -54,19 +52,17 @@ export default {
             loadingRecovery: false,
             mdiAlert,
             mdiGithub,
-            methods: LOGIN_METHODS
-                ? LOGIN_METHODS.split(",")
-                : [],
+            methods: LOGIN_METHODS ? LOGIN_METHODS.split(",") : [],
             recoveryDetails: {
-                email: ""
-            }
+                email: "",
+            },
         };
     },
     props: {
         redirect: {
             type: String,
-            default: "/dash/lists"
-        }
+            default: "/dash/lists",
+        },
     },
     methods: {
         async startRecovery() {
@@ -75,22 +71,22 @@ export default {
             try {
                 await account.createRecovery(
                     this.recoveryDetails.email,
-                    "https://readyto.gift/dash/recovery/complete"
+                    "https://readyto.gift/dash/recovery/complete",
                 );
                 this.alert = {
                     text: "Recovery email sent",
                     title: "Success",
-                    type: "success"
+                    type: "success",
                 };
             } catch (error) {
                 this.alert = {
                     text: error.message,
-                    title: "Error"
+                    title: "Error",
                 };
             }
             this.loadingRecovery = false;
-        }
-    }
+        },
+    },
 };
 </script>
 

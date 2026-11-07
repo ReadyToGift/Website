@@ -41,10 +41,7 @@
                     />
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="error"
                         text="Delete"
@@ -60,13 +57,19 @@
 
 <script>
 import { mdiAlert, mdiDelete } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { adjustCount } from "@/stores/userLists";
 import { AppwriteException } from "appwrite";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
 import { clientRouter } from "@/router";
-import { handleFetch } from "@/utils/handleFetch";
-
 import { getJwt } from "@/stores/auth";
+import { adjustCount } from "@/stores/userLists";
+import { handleFetch } from "@/utils/handleFetch";
 
 export default {
     title: "ListDialog",
@@ -76,17 +79,17 @@ export default {
         VCard,
         VCardText,
         VCardActions,
-        VAlert
+        VAlert,
     },
     props: {
         list: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -95,7 +98,7 @@ export default {
             listId: null,
             loading: false,
             mdiAlert,
-            mdiDelete
+            mdiDelete,
         };
     },
     watch: {
@@ -103,7 +106,7 @@ export default {
             if (open !== true) {
                 this.$emit("dialogClosed");
             }
-        }
+        },
     },
     methods: {
         async deleteList() {
@@ -114,28 +117,32 @@ export default {
                 if (!jwt) {
                     this.alert = {
                         text: "You must be logged in to delete a list.",
-                        title: "Error"
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
                 }
 
-                const [, deleteListError] = await handleFetch("/api/content/list", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [, deleteListError] = await handleFetch(
+                    "/api/content/list",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${jwt}`,
+                        },
+                        body: JSON.stringify({
+                            listId: this.list.$id,
+                        }),
                     },
-                    body: JSON.stringify({
-                        listId: this.list.$id
-                    })
-                });
+                );
 
-                
                 if (deleteListError) {
                     this.alert = {
-                        text: deleteListError.message || "An error occurred while deleting the list.",
-                        title: "Error"
+                        text:
+                            deleteListError.message ||
+                            "An error occurred while deleting the list.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -152,18 +159,18 @@ export default {
                 if (e instanceof AppwriteException) {
                     this.alert = {
                         text: e.message,
-                        title: "Error"
+                        title: "Error",
                     };
                 } else {
                     this.alert = {
                         text: "An unknown error occurred.",
-                        title: "Error"
+                        title: "Error",
                     };
                 }
                 this.loading = false;
                 return;
             }
-        }
-    }
+        },
+    },
 };
 </script>

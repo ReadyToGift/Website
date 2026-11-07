@@ -26,10 +26,10 @@ Sample `200` Response:
 
 ```json
 {
-  "motto": "Build like a team of hundreds_",
-  "learn": "https://appwrite.io/docs",
-  "connect": "https://appwrite.io/discord",
-  "getInspired": "https://builtwith.appwrite.io"
+    "motto": "Build like a team of hundreds_",
+    "learn": "https://appwrite.io/docs",
+    "connect": "https://appwrite.io/discord",
+    "getInspired": "https://builtwith.appwrite.io"
 }
 ```
 

@@ -1,5 +1,5 @@
-import { Client, Users } from "node-appwrite";
 import { createPolar } from "@polar-sh/sdk/2026-10";
+import { Client, Users } from "node-appwrite";
 
 const polar = createPolar({
     accessToken: process.env["POLAR_ACCESS_TOKEN"] ?? "",
@@ -27,7 +27,7 @@ export default async ({ req, res, log, error }) => {
             log("Billing is disabled; skipping Polar customer sync.");
             return res.json({
                 success: true,
-                skipped: true
+                skipped: true,
             });
         }
 
@@ -48,15 +48,17 @@ export default async ({ req, res, log, error }) => {
             log(`Total users in Appwrite: ${allUsers.total}`);
 
             const polarCustomers = await polar.customers.list({
-                organization_id: organizationId
+                organization_id: organizationId,
             });
 
             log(`Total customers in Polar: ${polarCustomers.items.length}`);
 
             for (const appwriteUser of allUsers.users) {
-                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
-                const existingCustomer = polarCustomers.items.find(
-                    (c) => matchesAppwriteUserId(c.external_id, appwriteUser.$id)
+                const appwriteExternalId = toPolarExternalCustomerId(
+                    appwriteUser.$id,
+                );
+                const existingCustomer = polarCustomers.items.find((c) =>
+                    matchesAppwriteUserId(c.external_id, appwriteUser.$id),
                 );
                 if (existingCustomer) {
                     if (
@@ -64,40 +66,53 @@ export default async ({ req, res, log, error }) => {
                         existingCustomer.name !== appwriteUser.name
                     ) {
                         try {
-                            await polar.customers.updateExternal(appwriteExternalId, {
+                            await polar.customers.updateExternal(
+                                appwriteExternalId,
+                                {
                                     email: appwriteUser.email,
-                                    name: appwriteUser.name
-                            });
-                            log(`Updated Polar customer for Appwrite user ${appwriteUser.$id}`);
+                                    name: appwriteUser.name,
+                                },
+                            );
+                            log(
+                                `Updated Polar customer for Appwrite user ${appwriteUser.$id}`,
+                            );
                         } catch (err) {
                             log(
-                                `Failed to update Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                                `Failed to update Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`,
                             );
                         }
                     } else {
-                        log(`No update needed for Appwrite user ${appwriteUser.$id}`);
+                        log(
+                            `No update needed for Appwrite user ${appwriteUser.$id}`,
+                        );
                     }
                 } else {
                     try {
                         await polar.customers.create({
                             external_id: appwriteExternalId,
                             email: appwriteUser.email,
-                            name: appwriteUser.name
+                            name: appwriteUser.name,
                         });
-                        log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
+                        log(
+                            `Created Polar customer for Appwrite user ${appwriteUser.$id}`,
+                        );
                     } catch (err) {
                         log(
-                            `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                            `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`,
                         );
                     }
                 }
             }
 
             const unmatchedPolarCustomers = polarCustomers.items.filter((c) => {
-                return !allUsers.users.find((u) => matchesAppwriteUserId(c.external_id, u.$id));
+                return !allUsers.users.find((u) =>
+                    matchesAppwriteUserId(c.external_id, u.$id),
+                );
             });
 
-            log(`Total unmatched Polar customers: ${unmatchedPolarCustomers.length}`);
+            log(
+                `Total unmatched Polar customers: ${unmatchedPolarCustomers.length}`,
+            );
 
             for (const polarCustomer of unmatchedPolarCustomers) {
                 try {
@@ -105,7 +120,7 @@ export default async ({ req, res, log, error }) => {
                     log(`Deleted unmatched Polar customer ${polarCustomer.id}`);
                 } catch (err) {
                     log(
-                        `Failed to delete unmatched Polar customer ${polarCustomer.id}: ${err.message}`
+                        `Failed to delete unmatched Polar customer ${polarCustomer.id}: ${err.message}`,
                     );
                 }
             }
@@ -116,36 +131,46 @@ export default async ({ req, res, log, error }) => {
 
             if (eventType === "update") {
                 const appwriteUser = req.body;
-                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
+                const appwriteExternalId = toPolarExternalCustomerId(
+                    appwriteUser.$id,
+                );
                 await polar.customers.updateExternal(appwriteExternalId, {
-                        email: appwriteUser.email,
-                        name: appwriteUser.name
+                    email: appwriteUser.email,
+                    name: appwriteUser.name,
                 });
-                log(`Updated Polar customer for Appwrite user ${appwriteUser.$id}`);
+                log(
+                    `Updated Polar customer for Appwrite user ${appwriteUser.$id}`,
+                );
             } else if (eventType === "delete") {
                 try {
                     const appwriteUser = req.body;
-                    const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
+                    const appwriteExternalId = toPolarExternalCustomerId(
+                        appwriteUser.$id,
+                    );
                     await polar.customers.deleteExternal(appwriteExternalId);
                     log(`Deleted Polar customer for Appwrite user ${user}`);
                 } catch (err) {
                     log(
-                        `Failed to delete Polar customer for Appwrite user ${user}: ${err.message}`
+                        `Failed to delete Polar customer for Appwrite user ${user}: ${err.message}`,
                     );
                 }
             } else if (eventType === "create") {
                 const appwriteUser = req.body;
-                const appwriteExternalId = toPolarExternalCustomerId(appwriteUser.$id);
+                const appwriteExternalId = toPolarExternalCustomerId(
+                    appwriteUser.$id,
+                );
                 try {
                     await polar.customers.create({
                         external_id: appwriteExternalId,
                         email: appwriteUser.email,
-                        name: appwriteUser.name
+                        name: appwriteUser.name,
                     });
-                    log(`Created Polar customer for Appwrite user ${appwriteUser.$id}`);
+                    log(
+                        `Created Polar customer for Appwrite user ${appwriteUser.$id}`,
+                    );
                 } catch (err) {
                     log(
-                        `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`
+                        `Failed to create Polar customer for Appwrite user ${appwriteUser.$id}: ${err.message}`,
                     );
                 }
             } else {
@@ -153,12 +178,12 @@ export default async ({ req, res, log, error }) => {
             }
         }
         return res.json({
-            success: true
+            success: true,
         });
     } catch (err) {
         error(`Function failed: ${err.message}`);
         return res.json({
-            error: "Function failed"
+            error: "Function failed",
         });
     }
 };

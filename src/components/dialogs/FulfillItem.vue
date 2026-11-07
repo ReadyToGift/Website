@@ -1,8 +1,5 @@
 <template>
-    <v-dialog
-        max-width="500px"
-        v-model="dialogOpen"
-    >
+    <v-dialog max-width="500px" v-model="dialogOpen">
         <template v-slot:activator="{ props: activatorProps }">
             <v-btn
                 v-bind="activatorProps"
@@ -14,10 +11,7 @@
         </template>
 
         <template v-slot:default="{ isActive }">
-            <v-card
-                title="Fulfill Item"
-                v-if="!item.fulfillment"
-            >
+            <v-card title="Fulfill Item" v-if="!item.fulfillment">
                 <v-card-text>
                     <v-text-field
                         label="Your name"
@@ -30,13 +24,14 @@
 
                     <b>Thank you!</b>
 
-                    This will only be shown to other viewers of this list to help prevent
-                    duplicates.<br />
+                    This will only be shown to other viewers of this list to
+                    help prevent duplicates.<br>
                     It will
                     <span
                         class="text-error"
                         style="font-weight: bold; text-decoration: underline"
-                    >not be shown</span>
+                        >not be shown</span
+                    >
                     to the owner of this list.
 
                     <v-alert
@@ -51,10 +46,7 @@
                     />
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="primary"
                         text="Fulfill"
@@ -64,12 +56,10 @@
                     />
                 </v-card-actions>
             </v-card>
-            <v-card
-                title="Unfulfill Item"
-                v-else
-            >
+            <v-card title="Unfulfill Item" v-else>
                 <v-card-text>
-                    Are you sure you want to do this? It can be undone at any time
+                    Are you sure you want to do this? It can be undone at any
+                    time
 
                     <v-alert
                         v-if="alert"
@@ -83,10 +73,7 @@
                     />
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="primary"
                         text="Unfulfill"
@@ -102,12 +89,18 @@
 
 <script>
 import { mdiAlert, mdiGift, mdiGiftOff } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VTextField } from "vuetify/components";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
-
-import { user as userStore } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+    VTextField,
+} from "vuetify/components";
+import { getJwt, user as userStore } from "@/stores/auth";
+import { handleFetch } from "@/utils/handleFetch";
 
 export default {
     title: "ListDialog",
@@ -118,17 +111,17 @@ export default {
         VCardActions,
         VBtn,
         VAlert,
-        VTextField
+        VTextField,
     },
     props: {
         item: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -139,7 +132,7 @@ export default {
             mdiGift,
             mdiGiftOff,
             name: "",
-            user: useStore(userStore)
+            user: useStore(userStore),
         };
     },
     methods: {
@@ -149,22 +142,27 @@ export default {
             let result;
             try {
                 const jwt = await getJwt();
-                const [resp, fulfillError] = await handleFetch("/api/content/item/fulfillment", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                const [resp, fulfillError] = await handleFetch(
+                    "/api/content/item/fulfillment",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+                        },
+                        body: JSON.stringify({
+                            itemId: this.item.$id,
+                            name: this.name !== "" ? this.name : null,
+                        }),
                     },
-                    body: JSON.stringify({
-                        itemId: this.item.$id,
-                        name: this.name !== "" ? this.name : null
-                    })
-                });
+                );
 
                 if (fulfillError) {
                     this.alert = {
-                        text: fulfillError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            fulfillError.message ||
+                            "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -174,7 +172,7 @@ export default {
             } catch (e) {
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -190,22 +188,27 @@ export default {
             this.alert = false;
             try {
                 const jwt = await getJwt();
-                const [, unfulfillError] = await handleFetch("/api/content/item/fulfillment", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {})
+                const [, unfulfillError] = await handleFetch(
+                    "/api/content/item/fulfillment",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+                        },
+                        body: JSON.stringify({
+                            fulfillmentId: this.item.fulfillment.$id,
+                            itemId: this.item.$id,
+                        }),
                     },
-                    body: JSON.stringify({
-                        fulfillmentId: this.item.fulfillment.$id,
-                        itemId: this.item.$id
-                    })
-                });
+                );
 
                 if (unfulfillError) {
                     this.alert = {
-                        text: unfulfillError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            unfulfillError.message ||
+                            "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -213,7 +216,7 @@ export default {
             } catch (e) {
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -223,12 +226,12 @@ export default {
 
             this.dialogOpen = false;
             this.loading = false;
-        }
+        },
     },
     mounted() {
         if (this.user && this.user.name) {
             this.name = this.user.name.split(" ")[0];
         }
-    }
+    },
 };
 </script>

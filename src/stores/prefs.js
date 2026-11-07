@@ -1,5 +1,5 @@
-import { account } from "@/appwrite";
 import { persistentMap } from "@nanostores/persistent";
+import { account } from "@/appwrite";
 import { user } from "./auth";
 
 const defaultPrefs = {
@@ -9,16 +9,20 @@ const defaultPrefs = {
     savedLists: [],
     listSorting: {
         type: { name: "Last updated", value: "$updatedAt" },
-        order: "asc"
+        order: "asc",
     },
     history: [],
-    hidePWAInstallPrompt: false
+    hidePWAInstallPrompt: false,
 };
 
-export const $prefs = persistentMap("userPrefs", { ...defaultPrefs }, {
-    encode: JSON.stringify,
-    decode: JSON.parse
-});
+export const $prefs = persistentMap(
+    "userPrefs",
+    { ...defaultPrefs },
+    {
+        encode: JSON.stringify,
+        decode: JSON.parse,
+    },
+);
 
 export const newUserPrefs = { ...defaultPrefs };
 
@@ -39,8 +43,8 @@ export const updatePrefs = async (updatedPrefs) => {
 export const addToHistory = (item) => {
     let history = $prefs.get().history;
     history.unshift(item);
-    history = history.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // remove duplicates
-        .slice(0, 5); 
+    history = history
+        .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
+        .slice(0, 5);
     $prefs.set({ ...$prefs.get(), history });
-
 };

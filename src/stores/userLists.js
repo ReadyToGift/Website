@@ -3,8 +3,8 @@ import { map } from "nanostores";
 export const userLists = map({
     listCount: {
         public: 0,
-        private: 0
-    }
+        private: 0,
+    },
 });
 
 export const setCount = ({ public: publicCount, private: privateCount }) => {
@@ -13,8 +13,8 @@ export const setCount = ({ public: publicCount, private: privateCount }) => {
         ...current,
         listCount: {
             public: publicCount,
-            private: privateCount
-        }
+            private: privateCount,
+        },
     });
 };
 
@@ -24,17 +24,17 @@ export const adjustCount = (isPrivate, delta) => {
     const updatedListCount = {
         ...listCount,
         [isPrivate ? "private" : "public"]:
-            (isPrivate ? listCount.private : listCount.public) + delta
+            (isPrivate ? listCount.private : listCount.public) + delta,
     };
 
     userLists.set({
         ...current,
-        listCount: updatedListCount
+        listCount: updatedListCount,
     });
 };
 
 export default {
     userLists,
     setCount,
-    adjustCount
+    adjustCount,
 };

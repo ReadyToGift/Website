@@ -14,10 +14,10 @@ This is a simple Wishlist app, to keep track of things you'd like. If anyone buy
 ## Stack
 
 - Frontend: Vue (w/ Vite) + Pinia + Vuetify
-    - Familiar, nicely reactive and wanted to try out something like Vuetify - also means I didn't need to design this beforehand.
-    - This isn't the most performant app. I could've gone with a more efficient setup, maybe making use of SSR, but this is a simple app that I'll only use a few times a year. 
+  - Familiar, nicely reactive and wanted to try out something like Vuetify - also means I didn't need to design this beforehand.
+  - This isn't the most performant app. I could've gone with a more efficient setup, maybe making use of SSR, but this is a simple app that I'll only use a few times a year.
 - Backend: Appwrite
-    - It's a decent backend that I've wanted to use properly for a while and I didn't want to spend an eternity setting one up myself for this project.
+  - It's a decent backend that I've wanted to use properly for a while and I didn't want to spend an eternity setting one up myself for this project.
 
 ## Features
 
@@ -50,7 +50,7 @@ Then, move the created `output.env` file to `.env`.
 You can also set the below options in the `.env` file:
 
 - `VITE_LOGIN_METHODS`: github,password
-    - Currently only supports the above options. Both need to be set up within Appwrite.
+  - Currently only supports the above options. Both need to be set up within Appwrite.
 - `VITE_UMAMI_URL`: https://analytics.example.com/script.js
 - `VITE_UMAMI_ID`: f79676da-d2c5-49dd-a35b-f829764b44c5
 - `VITE_UMAMI_DOMAINS`: example.com
@@ -98,7 +98,6 @@ pnpm build
 pnpm format && pnpm lint
 ```
 
-
 # Billing
 
 This project features a billing system which is disabled.
@@ -106,16 +105,16 @@ This project features a billing system which is disabled.
 You can change the limits using the following:
 
 - `FREE_TIER_PUBLIC_LIST_LIMIT`
-    How many public lists a user can have. A public list is one that anyone can view, and the author can choose to show what has been purchased or not.
-    Set to `-1` for unlimited.
+  How many public lists a user can have. A public list is one that anyone can view, and the author can choose to show what has been purchased or not.
+  Set to `-1` for unlimited.
 - `FREE_TIER_PRIVATE_LIST_LIMIT`
-    How many private lists a user can have. A private list is one that only the author can view.
-    Set to `-1` for unlimited.
+  How many private lists a user can have. A private list is one that only the author can view.
+  Set to `-1` for unlimited.
 - `FREE_TIER_ITEMS_PER_LIST`
-    How many items can be in a list.
-    Set to `-1` for unlimited.
+  How many items can be in a list.
+  Set to `-1` for unlimited.
 - `FREE_TIER_ENABLE_AUTOFILL`
-    Wether to allow autofill. Set to `true` to allow it, `false` to disable it. Autofill is where the app will try to fill in item details (like name and image) based on a URL.
+  Wether to allow autofill. Set to `true` to allow it, `false` to disable it. Autofill is where the app will try to fill in item details (like name and image) based on a URL.
 
 # License
 

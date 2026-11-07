@@ -1,14 +1,8 @@
 <template>
-    <v-card
-        variant="tonal"
-    >
-        <v-card-title>
-            Personal Information
-        </v-card-title>
+    <v-card variant="tonal">
+        <v-card-title> Personal Information </v-card-title>
 
-        <v-list
-            class="mt-0"
-        >
+        <v-list class="mt-0">
             <UpdateAccountField
                 name="Full Name"
                 :icon="mdiAccount"
@@ -26,15 +20,13 @@
             />
         </v-list>
     </v-card>
-    <v-card
-        class="mt-4"
-        variant="tonal"
-    >
-        <v-card-title>
-            Security Settings
-        </v-card-title>
+    <v-card class="mt-4" variant="tonal">
+        <v-card-title> Security Settings </v-card-title>
         <v-card-text>
-            <p>Manage your security settings here, including changing your password.</p>
+            <p>
+                Manage your security settings here, including changing your
+                password.
+            </p>
         </v-card-text>
         <v-list>
             <UpdateAccountField
@@ -50,35 +42,31 @@
 </template>
 
 <script setup>
-import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
-import { reactive } from "vue";
-
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
-import { AppwriteException } from "appwrite";
-
-import { setUser, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
-
+import { AppwriteException } from "appwrite";
+import { reactive } from "vue";
+import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
 import { account } from "@/appwrite";
-
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
+import { setUser, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
 
 const user = useStore(userStore);
 
 const personalInfo = reactive({
     email: {
         passwordConfirmation: "",
-        value: user.value?.email || ""
+        value: user.value?.email || "",
     },
     fullName: {
-        value: user.value?.name || ""
+        value: user.value?.name || "",
     },
     password: {
         passwordConfirmation: "",
-        value: ""
-    }
+        value: "",
+    },
 });
 
 userStore.subscribe((mutation) => {
@@ -101,7 +89,7 @@ const saveName = async () => {
         createDialog({
             text: `There was an error updating your name: ${result.message}`,
             title: "Error Updating Name",
-            type: "error"
+            type: "error",
         });
         return false;
     }
@@ -109,22 +97,27 @@ const saveName = async () => {
 
 const saveEmail = async (newValue) => {
     try {
-        const result = await account.updateEmail(newValue.value, newValue.passwordConfirmation);
+        const result = await account.updateEmail(
+            newValue.value,
+            newValue.passwordConfirmation,
+        );
         console.log({ result });
         if (result.$id) {
             setUser({ user: result });
-            await account.createEmailVerification({ url: "https://readyto.gift/dash/verify" });
+            await account.createEmailVerification({
+                url: "https://readyto.gift/dash/verify",
+            });
             createDialog({
                 actions: [
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text: "A verification email has been sent to your new email address.",
                 title: "Verification Email Sent",
-                type: "info"
+                type: "info",
             });
             return true;
         } else {
@@ -133,16 +126,15 @@ const saveEmail = async (newValue) => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text: `There was an error updating your email: ${result.message}`,
                 title: "Error Updating Email",
-                type: "error"
+                type: "error",
             });
             return false;
         }
-
     } catch (error) {
         if (error instanceof AppwriteException) {
             createDialog({
@@ -150,12 +142,12 @@ const saveEmail = async (newValue) => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text: error.message,
                 title: "Error Updating Email",
-                type: "error"
+                type: "error",
             });
             return false;
         }
@@ -164,12 +156,12 @@ const saveEmail = async (newValue) => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: error.message,
             title: "Error Updating Email",
-            type: "error"
+            type: "error",
         });
         return false;
     }
@@ -179,19 +171,19 @@ const savePassword = async (newValue) => {
     try {
         await account.updatePassword({
             oldPassword: newValue.passwordConfirmation,
-            password: newValue.value
+            password: newValue.value,
         });
         createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: "Your password has been successfully updated.",
             title: "Password Updated",
-            type: "success"
+            type: "success",
         });
         return true;
     } catch (error) {
@@ -201,12 +193,12 @@ const savePassword = async (newValue) => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text: error.message,
                 title: "Error Updating Password",
-                type: "error"
+                type: "error",
             });
             return false;
         }
@@ -215,12 +207,12 @@ const savePassword = async (newValue) => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: error.message,
             title: "Error Updating Password",
-            type: "error"
+            type: "error",
         });
         return false;
     }

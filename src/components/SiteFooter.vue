@@ -1,12 +1,12 @@
 <template>
     <v-footer class="mb-4 v-card--variant-tonal pa-0">
         <div class="made-by">
-            <p>Created by <a
-                href="https://jackbailey.dev"
-                target="_blank"
-            >
-                Jack Bailey
-            </a></p>
+            <p>
+                Created by
+                <a href="https://jackbailey.dev" target="_blank">
+                    Jack Bailey
+                </a>
+            </p>
         </div>
         <div class="footer-links">
             <v-btn

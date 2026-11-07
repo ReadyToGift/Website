@@ -20,9 +20,7 @@
             <v-timeline-item
                 v-for="(step, index) in timelineSteps"
                 :key="index"
-                :dot-color="
-                    index > currentStep ? 'transparent' : 'primary'
-                "
+                :dot-color="index > currentStep ? 'transparent' : 'primary'"
                 :fill-dot="index <= currentStep"
                 :data-completed="index < currentStep"
                 :data-active="index === currentStep"
@@ -53,14 +51,29 @@
     </v-card-text>
 </template>
 
-
 <script setup>
+import {
+    mdiCheck,
+    mdiFileDocument,
+    mdiFileDocumentCheck,
+    mdiImage,
+    mdiImageCheck,
+    mdiLoading,
+    mdiWeb,
+    mdiWebCheck,
+} from "@mdi/js";
+import { SSE } from "sse.js";
 import { computed, onMounted, onUnmounted, shallowRef } from "vue";
-import { mdiCheck, mdiFileDocument, mdiFileDocumentCheck, mdiImage, mdiImageCheck, mdiLoading, mdiWeb, mdiWebCheck } from "@mdi/js";
-import { VCardText, VCardTitle, VChip, VIcon, VTimeline, VTimelineItem } from "vuetify/components";
+import {
+    VCardText,
+    VCardTitle,
+    VChip,
+    VIcon,
+    VTimeline,
+    VTimelineItem,
+} from "vuetify/components";
 import { getJwt } from "@/stores/auth";
 import { setUsedAutofillAllowance } from "@/stores/billing";
-import { SSE } from "sse.js";
 
 const totalAttempts = shallowRef(0);
 const currentAttempt = shallowRef(0);
@@ -75,15 +88,15 @@ const autofillSSE = shallowRef(null);
 const currentStep = computed(() => {
     if (attemptStatus.value) {
         switch (attemptStatus.value) {
-        case "starting":
-            return 0;
-        case "processing":
-            return 1;
-        case "finding-best-image":
-        case "processing-best-image":
-            return 2;
-        case "completed":
-            return 4;
+            case "starting":
+                return 0;
+            case "processing":
+                return 1;
+            case "finding-best-image":
+            case "processing-best-image":
+                return 2;
+            case "completed":
+                return 4;
         }
     }
     return 0;
@@ -93,37 +106,37 @@ const timelineSteps = [
     {
         completeIcon: mdiWebCheck,
         icon: mdiWeb,
-        label: "Fetching page data"
+        label: "Fetching page data",
     },
     {
         completeIcon: mdiFileDocumentCheck,
         icon: mdiFileDocument,
-        label: "Processing page data"
+        label: "Processing page data",
     },
     {
         completeIcon: mdiImageCheck,
         icon: mdiImage,
-        label: "Finding images"
+        label: "Finding images",
     },
     {
         icon: mdiCheck,
-        label: "Finishing up"
-    }
+        label: "Finishing up",
+    },
 ];
 
 const props = defineProps({
     currency: {
         required: true,
-        type: String
+        type: String,
     },
     itemID: {
         required: true,
-        type: String
+        type: String,
     },
     url: {
         required: true,
-        type: String
-    }
+        type: String,
+    },
 });
 
 let pollingFallback = null;
@@ -146,17 +159,19 @@ const autofill = async () => {
             sseClient = new SSE("/api/content/item/autofill", {
                 method: "POST",
                 headers: {
-                    Authorization: `Bearer ${jwt}`
+                    Authorization: `Bearer ${jwt}`,
                 },
                 payload: JSON.stringify({
                     itemID: props.itemID,
                     url: props.url,
-                    currency: props.currency
-                })
+                    currency: props.currency,
+                }),
             });
         } catch (err) {
             console.error("Failed to create SSE client:", err);
-            throw new Error("Failed to start autofill process. Please try again.");
+            throw new Error(
+                "Failed to start autofill process. Please try again.",
+            );
         }
 
         autofillSSE.value = sseClient;
@@ -168,7 +183,8 @@ const autofill = async () => {
 
                 currentAttempt.value = payload.attempt || 0;
                 totalAttempts.value = payload.totalAttempts || 0;
-                attemptStatus.value = payload.attemptStatus || payload.status || "";
+                attemptStatus.value =
+                    payload.attemptStatus || payload.status || "";
                 status.value = payload.status || "";
 
                 if (payload.outputData) {
@@ -178,19 +194,26 @@ const autofill = async () => {
                 if (payload.status === "completed" && payload.outputData) {
                     completed.value = true;
                     console.log(payload.outputData);
-                    if (payload.newConsumedUnits) setUsedAutofillAllowance(payload.newConsumedUnits);
+                    if (payload.newConsumedUnits)
+                        setUsedAutofillAllowance(payload.newConsumedUnits);
                     emit("complete", JSON.stringify(payload.outputData));
                     sseClient.close();
                 }
 
                 if (payload.status === "failed") {
                     completed.value = true;
-                    emit("error", "Autofill process failed. Please try again or fill in the details manually.");
+                    emit(
+                        "error",
+                        "Autofill process failed. Please try again or fill in the details manually.",
+                    );
                     sseClient.close();
                 }
-
             } catch (parseError) {
-                console.error("Failed to parse SSE message:", parseError, event.data);
+                console.error(
+                    "Failed to parse SSE message:",
+                    parseError,
+                    event.data,
+                );
             }
         };
 
@@ -205,24 +228,43 @@ const autofill = async () => {
                     const errorPayload = JSON.parse(event.data);
                     console.error("Autofill SSE Error Payload:", errorPayload);
                     if (errorPayload.message) {
-                        emit("error", `Autofill error: ${errorPayload.message}`);
+                        emit(
+                            "error",
+                            `Autofill error: ${errorPayload.message}`,
+                        );
                     } else {
-                        emit("error", "An unknown error occurred during autofill.");
+                        emit(
+                            "error",
+                            "An unknown error occurred during autofill.",
+                        );
                     }
                 } catch (parseError) {
-                    console.error("Failed to parse SSE error message:", parseError, event.data);
-                    emit("error", "An error occurred during autofill, and the error message could not be parsed.");
+                    console.error(
+                        "Failed to parse SSE error message:",
+                        parseError,
+                        event.data,
+                    );
+                    emit(
+                        "error",
+                        "An error occurred during autofill, and the error message could not be parsed.",
+                    );
                 }
             } else {
-                emit("error", "An error occurred during autofill, and no additional information is available.");
+                emit(
+                    "error",
+                    "An error occurred during autofill, and no additional information is available.",
+                );
             }
             sseClient.close();
         };
     } catch (error) {
         console.error({
-            error
+            error,
         });
-        emit("error", "All autofill attempts have failed. Please try again later or fill in the details manually.");
+        emit(
+            "error",
+            "All autofill attempts have failed. Please try again later or fill in the details manually.",
+        );
     }
 };
 
@@ -242,9 +284,7 @@ onUnmounted(() => {
         clearInterval(pollingFallback);
     }
 });
-
 </script>
-
 
 <style lang="scss" scoped>
 .v-icon--spin {

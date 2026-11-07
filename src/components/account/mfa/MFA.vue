@@ -41,15 +41,19 @@
 </template>
 
 <script setup>
+import { mdiShieldCheck } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
 import { computed, onMounted, shallowRef } from "vue";
 import { VList, VListItem, VSwitch, VTooltip } from "vuetify/components";
 import { account } from "@/appwrite";
-import { mdiShieldCheck } from "@mdi/js";
-import TOTPFactor from "./factors/totp/TOTP.vue";
 
-import { getMFAFactors, mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
+import {
+    getMFAFactors,
+    mfaFactors as mfaFactorsStore,
+    user as userStore,
+} from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
-import { useStore } from "@nanostores/vue";
+import TOTPFactor from "./factors/totp/TOTP.vue";
 
 const user = useStore(userStore);
 const mfaFactors = useStore(mfaFactorsStore);
@@ -61,22 +65,22 @@ const hasAuthenticator = computed(() => mfaFactors.value.totp);
 const toggleMFA = async () => {
     try {
         await account.updateMFA({
-            mfa: !user.mfa
+            mfa: !user.mfa,
         });
         userStore.set({
             ...user.value,
-            mfa: !user.value.mfa
+            mfa: !user.value.mfa,
         });
         createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: `Multi-Factor Authentication has been ${user.value.mfa ? "enabled" : "disabled"}.`,
-            title: "MFA Updated"
+            title: "MFA Updated",
         });
     } catch (error) {
         console.error("Error toggling MFA:", error);
@@ -85,11 +89,11 @@ const toggleMFA = async () => {
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: "There was an error updating your MFA settings. Please try again.",
-            title: "Error"
+            title: "Error",
         });
     }
 };

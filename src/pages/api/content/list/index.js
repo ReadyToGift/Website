@@ -1,7 +1,18 @@
-import { APPWRITE_DB, APPWRITE_FULFILLMENT_COLLECTION, APPWRITE_IMAGE_BUCKET, APPWRITE_ITEM_COLLECTION, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import {
+    APPWRITE_DB,
+    APPWRITE_FULFILLMENT_COLLECTION,
+    APPWRITE_IMAGE_BUCKET,
+    APPWRITE_ITEM_COLLECTION,
+    APPWRITE_LIST_COLLECTION,
+} from "astro:env/client";
 export const prerender = false;
+
 import { AppwriteException, Permission, Query, Role } from "node-appwrite";
-import { createAdminClient, createSessionClient, requireAuth } from "@/server/appwrite";
+import {
+    createAdminClient,
+    createSessionClient,
+    requireAuth,
+} from "@/server/appwrite";
 import { getUserLimits } from "@/server/billing";
 
 const getListUsage = async ({ account, adminClient }) => {
@@ -13,9 +24,7 @@ const getListUsage = async ({ account, adminClient }) => {
         const listsResp = await adminClient.tablesDB.listRows({
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_LIST_COLLECTION,
-            queries: [
-                Query.equal("author", account.$id)
-            ]
+            queries: [Query.equal("author", account.$id)],
         });
 
         userLists = listsResp.rows;
@@ -24,19 +33,19 @@ const getListUsage = async ({ account, adminClient }) => {
 
         return new Response(
             JSON.stringify({
-                message: "Error getting user lists"
+                message: "Error getting user lists",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 
-    const publicListCount = userLists.filter(list => !list.private).length;
-    const privateListCount = userLists.filter(list => list.private).length;
+    const publicListCount = userLists.filter((list) => !list.private).length;
+    const privateListCount = userLists.filter((list) => list.private).length;
 
     return { limits, publicListCount, privateListCount };
 };
@@ -45,7 +54,9 @@ export const GET = async (context) => {
     try {
         let account = null;
         try {
-            const sessionClient = createSessionClient({ request: context.request });
+            const sessionClient = createSessionClient({
+                request: context.request,
+            });
             account = await sessionClient.account.get();
         } catch {
             // Public list access is allowed without authentication.
@@ -60,14 +71,14 @@ export const GET = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error creating admin client"
+                    message: "Error creating admin client",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -78,14 +89,14 @@ export const GET = async (context) => {
         if (!listID) {
             return new Response(
                 JSON.stringify({
-                    message: "Missing list ID"
+                    message: "Missing list ID",
                 }),
                 {
                     status: 400,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -96,36 +107,38 @@ export const GET = async (context) => {
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_LIST_COLLECTION,
                 rowId: listID,
-                queries: [Query.select(["*", "items.*"])]
+                queries: [Query.select(["*", "items.*"])],
             });
 
             if (!list) {
                 return new Response(
                     JSON.stringify({
-                        message: "List not found"
+                        message: "List not found",
                     }),
                     {
                         status: 404,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
 
-            list.items = (list.items || []).filter((item) => !item.communityList);
+            list.items = (list.items || []).filter(
+                (item) => !item.communityList,
+            );
 
             if (list.private && (!account || list.author !== account.$id)) {
                 return new Response(
                     JSON.stringify({
-                        message: "Unauthorized"
+                        message: "Unauthorized",
                     }),
                     {
                         status: 403,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
         } catch (err) {
@@ -133,14 +146,14 @@ export const GET = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error fetching list"
+                    message: "Error fetching list",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -150,7 +163,7 @@ export const GET = async (context) => {
             const communityItemsResp = await adminClient.tablesDB.listRows({
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_ITEM_COLLECTION,
-                queries: [Query.equal("communityList", list.$id)]
+                queries: [Query.equal("communityList", list.$id)],
             });
 
             communityItems = communityItemsResp.rows;
@@ -159,14 +172,14 @@ export const GET = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error getting community items"
+                    message: "Error getting community items",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -178,10 +191,13 @@ export const GET = async (context) => {
                     databaseId: APPWRITE_DB,
                     tableId: APPWRITE_FULFILLMENT_COLLECTION,
                     queries: [
-                        Query.equal("item", list.items.map((item) => item.$id)),
+                        Query.equal(
+                            "item",
+                            list.items.map((item) => item.$id),
+                        ),
                         Query.select(["*", "item.*"]),
-                        Query.limit(list.items.length)
-                    ]
+                        Query.limit(list.items.length),
+                    ],
                 });
 
                 fulfillments = fulfillmentsResp.rows;
@@ -190,14 +206,14 @@ export const GET = async (context) => {
 
                 return new Response(
                     JSON.stringify({
-                        message: "Error getting fulfillments"
+                        message: "Error getting fulfillments",
                     }),
                     {
                         status: 500,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
         }
@@ -211,7 +227,10 @@ export const GET = async (context) => {
                 return a.title.localeCompare(b.title);
             })
             .map((item) => {
-                item.fulfillment = fulfillments.find((fulfillment) => fulfillment.item.$id === item.$id) || null;
+                item.fulfillment =
+                    fulfillments.find(
+                        (fulfillment) => fulfillment.item.$id === item.$id,
+                    ) || null;
                 return item;
             });
 
@@ -220,28 +239,28 @@ export const GET = async (context) => {
                 list,
                 loadedAsAuthor: !!account && list.author === account.$id,
                 fulfillments,
-                communityItems
+                communityItems,
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     } catch (err) {
         console.log(err);
 
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Internal server error",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 };
@@ -253,17 +272,17 @@ export const POST = async (context) => {
         if (!sessionClient || !account) {
             return new Response(
                 JSON.stringify({
-                    message: "Unauthenticated"
+                    message: "Unauthenticated",
                 }),
                 {
                     status: 401,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
-        
+
         let adminClient;
 
         try {
@@ -273,18 +292,24 @@ export const POST = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error creating admin client"
+                    message: "Error creating admin client",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        const { currency, description, private: isPrivate, shortUrl, title } = await context.request.json();
+        const {
+            currency,
+            description,
+            private: isPrivate,
+            shortUrl,
+            title,
+        } = await context.request.json();
 
         let limits, publicListCount, privateListCount;
         try {
@@ -297,102 +322,111 @@ export const POST = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error getting user limits"
+                    message: "Error getting user limits",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        if (!isPrivate && limits.publicLists !== -1 && publicListCount >= limits.publicLists) {
+        if (
+            !isPrivate &&
+            limits.publicLists !== -1 &&
+            publicListCount >= limits.publicLists
+        ) {
             return new Response(
                 JSON.stringify({
-                    message: "Public list limit reached"
+                    message: "Public list limit reached",
                 }),
                 {
                     status: 400,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        if (isPrivate && limits.privateLists !== -1 && privateListCount >= limits.privateLists) {
+        if (
+            isPrivate &&
+            limits.privateLists !== -1 &&
+            privateListCount >= limits.privateLists
+        ) {
             return new Response(
                 JSON.stringify({
-                    message: "Private list limit reached"
+                    message: "Private list limit reached",
                 }),
                 {
                     status: 400,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        console.log(`User has ${publicListCount} public lists and ${privateListCount} private lists`);
+        console.log(
+            `User has ${publicListCount} public lists and ${privateListCount} private lists`,
+        );
 
         if (shortUrl) {
             try {
-                const conflictingDocuments = await adminClient.tablesDB.listRows({
-                    databaseId: APPWRITE_DB,
-                    tableId: APPWRITE_LIST_COLLECTION,
-                    queries: [
-                        Query.equal("shortUrl", shortUrl)
-                    ]
-                });
-        
+                const conflictingDocuments =
+                    await adminClient.tablesDB.listRows({
+                        databaseId: APPWRITE_DB,
+                        tableId: APPWRITE_LIST_COLLECTION,
+                        queries: [Query.equal("shortUrl", shortUrl)],
+                    });
+
                 if (conflictingDocuments.total > 0) {
                     return new Response(
                         JSON.stringify({
-                            message: "Short URL already in use"
+                            message: "Short URL already in use",
                         }),
                         {
                             status: 400,
                             headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
+                                "Content-Type": "application/json",
+                            },
+                        },
                     );
                 }
             } catch (err) {
                 if (err instanceof AppwriteException) {
                     return new Response(
                         JSON.stringify({
-                            message: err.message
+                            message: err.message,
                         }),
                         {
                             status: err.code || 500,
                             headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
+                                "Content-Type": "application/json",
+                            },
+                        },
                     );
                 }
                 return new Response(
                     JSON.stringify({
-                        message: "Error checking for conflicting short URL"
+                        message: "Error checking for conflicting short URL",
                     }),
                     {
                         status: 500,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
         }
 
-        let permissions = [
+        const permissions = [
             Permission.write(Role.user(account.$id)),
             Permission.delete(Role.user(account.$id)),
-            Permission.update(Role.user(account.$id))
+            Permission.update(Role.user(account.$id)),
         ];
 
         if (isPrivate) {
@@ -416,50 +450,50 @@ export const POST = async (context) => {
                     title,
                     authorName: account.name || account.email,
                     author: account.$id,
-                    itemCount: 0
+                    itemCount: 0,
                 },
-                permissions
+                permissions,
             });
         } catch (err) {
             console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error creating list"
+                    message: "Error creating list",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         return new Response(
             JSON.stringify({
-                list: newList
+                list: newList,
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     } catch (err) {
         console.log(err);
 
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Internal server error",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 };
@@ -471,14 +505,14 @@ export const DELETE = async (context) => {
         if (!sessionClient || !account) {
             return new Response(
                 JSON.stringify({
-                    message: "Unauthenticated"
+                    message: "Unauthenticated",
                 }),
                 {
                     status: 401,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -493,14 +527,14 @@ export const DELETE = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error creating admin client"
+                    message: "Error creating admin client",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -508,34 +542,34 @@ export const DELETE = async (context) => {
             databaseId: APPWRITE_DB,
             tableId: APPWRITE_LIST_COLLECTION,
             rowId: listId,
-            queries: [Query.select(["*", "items.*"])]
+            queries: [Query.select(["*", "items.*"])],
         });
 
         if (!list) {
             return new Response(
                 JSON.stringify({
-                    message: "List not found"
+                    message: "List not found",
                 }),
                 {
                     status: 404,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         if (list.author !== account.$id) {
             return new Response(
                 JSON.stringify({
-                    message: "Unauthorized"
+                    message: "Unauthorized",
                 }),
                 {
                     status: 403,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -544,7 +578,7 @@ export const DELETE = async (context) => {
                 try {
                     await adminClient.storage.deleteFile({
                         bucketId: APPWRITE_IMAGE_BUCKET,
-                        fileId: item.imageID
+                        fileId: item.imageID,
                     });
                 } catch (err) {
                     console.log(err);
@@ -559,9 +593,7 @@ export const DELETE = async (context) => {
             const communityItemsResp = await adminClient.tablesDB.listRows({
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_ITEM_COLLECTION,
-                queries: [
-                    Query.equal("communityList", listId)
-                ]
+                queries: [Query.equal("communityList", listId)],
             });
 
             communityItems = communityItemsResp.rows;
@@ -570,14 +602,14 @@ export const DELETE = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error getting community items"
+                    message: "Error getting community items",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -586,7 +618,7 @@ export const DELETE = async (context) => {
                 if (item.imageID) {
                     await adminClient.storage.deleteFile({
                         bucketId: APPWRITE_IMAGE_BUCKET,
-                        fileId: item.imageID
+                        fileId: item.imageID,
                     });
 
                     console.log(`Deleted community item image ${item.imageID}`);
@@ -600,48 +632,48 @@ export const DELETE = async (context) => {
             await adminClient.tablesDB.deleteRow({
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_LIST_COLLECTION,
-                rowId: listId
+                rowId: listId,
             });
         } catch (err) {
             console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error deleting list"
+                    message: "Error deleting list",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         return new Response(
             JSON.stringify({
-                message: "List deleted successfully"
+                message: "List deleted successfully",
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     } catch (err) {
         console.log(err);
 
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Internal server error",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 };
@@ -653,14 +685,14 @@ export const PUT = async (context) => {
         if (!sessionClient || !account) {
             return new Response(
                 JSON.stringify({
-                    message: "Unauthenticated"
+                    message: "Unauthenticated",
                 }),
                 {
                     status: 401,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -674,65 +706,66 @@ export const PUT = async (context) => {
 
             return new Response(
                 JSON.stringify({
-                    message: "Error creating admin client"
+                    message: "Error creating admin client",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
-        } 
+        }
 
         if (updateData.shortUrl) {
             try {
-                const conflictingDocuments = await adminClient.tablesDB.listRows({
-                    databaseId: APPWRITE_DB,
-                    tableId: APPWRITE_LIST_COLLECTION,
-                    queries: [
-                        Query.equal("shortUrl", updateData.shortUrl),
-                        Query.notEqual("$id", listId)
-                    ]
-                });
+                const conflictingDocuments =
+                    await adminClient.tablesDB.listRows({
+                        databaseId: APPWRITE_DB,
+                        tableId: APPWRITE_LIST_COLLECTION,
+                        queries: [
+                            Query.equal("shortUrl", updateData.shortUrl),
+                            Query.notEqual("$id", listId),
+                        ],
+                    });
 
                 if (conflictingDocuments.total > 0) {
                     return new Response(
                         JSON.stringify({
-                            message: "Short URL already in use"
+                            message: "Short URL already in use",
                         }),
                         {
                             status: 400,
                             headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
+                                "Content-Type": "application/json",
+                            },
+                        },
                     );
                 }
             } catch (err) {
                 if (err instanceof AppwriteException) {
                     return new Response(
                         JSON.stringify({
-                            message: err.message
+                            message: err.message,
                         }),
                         {
                             status: err.code || 500,
                             headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
+                                "Content-Type": "application/json",
+                            },
+                        },
                     );
                 }
                 return new Response(
                     JSON.stringify({
-                        message: "Error checking for conflicting short URL"
+                        message: "Error checking for conflicting short URL",
                     }),
                     {
                         status: 500,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
         }
@@ -744,54 +777,56 @@ export const PUT = async (context) => {
                 databaseId: APPWRITE_DB,
                 tableId: APPWRITE_LIST_COLLECTION,
                 rowId: listId,
-                queries: [Query.select(["*", "items.*"])]
+                queries: [Query.select(["*", "items.*"])],
             });
         } catch (err) {
             console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error fetching list"
+                    message: "Error fetching list",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         if (!list) {
             return new Response(
                 JSON.stringify({
-                    message: "List not found"
+                    message: "List not found",
                 }),
                 {
                     status: 404,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         if (list.author !== account.$id) {
             return new Response(
                 JSON.stringify({
-                    message: "Unauthorized"
+                    message: "Unauthorized",
                 }),
                 {
                     status: 403,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        const updatingToPrivate = updateData.private === true && list.private === false;
-        const updatingToPublic = updateData.private === false && list.private === true;
+        const updatingToPrivate =
+            updateData.private === true && list.private === false;
+        const updatingToPublic =
+            updateData.private === false && list.private === true;
 
         if (updatingToPrivate || updatingToPublic) {
             let userLimits;
@@ -803,14 +838,14 @@ export const PUT = async (context) => {
 
                 return new Response(
                     JSON.stringify({
-                        message: "Error getting user limits"
+                        message: "Error getting user limits",
                     }),
                     {
                         status: 500,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
 
@@ -818,31 +853,39 @@ export const PUT = async (context) => {
             const publicListCount = userLimits.publicListCount;
             const privateListCount = userLimits.privateListCount;
 
-            if (updatingToPrivate && limits.privateLists !== -1 && privateListCount >= limits.privateLists) {
+            if (
+                updatingToPrivate &&
+                limits.privateLists !== -1 &&
+                privateListCount >= limits.privateLists
+            ) {
                 return new Response(
                     JSON.stringify({
-                        message: "Private list limit reached"
+                        message: "Private list limit reached",
                     }),
                     {
                         status: 400,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
 
-            if (updatingToPublic && limits.publicLists !== -1 && publicListCount >= limits.publicLists) {
+            if (
+                updatingToPublic &&
+                limits.publicLists !== -1 &&
+                publicListCount >= limits.publicLists
+            ) {
                 return new Response(
                     JSON.stringify({
-                        message: "Public list limit reached"
+                        message: "Public list limit reached",
                     }),
                     {
                         status: 400,
                         headers: {
-                            "Content-Type": "application/json"
-                        }
-                    }
+                            "Content-Type": "application/json",
+                        },
+                    },
                 );
             }
 
@@ -850,13 +893,12 @@ export const PUT = async (context) => {
                 let communityItems;
 
                 try {
-                    const communityItemsResp = await adminClient.tablesDB.listRows({
-                        databaseId: APPWRITE_DB,
-                        tableId: APPWRITE_ITEM_COLLECTION,
-                        queries: [
-                            Query.equal("communityList", listId)
-                        ]
-                    });
+                    const communityItemsResp =
+                        await adminClient.tablesDB.listRows({
+                            databaseId: APPWRITE_DB,
+                            tableId: APPWRITE_ITEM_COLLECTION,
+                            queries: [Query.equal("communityList", listId)],
+                        });
 
                     communityItems = communityItemsResp.rows;
                 } catch (err) {
@@ -864,14 +906,14 @@ export const PUT = async (context) => {
 
                     return new Response(
                         JSON.stringify({
-                            message: "Error getting community items"
+                            message: "Error getting community items",
                         }),
                         {
                             status: 500,
                             headers: {
-                                "Content-Type": "application/json"
-                            }
-                        }
+                                "Content-Type": "application/json",
+                            },
+                        },
                     );
                 }
 
@@ -880,15 +922,17 @@ export const PUT = async (context) => {
                         if (item.imageID) {
                             await adminClient.storage.deleteFile({
                                 bucketId: APPWRITE_IMAGE_BUCKET,
-                                fileId: item.imageID
+                                fileId: item.imageID,
                             });
 
-                            console.log(`Deleted community item image ${item.imageID}`);
+                            console.log(
+                                `Deleted community item image ${item.imageID}`,
+                            );
                         }
                         await adminClient.tablesDB.deleteRow({
                             databaseId: APPWRITE_DB,
                             tableId: APPWRITE_ITEM_COLLECTION,
-                            rowId: item.$id
+                            rowId: item.$id,
                         });
 
                         console.log(`Deleted community item ${item.$id}`);
@@ -899,10 +943,10 @@ export const PUT = async (context) => {
             }
         }
 
-        let permissions = [
+        const permissions = [
             Permission.write(Role.user(account.$id)),
             Permission.delete(Role.user(account.$id)),
-            Permission.update(Role.user(account.$id))
+            Permission.update(Role.user(account.$id)),
         ];
 
         if (updateData.private) {
@@ -911,7 +955,6 @@ export const PUT = async (context) => {
             permissions.push(Permission.read(Role.any()));
         }
 
-
         if (updatingToPrivate || updatingToPublic) {
             list.items.map(async (item) => {
                 if (item.imageID) {
@@ -919,10 +962,12 @@ export const PUT = async (context) => {
                         await adminClient.storage.updateFile({
                             bucketId: APPWRITE_IMAGE_BUCKET,
                             fileId: item.imageID,
-                            permissions
+                            permissions,
                         });
 
-                        console.log(`Updated permissions for image ${item.imageID}`);
+                        console.log(
+                            `Updated permissions for image ${item.imageID}`,
+                        );
                     } catch (err) {
                         console.log(err);
                     }
@@ -934,7 +979,7 @@ export const PUT = async (context) => {
                         tableId: APPWRITE_ITEM_COLLECTION,
                         rowId: item.$id,
                         data: {},
-                        permissions
+                        permissions,
                     });
 
                     console.log(`Updated permissions for item ${item.$id}`);
@@ -952,49 +997,49 @@ export const PUT = async (context) => {
                 tableId: APPWRITE_LIST_COLLECTION,
                 rowId: listId,
                 data: updateData,
-                permissions
+                permissions,
             });
         } catch (err) {
             console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error updating list"
+                    message: "Error updating list",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
         return new Response(
             JSON.stringify({
                 message: "List updated successfully",
-                list: updatedList
+                list: updatedList,
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     } catch (err) {
         console.log(err);
 
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Internal server error",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 };

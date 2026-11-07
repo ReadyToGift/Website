@@ -1,11 +1,16 @@
 import { getCache, setCache } from "@/server/cache";
 export const prerender = false;
-import { createSessionClient } from "@/server/appwrite";
-import { extractJwt } from "@/server/auth";
-
-import { getCustomerSession, getCustomerSubscriptions, getLimits, getProProduct, getUserAutofillMeter } from "@/server/billing";
 
 import { ENABLE_BILLING } from "astro:env/client";
+import { createSessionClient } from "@/server/appwrite";
+import { extractJwt } from "@/server/auth";
+import {
+    getCustomerSession,
+    getCustomerSubscriptions,
+    getLimits,
+    getProProduct,
+    getUserAutofillMeter,
+} from "@/server/billing";
 
 const getProLimits = async () => {
     if (!ENABLE_BILLING) {
@@ -22,14 +27,14 @@ export const GET = async (context) => {
         if (!ENABLE_BILLING) {
             return new Response(
                 JSON.stringify({
-                    message: "Billing is disabled"
+                    message: "Billing is disabled",
                 }),
                 {
                     status: 200,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
@@ -46,27 +51,28 @@ export const GET = async (context) => {
             }
         } catch (error) {
             console.error("Error getting account", error);
-            
+
             return new Response(
                 JSON.stringify({
-                    message: "Internal server error when getting account"
+                    message: "Internal server error when getting account",
                 }),
                 {
                     status: 500,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
-        const [customerSession, subscriptions, autofillMeter] = await Promise.all([
-            getCustomerSession({ externalCustomerId: account.$id }),
-            getCustomerSubscriptions({ externalCustomerId: account.$id }),
-            getUserAutofillMeter({ externalCustomerId: account.$id })
-        ]);
+        const [customerSession, subscriptions, autofillMeter] =
+            await Promise.all([
+                getCustomerSession({ externalCustomerId: account.$id }),
+                getCustomerSubscriptions({ externalCustomerId: account.$id }),
+                getUserAutofillMeter({ externalCustomerId: account.$id }),
+            ]);
 
-        const hasPro = subscriptions.some(sub => sub.status === "active");
+        const hasPro = subscriptions.some((sub) => sub.status === "active");
 
         return new Response(
             JSON.stringify({
@@ -74,20 +80,20 @@ export const GET = async (context) => {
                 subscriptions,
                 autofillMeter,
                 proLimits: await getProLimits(),
-                pro: hasPro
+                pro: hasPro,
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     } catch (error) {
         console.error(error);
 
         return new Response(null, {
-            status: 500
+            status: 500,
         });
     }
 };

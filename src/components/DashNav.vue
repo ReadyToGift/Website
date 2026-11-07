@@ -14,11 +14,7 @@
                 />
             </v-list>
             <v-divider v-if="user" />
-            <v-list
-                density="compact"
-                nav
-                v-if="user"
-            >
+            <v-list density="compact" nav v-if="user">
                 <v-list-item
                     :prepend-icon="mdiFormatListBulleted"
                     title="Lists"
@@ -30,9 +26,7 @@
                     to="/dash/settings"
                 />
             </v-list>
-            <v-list
-                v-if="prefs.history && prefs.history.length > 0"
-            >
+            <v-list v-if="prefs.history && prefs.history.length > 0">
                 <v-divider v-if="user" />
                 <v-list-item
                     :prepend-icon="mdiClock"
@@ -124,7 +118,6 @@
                 </QuickSettings>
             </template>
 
-
             <v-progress-linear
                 :active="loading"
                 indeterminate
@@ -148,27 +141,26 @@ import {
     mdiLogin,
     mdiLogout,
     mdiMenu,
-    mdiTune
+    mdiTune,
 } from "@mdi/js";
-import { 
-    VAppBar, 
-    VBtn, 
-    VDivider, 
-    VList, 
-    VListItem, 
-    VNavigationDrawer, 
-    VProgressLinear, 
-    VToolbarTitle 
+import { useStore } from "@nanostores/vue";
+import {
+    VAppBar,
+    VBtn,
+    VDivider,
+    VList,
+    VListItem,
+    VNavigationDrawer,
+    VProgressLinear,
+    VToolbarTitle,
 } from "vuetify/components";
-import QuickSettings from "./dialogs/QuickSettings.vue";
 
 import { logOut as logOutUser, user as userStore } from "@/stores/auth";
 import { $prefs } from "@/stores/prefs";
-import { useStore } from "@nanostores/vue";
+import QuickSettings from "./dialogs/QuickSettings.vue";
 
 const prefs = useStore($prefs);
 const user = useStore(userStore);
-
 
 export default {
     components: {
@@ -180,13 +172,13 @@ export default {
         VAppBar,
         VToolbarTitle,
         VBtn,
-        VProgressLinear
+        VProgressLinear,
     },
     props: {
         loading: {
             type: Boolean,
-            default: true
-        }
+            default: true,
+        },
     },
     data() {
         return {
@@ -203,21 +195,25 @@ export default {
             mdiLogout,
             mdiMenu,
             mdiTune,
-            user
+            user,
         };
     },
     methods: {
-        logIn () {
+        logIn() {
             this.loadingLoginLogout = true;
-            const currentPath = window.location.pathname + window.location.search;
-            this.$router.push({ path: "/dash/login", query: { redirect: currentPath } });
+            const currentPath =
+                window.location.pathname + window.location.search;
+            this.$router.push({
+                path: "/dash/login",
+                query: { redirect: currentPath },
+            });
             this.loadingLoginLogout = false;
         },
         async logout() {
             this.loadingLoginLogout = true;
             await logOutUser();
             window.location.reload();
-        }
-    }
+        },
+    },
 };
 </script>

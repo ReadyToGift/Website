@@ -28,7 +28,8 @@
                     type="submit"
                     color="primary"
                     :loading="loadingRegistration"
-                >Register</v-btn>
+                    >Register</v-btn
+                >
             </v-form>
             <v-alert
                 :type="alert.type || 'error'"
@@ -43,23 +44,25 @@
         </div>
         <p>
             Already have an account?
-            <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
+            <router-link :to="{ path: '/dash/login', query: { redirect } }"
+                >Login here</router-link
+            >
         </p>
     </div>
 </template>
 
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
+import { ID } from "appwrite";
 import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
 import { account } from "@/appwrite";
-import { ID } from "appwrite";
 
 export default {
     components: {
         VForm,
         VTextField,
         VBtn,
-        VAlert
+        VAlert,
     },
     data() {
         const successRedirect = window.location.origin + this.redirect;
@@ -69,16 +72,16 @@ export default {
             mdiAlert,
             registrationDetails: {
                 email: "",
-                password: ""
+                password: "",
             },
-            successRedirect
+            successRedirect,
         };
     },
     props: {
         redirect: {
             type: String,
-            default: "/dash/lists"
-        }
+            default: "/dash/lists",
+        },
     },
     methods: {
         async register() {
@@ -86,7 +89,7 @@ export default {
             if (!this.registrationDetails.name) {
                 this.alert = {
                     text: "Please enter a name.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
@@ -94,7 +97,7 @@ export default {
             if (!this.registrationDetails.email) {
                 this.alert = {
                     text: "Please enter an email address.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
@@ -102,17 +105,18 @@ export default {
             if (!this.registrationDetails.password) {
                 this.alert = {
                     text: "Please enter a password.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
 
             if (
-                this.registrationDetails.password !== this.registrationDetails.passwordConfirmation
+                this.registrationDetails.password !==
+                this.registrationDetails.passwordConfirmation
             ) {
                 this.alert = {
                     text: "Passwords do not match.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
@@ -123,7 +127,7 @@ export default {
                     ID.unique(),
                     this.registrationDetails.email.trim(),
                     this.registrationDetails.password.trim(),
-                    this.registrationDetails.name.trim()
+                    this.registrationDetails.name.trim(),
                 );
 
                 if (accResp.status === true) {
@@ -131,26 +135,29 @@ export default {
                         icon: mdiInformation,
                         text: "Account created successfully, redirecting you to the login page.",
                         title: "Success",
-                        type: "success"
+                        type: "success",
                     };
 
                     this.loadingRegistration = false;
 
                     setTimeout(() => {
-                        this.$router.push({ path: "/dash/login", query: { redirect: this.redirect } });
+                        this.$router.push({
+                            path: "/dash/login",
+                            query: { redirect: this.redirect },
+                        });
                     }, 2000);
                 }
             } catch (error) {
                 this.alert = {
                     text: error.message,
-                    title: "Error"
+                    title: "Error",
                 };
 
                 this.loadingRegistration = false;
                 return;
             }
-        }
-    }
+        },
+    },
 };
 </script>
 

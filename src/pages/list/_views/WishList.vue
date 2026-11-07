@@ -1,8 +1,5 @@
 <template>
-    <div
-        class="loader-outer"
-        v-if="!list && !newItem.notFound"
-    >
+    <div class="loader-outer" v-if="!list && !newItem.notFound">
         <div class="loader-inner">
             <v-progress-circular
                 indeterminate
@@ -16,10 +13,8 @@
         </div>
     </div>
     <template v-else-if="!newItem.notFound">
-        <div
-            class="page-content"
-        >
-            <PWAPrompt class="mb-5"/>
+        <div class="page-content">
+            <PWAPrompt class="mb-5" />
             <ListCard
                 :header="true"
                 :list="list"
@@ -52,10 +47,7 @@
                 color="primary"
             />
 
-            <div
-                class="items"
-                v-if="itemGroups.length"
-            >
+            <div class="items" v-if="itemGroups.length">
                 <div
                     class="item-group"
                     v-for="itemGroup in itemGroups"
@@ -80,10 +72,7 @@
                     </div>
                 </div>
             </div>
-            <div
-                class="no-items"
-                v-else
-            >
+            <div class="no-items" v-else>
                 <v-spacer height="20" />
                 <v-alert
                     type="info"
@@ -96,21 +85,17 @@
                         v-slot:text
                         v-if="list.items && list.items.length"
                     >
-                        Items exist on this list, but they've all been fulfilled. Lucky them!
+                        Items exist on this list, but they've all been
+                        fulfilled. Lucky them!
                     </template>
-                    <template
-                        v-slot:text
-                        v-else
-                    >
+                    <template v-slot:text v-else>
                         No items currently exist in this list.
                         <template v-if="wishlistOwner"> Add some! </template>
                     </template>
                 </v-alert>
             </div>
         </div>
-        <div
-            class="add-item-fab"
-        >
+        <div class="add-item-fab">
             <ModifyItem
                 :list="list"
                 :currency="list.currency"
@@ -129,25 +114,40 @@
 </template>
 
 <script>
-import { VAlert, VDivider, VProgressCircular, VSpacer, VSwitch } from "vuetify/components";
-import { avatars } from "@/appwrite";
 import { ENABLE_BILLING } from "astro:env/client";
-import { handleFetch } from "@/utils/handleFetch";
+import { mdiInformation } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import {
+    VAlert,
+    VDivider,
+    VProgressCircular,
+    VSpacer,
+    VSwitch,
+} from "vuetify/components";
+import { avatars } from "@/appwrite";
+import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
-import { mdiInformation  } from "@mdi/js";
-import ModifyItem from "@/components/dialogs/ModifyItem.vue";
-import NotFound from "../../404/_NotFound.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-
-import { $prefs, addToHistory } from "@/stores/prefs";
-import { billing as billingStore, limits as limitsStore } from "@/stores/billing";
-import { getJwt, previouslyLoggedInUserID as previouslyLoggedInUserIDStore, user as userStore } from "@/stores/auth";
-import { setCount as setListCount, userLists as userListsStore } from "@/stores/userLists";
 import { clientRouter } from "@/router";
-import { create as createDialog } from "@/stores/dialogs";
+import {
+    getJwt,
+    previouslyLoggedInUserID as previouslyLoggedInUserIDStore,
+    user as userStore,
+} from "@/stores/auth";
+import {
+    billing as billingStore,
+    limits as limitsStore,
+} from "@/stores/billing";
 import { formatter as currencyFormatter } from "@/stores/currency";
-import { useStore } from "@nanostores/vue";
+import { create as createDialog } from "@/stores/dialogs";
+import { $prefs, addToHistory } from "@/stores/prefs";
+import {
+    setCount as setListCount,
+    userLists as userListsStore,
+} from "@/stores/userLists";
+import { handleFetch } from "@/utils/handleFetch";
+import NotFound from "../../404/_NotFound.vue";
 
 export default {
     components: {
@@ -160,7 +160,7 @@ export default {
         VSpacer,
         VProgressCircular,
         NotFound,
-        PWAPrompt
+        PWAPrompt,
     },
     data() {
         return {
@@ -177,7 +177,7 @@ export default {
                 value: 0,
                 bufferValue: 0,
                 max: 3,
-                status: "Loading list"
+                status: "Loading list",
             },
             mdiInformation,
             newItem: {
@@ -186,28 +186,36 @@ export default {
                 price: 0,
                 priority: "none",
                 title: "",
-                url: ""
+                url: "",
             },
             notFound: false,
             userLists: useStore(userListsStore),
-            priceGroups: [0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+            priceGroups: [
+                0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000,
+            ],
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
-            showFulfilled: import.meta.env.SSR ? true : localStorage.getItem("showFulfilled") !== "false",
+            showFulfilled: import.meta.env.SSR
+                ? true
+                : localStorage.getItem("showFulfilled") !== "false",
             sort: "price",
             user: useStore(userStore),
-            quickCreateURL: null
+            quickCreateURL: null,
         };
     },
     props: {
         listId: {
             type: String,
-            required: false
-        }
+            required: false,
+        },
     },
     computed: {
         itemLimitReached() {
-            return this.wishlistOwner && this.list.itemCount >= this.limits.itemsPerList && this.limits.itemsPerList != -1;
+            return (
+                this.wishlistOwner &&
+                this.list.itemCount >= this.limits.itemsPerList &&
+                this.limits.itemsPerList != -1
+            );
         },
         itemGroups() {
             if (!this.list) return [];
@@ -215,16 +223,20 @@ export default {
 
             const groups = this.priceGroups
                 .map((price, index) => {
-                    const lowerBound = index === 0 ? 0 : this.priceGroups[index - 1];
+                    const lowerBound =
+                        index === 0 ? 0 : this.priceGroups[index - 1];
                     const upperBound = price;
 
-                    const title = price === 0 ? "Flexible Gifts" : this.currencyFormatter(this.list.currency)
-                        .format(lowerBound)
-                        .split(".")[0] +
-                        " - " +
-                        this.currencyFormatter(this.list.currency)
-                            .format(upperBound)
-                            .split(".")[0];
+                    const title =
+                        price === 0
+                            ? "Flexible Gifts"
+                            : this.currencyFormatter(this.list.currency)
+                                  .format(lowerBound)
+                                  .split(".")[0] +
+                              " - " +
+                              this.currencyFormatter(this.list.currency)
+                                  .format(upperBound)
+                                  .split(".")[0];
 
                     return {
                         id: price,
@@ -236,14 +248,21 @@ export default {
                                     item.fulfillment
                                 )
                                     return false; // skip it
-                                if ((item.price >= lowerBound && item.price < upperBound && item.price !== 0) || (item.price === 0 && upperBound === 0)) {
+                                if (
+                                    (item.price >= lowerBound &&
+                                        item.price < upperBound &&
+                                        item.price !== 0) ||
+                                    (item.price === 0 && upperBound === 0)
+                                ) {
                                     return item;
                                 }
                             })
                             .sort((a, b) => {
                                 if (!this.wishlistOwner) {
-                                    if (a.fulfillment && !b.fulfillment) return 1;
-                                    if (!a.fulfillment && b.fulfillment) return -1;
+                                    if (a.fulfillment && !b.fulfillment)
+                                        return 1;
+                                    if (!a.fulfillment && b.fulfillment)
+                                        return -1;
                                 }
 
                                 if (this.sort === "price") {
@@ -251,15 +270,21 @@ export default {
                                 }
                                 return a.title.localeCompare(b.title);
                             }),
-                        title
+                        title,
                     };
                 })
                 .filter((group) => group.items.length);
 
             const itemsAboveLargestPriceGroup = items.filter((item) => {
-                if (!this.showFulfilled && !this.wishlistOwner && item.fulfillment)
+                if (
+                    !this.showFulfilled &&
+                    !this.wishlistOwner &&
+                    item.fulfillment
+                )
                     return false;
-                if (item.price >= this.priceGroups[this.priceGroups.length - 1]) {
+                if (
+                    item.price >= this.priceGroups[this.priceGroups.length - 1]
+                ) {
                     return item;
                 }
             });
@@ -270,19 +295,25 @@ export default {
                     items: itemsAboveLargestPriceGroup,
                     title:
                         this.currencyFormatter(this.list.currency)
-                            .format(this.priceGroups[this.priceGroups.length - 1])
-                            .split(".")[0] +
-                        "+"
+                            .format(
+                                this.priceGroups[this.priceGroups.length - 1],
+                            )
+                            .split(".")[0] + "+",
                 });
             }
 
-            if ((!this.wishlistOwner || this.spoilSurprises) && this.communityItems.length) {
+            if (
+                (!this.wishlistOwner || this.spoilSurprises) &&
+                this.communityItems.length
+            ) {
                 groups.push({
                     id: "contributed",
                     items: [...this.communityItems].sort((a, b) =>
-                        this.sort === "price" ? a.price - b.price : a.title.localeCompare(b.title)
+                        this.sort === "price"
+                            ? a.price - b.price
+                            : a.title.localeCompare(b.title),
                     ),
-                    title: "Gifts from others"
+                    title: "Gifts from others",
                 });
             }
 
@@ -293,17 +324,20 @@ export default {
         },
         wishlistOwner() {
             return this.user && this.user.$id === this.list.author;
-        }
+        },
     },
     methods: {
         resetQuickCreateURL() {
             const { quickCreateURL, ...remainingQueries } = Object.fromEntries(
-                new URLSearchParams(window.location.search)
+                new URLSearchParams(window.location.search),
             );
             if (quickCreateURL) {
-                const newQueryString = new URLSearchParams(remainingQueries).toString();
+                const newQueryString = new URLSearchParams(
+                    remainingQueries,
+                ).toString();
                 const newURL =
-                    window.location.pathname + (newQueryString ? `?${newQueryString}` : "");
+                    window.location.pathname +
+                    (newQueryString ? `?${newQueryString}` : "");
                 window.history.replaceState({}, document.title, newURL);
             }
         },
@@ -315,13 +349,13 @@ export default {
                             action: "close",
                             color: "primary",
                             text: "Okay",
-                            variant: "elevated"
-                        }
+                            variant: "elevated",
+                        },
                     ],
                     text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
                     Please remove some items before adding more.`,
                     title: "Item limit reached",
-                    variant: "warning"
+                    variant: "warning",
                 });
             } else if (this.billing.isPro) {
                 createDialog({
@@ -330,19 +364,19 @@ export default {
                             action: "close",
                             color: "primary",
                             text: "Okay",
-                            variant: "elevated"
+                            variant: "elevated",
                         },
                         {
                             to: "/contact",
                             closeAfterAction: true,
                             color: "secondary",
-                            text: "Contact"
-                        }
+                            text: "Contact",
+                        },
                     ],
                     text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
                     Please remove some items, or contact support if you'd like this limit raised.`,
                     title: "Item limit reached",
-                    variant: "warning"
+                    variant: "warning",
                 });
             } else {
                 createDialog({
@@ -351,19 +385,19 @@ export default {
                             action: "close",
                             color: "primary",
                             text: "Okay",
-                            variant: "elevated"
+                            variant: "elevated",
                         },
                         {
                             to: "/dash/settings/billing",
                             closeAfterAction: true,
                             color: "secondary",
-                            text: "Upgrade"
-                        }
+                            text: "Upgrade",
+                        },
                     ],
                     text: `You have used ${this.list.itemCount}/${this.limits.itemsPerList} of your limit of items in a list
                     Please remove some items, or upgrade your plan.`,
                     title: "Item limit reached",
-                    variant: "warning"
+                    variant: "warning",
                 });
             }
         },
@@ -393,10 +427,12 @@ export default {
             this.showFulfilled = true;
             this.$nextTick(() => {
                 setTimeout(() => {
-                    const newItem = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    const newItem = document.body.querySelector(
+                        `[data-item-id="${data.item.$id}"]`,
+                    );
                     newItem.scrollIntoView({
                         behavior: "smooth",
-                        block: "center"
+                        block: "center",
                     });
                 }, 500);
             });
@@ -419,20 +455,26 @@ export default {
             }
             this.$nextTick(() => {
                 setTimeout(() => {
-                    const newItem = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    const newItem = document.body.querySelector(
+                        `[data-item-id="${data.item.$id}"]`,
+                    );
                     newItem.scrollIntoView({
                         behavior: "smooth",
-                        block: "center"
+                        block: "center",
                     });
                 }, 500);
             });
         },
         async removeItem(id) {
             if (this.communityItems.find((item) => item.$id === id)) {
-                this.communityItems = this.communityItems.filter((item) => item.$id !== id);
+                this.communityItems = this.communityItems.filter(
+                    (item) => item.$id !== id,
+                );
                 return;
             } else {
-                this.list.items = this.list.items.filter((item) => item.$id !== id);
+                this.list.items = this.list.items.filter(
+                    (item) => item.$id !== id,
+                );
                 this.list.itemCount = this.list.items.length;
             }
         },
@@ -446,10 +488,12 @@ export default {
 
             if (this.showFulfilled === true) {
                 this.$nextTick(() => {
-                    const el = document.body.querySelector(`[data-item-id="${data.item.$id}"]`);
+                    const el = document.body.querySelector(
+                        `[data-item-id="${data.item.$id}"]`,
+                    );
                     el.scrollIntoView({
                         behavior: "smooth",
-                        block: "center"
+                        block: "center",
                     });
                 });
             }
@@ -463,15 +507,21 @@ export default {
             });
 
             this.$nextTick(() => {
-                const el = document.body.querySelector(`[data-item-id="${itemId}"]`);
+                const el = document.body.querySelector(
+                    `[data-item-id="${itemId}"]`,
+                );
                 el.scrollIntoView({
                     behavior: "smooth",
-                    block: "center"
+                    block: "center",
                 });
             });
         },
         async createAvoidSpoilersDialog(list) {
-            if (!this.user && this.previouslyLoggedInUserID && list.author === this.previouslyLoggedInUserID) {
+            if (
+                !this.user &&
+                this.previouslyLoggedInUserID &&
+                list.author === this.previouslyLoggedInUserID
+            ) {
                 const dialogResponse = await this.createDialog({
                     actions: [
                         {
@@ -481,39 +531,43 @@ export default {
                             closeAfterAction: true,
                             color: "error",
                             text: "Continue Anyway",
-                            variant: "text"
+                            variant: "text",
                         },
                         {
                             action: async () => {
-                                this.$router.push({ 
-                                    path: "/dash/login", 
-                                    query: { redirect: window.location.pathname + window.location.search }
+                                this.$router.push({
+                                    path: "/dash/login",
+                                    query: {
+                                        redirect:
+                                            window.location.pathname +
+                                            window.location.search,
+                                    },
                                 });
                             },
                             closeAfterAction: true,
                             color: "primary",
                             text: "Log In",
-                            variant: "elevated"
-                        }
+                            variant: "elevated",
+                        },
                     ],
                     async: true,
                     opaque: true,
                     persistent: true,
                     text: "It appears you may have created this list. Would you like to log in, to avoid spoilers?",
                     title: "Warning",
-                    variant: "warning"
+                    variant: "warning",
                 });
 
                 return dialogResponse.action === "Continue Anyway";
             }
             return true;
         },
-        async getList ({ listId, sort = "price" }) {
+        async getList({ listId, sort = "price" }) {
             this.loading = {
                 ...this.loading,
                 status: "Getting list",
                 value: 0,
-                bufferValue: 1
+                bufferValue: 1,
             };
             const query = new URLSearchParams({ sort });
             if (typeof listId === "string" && listId) {
@@ -521,16 +575,21 @@ export default {
             }
             const jwt = await getJwt();
 
-            const [listData, listError] = await handleFetch(`/api/content/list?${query.toString()}`, {
-                headers: jwt
-                    ? {
-                        Authorization: `Bearer ${jwt}`
-                    }
-                    : {}
-            });
+            const [listData, listError] = await handleFetch(
+                `/api/content/list?${query.toString()}`,
+                {
+                    headers: jwt
+                        ? {
+                              Authorization: `Bearer ${jwt}`,
+                          }
+                        : {},
+                },
+            );
 
             if (listError) {
-                const error = new Error(listError.message || "Failed to get list");
+                const error = new Error(
+                    listError.message || "Failed to get list",
+                );
                 error.code = listError.status;
                 throw error;
             }
@@ -539,35 +598,35 @@ export default {
                 ...this.loading,
                 status: "Getting community items",
                 value: 1,
-                bufferValue: 2
+                bufferValue: 2,
             };
 
             this.loading = {
                 ...this.loading,
                 status: "Getting fulfillments",
                 value: 2,
-                bufferValue: 3
+                bufferValue: 3,
             };
 
             this.loading = {
                 ...this.loading,
                 status: "Finishing up",
                 value: 2,
-                bufferValue: 3
+                bufferValue: 3,
             };
-            
+
             this.loading = {
                 ...this.loading,
                 status: "Getting community items",
                 value: 3,
-                bufferValue: 3
+                bufferValue: 3,
             };
 
             return {
                 list: listData.list,
                 loadedAsAuthor: listData.loadedAsAuthor,
                 fulfillments: listData.fulfillments,
-                communityItems: listData.communityItems
+                communityItems: listData.communityItems,
             };
         },
         async setList({ listData }) {
@@ -582,7 +641,7 @@ export default {
                     avatar: avatars.getInitials(this.list.authorName),
                     id: this.list.$id,
                     subtitle: `By ${this.list.authorName}`,
-                    title: this.list.title
+                    title: this.list.title,
                 });
             } catch (error) {
                 if (error?.code === 404) {
@@ -595,20 +654,27 @@ export default {
                         {
                             action: "close",
                             color: "primary",
-                            text: "OK"
-                        }
+                            text: "OK",
+                        },
                     ],
-                    text: "An error occurred while trying to load this list. Please try again later. " + error.message,
+                    text:
+                        "An error occurred while trying to load this list. Please try again later. " +
+                        error.message,
                     title: "Error",
-                    variant: "error"
+                    variant: "error",
                 });
             }
         },
         async loadList(listId) {
             try {
-                const listData = await this.getList({ listId, user: this.user });
+                const listData = await this.getList({
+                    listId,
+                    user: this.user,
+                });
                 if (listData && listData.list) {
-                    const continueAnyway = await this.createAvoidSpoilersDialog(listData.list);
+                    const continueAnyway = await this.createAvoidSpoilersDialog(
+                        listData.list,
+                    );
                     if (!continueAnyway) {
                         return; // redirected to login
                     }
@@ -621,7 +687,7 @@ export default {
                     return;
                 }
             }
-        }
+        },
     },
     watch: {
         showFulfilled(val) {
@@ -631,7 +697,7 @@ export default {
             this.list = false;
             this.newItem.notFound = false;
             this.loadList(this.listId);
-        }
+        },
     },
     async created() {
         if (import.meta.env.SSR) return;
@@ -653,20 +719,29 @@ export default {
             const jwt = await getJwt();
 
             if (jwt) {
-                const [listsData, listsError] = await handleFetch("/api/content/lists", {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`
-                    }
-                });
+                const [listsData, listsError] = await handleFetch(
+                    "/api/content/lists",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${jwt}`,
+                        },
+                    },
+                );
 
                 if (!listsError && listsData?.lists) {
-                    const ownLists = listsData.lists.filter((list) => list.author === this.user.$id);
-                    const publicLists = ownLists.filter((list) => !list.private);
-                    const privateLists = ownLists.filter((list) => list.private);
+                    const ownLists = listsData.lists.filter(
+                        (list) => list.author === this.user.$id,
+                    );
+                    const publicLists = ownLists.filter(
+                        (list) => !list.private,
+                    );
+                    const privateLists = ownLists.filter(
+                        (list) => list.private,
+                    );
 
                     setListCount({
                         private: privateLists.length,
-                        public: publicLists.length
+                        public: publicLists.length,
                     });
                 }
             }
@@ -681,7 +756,7 @@ export default {
             }
         });
         this.quickCreateURL = route.query.quickCreateURL || null;
-    }
+    },
 };
 </script>
 

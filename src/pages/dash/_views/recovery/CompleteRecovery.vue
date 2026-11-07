@@ -13,11 +13,7 @@
                     label="Password Confirmation"
                     type="password"
                 />
-                <v-btn
-                    type="submit"
-                    color="primary"
-                    :loading="loadingRecovery"
-                >
+                <v-btn type="submit" color="primary" :loading="loadingRecovery">
                     Recover Account
                 </v-btn>
             </v-form>
@@ -45,7 +41,7 @@ export default {
         VForm,
         VTextField,
         VBtn,
-        VAlert
+        VAlert,
     },
     data() {
         return {
@@ -56,19 +52,19 @@ export default {
                 password: "",
                 passwordConfirmation: "",
                 secret: "",
-                userId: ""
-            }
+                userId: "",
+            },
         };
     },
     props: {
         secret: {
             type: String,
-            required: true
+            required: true,
         },
         userId: {
             type: String,
-            required: true
-        }
+            required: true,
+        },
     },
     methods: {
         async completeRecovery() {
@@ -76,17 +72,18 @@ export default {
             if (!this.recoveryDetails.password) {
                 this.alert = {
                     text: "Please enter a password.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
 
             if (
-                this.recoveryDetails.password !== this.recoveryDetails.passwordConfirmation
+                this.recoveryDetails.password !==
+                this.recoveryDetails.passwordConfirmation
             ) {
                 this.alert = {
                     text: "Passwords do not match.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
@@ -95,16 +92,16 @@ export default {
             try {
                 await account.updateRecovery(
                     this.recoveryDetails.userId,
-                    this.recoveryDetails.secret,                    
+                    this.recoveryDetails.secret,
                     this.recoveryDetails.password.trim(),
-                    this.recoveryDetails.passwordConfirmation.trim()
+                    this.recoveryDetails.passwordConfirmation.trim(),
                 );
 
                 this.alert = {
                     icon: mdiInformation,
                     text: "Account recovered successfully, redirecting you to the login page.",
                     title: "Success",
-                    type: "success"
+                    type: "success",
                 };
 
                 this.loadingRecovery = false;
@@ -115,18 +112,18 @@ export default {
             } catch (error) {
                 this.alert = {
                     text: error.message,
-                    title: "Error"
+                    title: "Error",
                 };
 
                 this.loadingRecovery = false;
                 return;
             }
-        }
+        },
     },
     mounted() {
         this.recoveryDetails.userId = this.userId;
         this.recoveryDetails.secret = this.secret;
-    }
+    },
 };
 </script>
 

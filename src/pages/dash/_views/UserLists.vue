@@ -12,19 +12,15 @@
             v-if="user?.emailVerification === false"
         >
             <v-card-actions>
-                <v-btn
-                    @click="verifyEmail"
-                    color="warning"
-                    variant="elevated"
-                > Send Verification Email </v-btn>
-                <v-dialog
-                    max-width="500"
-                    v-model="verificationDialog"
-                >
+                <v-btn @click="verifyEmail" color="warning" variant="elevated">
+                    Send Verification Email
+                </v-btn>
+                <v-dialog max-width="500" v-model="verificationDialog">
                     <v-card>
                         <v-card-text>
-                            A verification email has been sent to {{ user.value.email }}. Please
-                            check your inbox and spam folder, the link will be valid for 7 days.
+                            A verification email has been sent to
+                            {{ user.value.email }}. Please check your inbox and
+                            spam folder, the link will be valid for 7 days.
                         </v-card-text>
 
                         <v-card-actions>
@@ -40,11 +36,7 @@
             </v-card-actions>
         </v-alert>
         <PWAPrompt />
-        <v-card
-            color="surface"
-            variant="flat"
-            class="pa-0 mb-4"
-        >
+        <v-card color="surface" variant="flat" class="pa-0 mb-4">
             <v-card-item class="px-0">
                 <template v-slot:title>
                     <h1 class="mb-0">Your lists</h1>
@@ -57,15 +49,9 @@
                     />
                 </template>
             </v-card-item>
-            <v-card-text
-                class="px-0"
-                v-if="prefs.listSorting"
-            >
+            <v-card-text class="px-0" v-if="prefs.listSorting">
                 <div class="sorting">
-                    <v-btn-group
-                        variant="tonal"
-                        divided
-                    >
+                    <v-btn-group variant="tonal" divided>
                         <v-btn ref="sortTypeButton">
                             {{ prefs.listSorting.type.name }}
                             <v-menu
@@ -103,73 +89,65 @@
                         hide-details
                         :menu-props="{
                             activator: $refs.sortTypeButton,
-                            closeOnClick: true
+                            closeOnClick: true,
                         }"
                         v-show="false"
                     />
                 </div>
             </v-card-text>
         </v-card>
-        <v-card
-            variant="tonal"
-            class="mb-4"
-            v-if="quickCreateURL"
-        >
+        <v-card variant="tonal" class="mb-4" v-if="quickCreateURL">
             <v-card-text>
                 <p>Select or create a list to add the following item to:</p>
                 <strong>URL:</strong> {{ quickCreateURL }}
             </v-card-text>
         </v-card>
 
-
-        <v-sheet
-            elevation="0"
-        >
+        <v-sheet elevation="0">
             <v-tabs
                 color="primary"
                 v-model="tab"
                 :stacked="$vuetify.display.mobile"
                 :align-tabs="$vuetify.display.mobile ? 'center' : 'left'"
             >
-                <v-tab
-                    value="public"
-                    :prepend-icon="mdiEarth"
-                >
-                    Public {{ $vuetify.display.mobile ? '' : 'Lists' }}
+                <v-tab value="public" :prepend-icon="mdiEarth">
+                    Public {{ $vuetify.display.mobile ? "" : "Lists" }}
                     <v-chip
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
                     >
-                        <template v-if="loading">
-                            -
-                        </template>
+                        <template v-if="loading"> - </template>
                         <template v-else>
                             {{ userLists.listCount.public }}
-                            <template v-if="limits.publicLists && limits.publicLists > 0">
+                            <template
+                                v-if="
+                                    limits.publicLists && limits.publicLists > 0
+                                "
+                            >
                                 / {{ limits.publicLists }}
                             </template>
                         </template>
                     </v-chip>
                 </v-tab>
-                <v-tab
-                    value="private"
-                    :prepend-icon="mdiLock"
-                >
-                    Private {{ $vuetify.display.mobile ? '' : 'Lists' }}
+                <v-tab value="private" :prepend-icon="mdiLock">
+                    Private {{ $vuetify.display.mobile ? "" : "Lists" }}
                     <v-chip
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
                     >
-                        <template v-if="loading">
-                            -
-                        </template>
+                        <template v-if="loading"> - </template>
                         <template v-else>
                             {{ userLists.listCount.private }}
-                            <template v-if="limits.privateLists && limits.privateLists > 0">
+                            <template
+                                v-if="
+                                    limits.privateLists &&
+                                    limits.privateLists > 0
+                                "
+                            >
                                 / {{ limits.privateLists }}
                             </template>
                         </template>
@@ -180,16 +158,14 @@
                     :prepend-icon="mdiStar"
                     :disabled="!!quickCreateURL"
                 >
-                    Saved {{ $vuetify.display.mobile ? '' : 'Lists' }}
+                    Saved {{ $vuetify.display.mobile ? "" : "Lists" }}
                     <v-chip
                         rounded="pill"
                         variant="tonal"
                         :class="$vuetify.display.mobile ? 'mt-2 mb-2' : 'ml-2'"
                         :size="$vuetify.display.mobile ? 'x-small' : 'small'"
                     >
-                        <template v-if="loading">
-                            -
-                        </template>
+                        <template v-if="loading"> - </template>
                         <template v-else>
                             {{ savedLists.length }}
                         </template>
@@ -197,12 +173,10 @@
                 </v-tab>
             </v-tabs>
 
-            <v-divider/>
+            <v-divider />
 
             <v-tabs-window v-model="tab">
-                <v-tabs-window-item
-                    value="public"
-                >
+                <v-tabs-window-item value="public">
                     <template v-if="!loading">
                         <v-list>
                             <ListCard
@@ -219,8 +193,8 @@
                             border="start"
                             dense
                         >
-                            There are no public lists available. Create a new list and make it
-                            public to share it with others!
+                            There are no public lists available. Create a new
+                            list and make it public to share it with others!
                         </v-alert>
                     </template>
                     <template v-else>
@@ -246,8 +220,8 @@
                             border="start"
                             dense
                         >
-                            You have no private lists. Create one to keep it hidden from
-                            others!
+                            You have no private lists. Create one to keep it
+                            hidden from others!
                         </v-alert>
                     </template>
                     <template v-else>
@@ -272,8 +246,8 @@
                             border="start"
                             dense
                         >
-                            You have no saved lists. Save lists to access them quickly from
-                            here!
+                            You have no saved lists. Save lists to access them
+                            quickly from here!
                         </v-alert>
                     </template>
                     <template v-else>
@@ -288,23 +262,52 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
-import { mdiEarth, mdiInformation, mdiLock, mdiSortAscending, mdiSortDescending, mdiStar } from "@mdi/js";
-import { VAlert, VBtn, VBtnGroup, VCard, VCardActions, VCardItem, VCardText, VChip, VDialog, VDivider, VList, VMenu, VSelect, VSheet, VSkeletonLoader, VSpacer, VTab, VTabs, VTabsWindow, VTabsWindowItem } from "vuetify/components";
-import { account } from "@/appwrite";
-
-import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
-import { getJwt, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
-import { handleFetch } from "@/utils/handleFetch";
-import { useRouter } from "vue-router";
+import {
+    mdiEarth,
+    mdiInformation,
+    mdiLock,
+    mdiSortAscending,
+    mdiSortDescending,
+    mdiStar,
+} from "@mdi/js";
 import { useStore } from "@nanostores/vue";
-
-import { setCount as setListsCount, userLists as userListsStore } from "@/stores/userLists";
+import { computed, onMounted, ref, watch } from "vue";
+import { useRouter } from "vue-router";
+import {
+    VAlert,
+    VBtn,
+    VBtnGroup,
+    VCard,
+    VCardActions,
+    VCardItem,
+    VCardText,
+    VChip,
+    VDialog,
+    VDivider,
+    VList,
+    VMenu,
+    VSelect,
+    VSheet,
+    VSkeletonLoader,
+    VSpacer,
+    VTab,
+    VTabs,
+    VTabsWindow,
+    VTabsWindowItem,
+} from "vuetify/components";
+import { account } from "@/appwrite";
 import CreateList from "@/components/dialogs/CreateList.vue";
-import { limits as limitsStore } from "@/stores/billing";
 import ListCard from "@/components/ListCard.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
+import { getJwt, user as userStore } from "@/stores/auth";
+import { limits as limitsStore } from "@/stores/billing";
+import { create as createDialog } from "@/stores/dialogs";
+import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
+import {
+    setCount as setListsCount,
+    userLists as userListsStore,
+} from "@/stores/userLists";
+import { handleFetch } from "@/utils/handleFetch";
 import validation from "@/utils/validation";
 
 const router = useRouter();
@@ -318,26 +321,30 @@ const newUserPrefs = ref($prefs.get());
 const lists = ref([]);
 const loading = ref(true);
 const quickCreateURL = ref(false);
-const savedLists = computed(() => lists.value.filter((list) =>
-    prefs.value.savedLists?.includes(list.$id)
-));
+const savedLists = computed(() =>
+    lists.value.filter((list) => prefs.value.savedLists?.includes(list.$id)),
+);
 const sorting = ref({
     typeOptions: [
         { name: "Title", value: "title" },
         { name: "Last updated", value: "$updatedAt" },
         { name: "Created", value: "$createdAt" },
-        { name: "Item Count", value: "itemCount" }
-    ]
+        { name: "Item Count", value: "itemCount" },
+    ],
 });
 const tab = ref("public");
 const verificationDialog = ref(false);
 
 const privateLists = computed(() => {
-    return lists.value.filter((list) => list.private && !prefs.value.savedLists?.includes(list.$id));
+    return lists.value.filter(
+        (list) => list.private && !prefs.value.savedLists?.includes(list.$id),
+    );
 });
 
 const publicLists = computed(() => {
-    return lists.value.filter((list) => !list.private && !prefs.value.savedLists?.includes(list.$id));
+    return lists.value.filter(
+        (list) => !list.private && !prefs.value.savedLists?.includes(list.$id),
+    );
 });
 
 const createList = (data) => {
@@ -360,15 +367,15 @@ const getLists = async () => {
                 {
                     action: getLists,
                     closeAfterAction: true,
-                    text: "Retry"
-                }
+                    text: "Retry",
+                },
             ],
             text: "User not logged in",
-            title: "Failed to load lists"
+            title: "Failed to load lists",
         });
         return;
     }
-    
+
     loading.value = true;
 
     const jwt = await getJwt();
@@ -379,27 +386,32 @@ const getLists = async () => {
                 {
                     action: getLists,
                     closeAfterAction: true,
-                    text: "Retry"
-                }
+                    text: "Retry",
+                },
             ],
             text: "Couldn't get user authentication token.",
-            title: "Failed to load lists"
+            title: "Failed to load lists",
         });
         loading.value = false;
         return;
     }
 
     const searchParams = new URLSearchParams({
-        sort: prefs.value.listSorting ? prefs.value.listSorting.type.value : null,
-        order: prefs.value.listSorting ? prefs.value.listSorting.order : null
+        sort: prefs.value.listSorting
+            ? prefs.value.listSorting.type.value
+            : null,
+        order: prefs.value.listSorting ? prefs.value.listSorting.order : null,
     });
 
-    const [listsResponse, listsError] = await handleFetch("/api/content/lists?" + searchParams.toString(), {
-        method: "GET",
-        headers: {
-            "Authorization": `Bearer ${jwt}`
-        }
-    });
+    const [listsResponse, listsError] = await handleFetch(
+        "/api/content/lists?" + searchParams.toString(),
+        {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${jwt}`,
+            },
+        },
+    );
 
     if (listsError) {
         console.error({ listsError });
@@ -408,11 +420,11 @@ const getLists = async () => {
                 {
                     action: getLists,
                     closeAfterAction: true,
-                    text: "Retry"
-                }
+                    text: "Retry",
+                },
             ],
             text: listsError.message || "An unknown error occurred.",
-            title: "Failed to load lists"
+            title: "Failed to load lists",
         });
         loading.value = false;
         return;
@@ -422,7 +434,7 @@ const getLists = async () => {
 
     setListsCount({
         private: privateLists.value.length,
-        public: publicLists.value.length
+        public: publicLists.value.length,
     });
 
     loading.value = false;
@@ -432,7 +444,7 @@ watch(
     () => prefs.value.savedLists,
     () => {
         if (user.value && !loading.value) getLists();
-    }
+    },
 );
 
 const setSortType = async (event) => {
@@ -481,9 +493,13 @@ onMounted(async () => {
     if (params.title || params.text || params.url) {
         if (!params.url) {
             if (params.text.match(validation.urlRegexGlobal)) {
-                quickCreateURL.value = params.text.match(validation.urlRegexGlobal)[0];
+                quickCreateURL.value = params.text.match(
+                    validation.urlRegexGlobal,
+                )[0];
             } else if (params.title.match(validation.urlRegexGlobal)) {
-                quickCreateURL.value = params.title.match(validation.urlRegexGlobal)[0];
+                quickCreateURL.value = params.title.match(
+                    validation.urlRegexGlobal,
+                )[0];
             }
         } else {
             quickCreateURL.value = params.url;

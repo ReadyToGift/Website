@@ -1,31 +1,28 @@
-import { account } from "@/appwrite";
-import { create as createDialog } from "./dialogs";
 import { markRaw } from "vue";
-
+import { account } from "@/appwrite";
 import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
+import { create as createDialog } from "./dialogs";
 
 export const createTOTPChallengeDialog = () => {
     return createDialog({
         async: true,
         component: markRaw(TotpChallenge),
-        emits: [
-            "cancel", "success", "totp-removed"
-        ],
+        emits: ["cancel", "success", "totp-removed"],
         fullscreen: false,
         maxWidth: "80%",
-        title: "Multi-Factor Authentication"
+        title: "Multi-Factor Authentication",
     });
 };
 
 export const completeMFAchallenge = async (code, factor = "totp") => {
     const challenge = await account.createMFAChallenge({
-        factor
+        factor,
     });
     const challengeId = challenge.$id;
 
     await account.updateMFAChallenge({
         challengeId,
-        otp: code
+        otp: code,
     });
 };
 
@@ -34,7 +31,8 @@ export const regenerateRecoveryCodes = async () => {
         return (await account.createMFARecoveryCodes()).recoveryCodes;
     } catch (error) {
         if (error.type === "user_recovery_codes_already_exists") {
-            const recoveryCodesResponse = await account.updateMFARecoveryCodes();
+            const recoveryCodesResponse =
+                await account.updateMFARecoveryCodes();
 
             return recoveryCodesResponse.recoveryCodes;
         } else {

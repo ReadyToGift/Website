@@ -1,5 +1,5 @@
-import { createRouter, createWebHistory } from "vue-router";
 import { ENABLE_BILLING } from "astro:env/client";
+import { createRouter, createWebHistory } from "vue-router";
 import { getCurrentUser } from "@/stores/auth";
 
 let clientRouter;
@@ -10,63 +10,65 @@ if (!import.meta.env.SSR) {
         routes: [
             {
                 path: "/",
-                redirect: "/dash/lists"
+                redirect: "/dash/lists",
             },
             {
                 path: "/list/:listId",
-                component: () => import("@/pages/list/_views/WishList.vue")
+                component: () => import("@/pages/list/_views/WishList.vue"),
             },
             {
                 path: "/dash/login",
                 component: () => import("@/pages/dash/_views/LoginPage.vue"),
-                meta: { requiresAuth: false }
+                meta: { requiresAuth: false },
             },
             {
                 path: "/dash/register",
                 component: () => import("@/pages/dash/_views/RegisterPage.vue"),
-                meta: { requiresAuth: false }
+                meta: { requiresAuth: false },
             },
             {
                 path: "/dash/settings",
                 redirect: "/dash/settings/account",
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true },
             },
             {
                 path: "/dash/settings/account",
                 component: () => import("@/pages/dash/_views/SettingsPage.vue"),
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true },
             },
             {
                 path: "/dash/about",
-                component: () => import("@/pages/dash/_views/SettingsPage.vue")
+                component: () => import("@/pages/dash/_views/SettingsPage.vue"),
             },
             {
                 path: "/dash/recovery/start",
-                component: () => import("@/pages/dash/_views/recovery/StartRecovery.vue")
+                component: () =>
+                    import("@/pages/dash/_views/recovery/StartRecovery.vue"),
             },
             {
                 path: "/dash/recovery/complete",
-                component: () => import("@/pages/dash/_views/recovery/CompleteRecovery.vue")
+                component: () =>
+                    import("@/pages/dash/_views/recovery/CompleteRecovery.vue"),
             },
             {
                 path: "/dash/verify",
-                component: () => import("@/pages/dash/_views/VerifyPage.vue")
+                component: () => import("@/pages/dash/_views/VerifyPage.vue"),
             },
             {
                 path: "/:pathMatch(.*)",
-                component: () => import("@/pages/404/_NotFound.vue")
+                component: () => import("@/pages/404/_NotFound.vue"),
             },
             {
                 path: "/dash/lists",
                 component: () => import("@/pages/dash/_views/UserLists.vue"),
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true },
             },
             ENABLE_BILLING && {
                 path: "/dash/settings/billing",
                 component: () => import("@/pages/dash/_views/SettingsPage.vue"),
-                meta: { requiresAuth: true }
-            }
-        ].filter(Boolean)
+                meta: { requiresAuth: true },
+            },
+        ].filter(Boolean),
     });
 
     clientRouter.beforeEach(async (to, from, next) => {
@@ -75,7 +77,7 @@ if (!import.meta.env.SSR) {
             if (!currentUser) {
                 return next({
                     path: "/dash/login",
-                    query: { redirect: encodeURIComponent(to.fullPath) }
+                    query: { redirect: encodeURIComponent(to.fullPath) },
                 });
             }
         } else if (to.meta && to.meta.requiresAuth === false) {

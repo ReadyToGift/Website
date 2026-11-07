@@ -17,33 +17,33 @@
 </template>
 
 <script>
-import { VAlert } from "vuetify/components";
 import { mdiAlert, mdiInformation } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import { VAlert } from "vuetify/components";
 import { account } from "@/appwrite";
 import { user as userStore } from "@/stores/auth";
-import { useStore } from "@nanostores/vue";
 
 export default {
     components: {
-        VAlert
+        VAlert,
     },
     data() {
         return {
             alert: false,
             user: useStore(userStore),
             loadingVerification: false,
-            mdiAlert
+            mdiAlert,
         };
     },
     props: {
         userId: {
             type: String,
-            required: true
+            required: true,
         },
         secret: {
             type: String,
-            required: true
-        }
+            required: true,
+        },
     },
     methods: {
         async verify() {
@@ -53,7 +53,7 @@ export default {
             if (!this.userId || !this.secret) {
                 this.alert = {
                     text: "Invalid verification link.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loadingVerification = false;
                 return;
@@ -66,7 +66,7 @@ export default {
                     icon: mdiInformation,
                     text: "Account successfully verified, redirecting you to the main page.",
                     title: "Success",
-                    type: "success"
+                    type: "success",
                 };
 
                 await this.auth.init();
@@ -74,16 +74,16 @@ export default {
             } catch (error) {
                 this.alert = {
                     text: error.message,
-                    title: "Error"
+                    title: "Error",
                 };
             }
 
             this.loadingVerification = false;
-        }
+        },
     },
     mounted() {
         this.verify();
-    }
+    },
 };
 </script>
 

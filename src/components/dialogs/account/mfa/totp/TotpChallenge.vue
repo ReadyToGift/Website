@@ -20,7 +20,8 @@
             </a>
         </template>
         <template v-else>
-            Please enter one of your recovery codes. If you don't have any recovery codes left, please contact support.
+            Please enter one of your recovery codes. If you don't have any
+            recovery codes left, please contact support.
             <v-otp-input
                 v-model="recoveryCode"
                 length="10"
@@ -47,7 +48,8 @@
                 width="500px"
                 max-width="100%"
             >
-                This will disable your multi-factor authentication. You can re-enable it later from your account settings.
+                This will disable your multi-factor authentication. You can
+                re-enable it later from your account settings.
             </v-alert>
         </template>
         <v-alert
@@ -63,12 +65,7 @@
         </v-alert>
     </v-card-text>
     <v-card-actions>
-        <v-btn
-            text
-            @click="$emit('cancel')"
-        >
-            Cancel
-        </v-btn>
+        <v-btn text @click="$emit('cancel')"> Cancel </v-btn>
         <v-spacer />
         <v-btn
             color="primary"
@@ -82,12 +79,19 @@
 </template>
 
 <script setup>
-import { mfaFactors, user } from "@/stores/auth";
-import { VAlert, VBtn, VCardActions, VCardText, VOtpInput, VSpacer } from "vuetify/components";
-import { account } from "@/appwrite";
-import { completeMFAchallenge } from "@/stores/mfa";
-import { create as createDialog } from "@/stores/dialogs";
 import { shallowRef } from "vue";
+import {
+    VAlert,
+    VBtn,
+    VCardActions,
+    VCardText,
+    VOtpInput,
+    VSpacer,
+} from "vuetify/components";
+import { account } from "@/appwrite";
+import { mfaFactors, user } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
+import { completeMFAchallenge } from "@/stores/mfa";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
 
@@ -104,11 +108,11 @@ const submit = async () => {
         if (usingRecoveryCode.value) {
             await completeMFAchallenge(recoveryCode.value, "recoverycode");
             await account.deleteMFAAuthenticator({
-                type: "totp"
+                type: "totp",
             });
 
             await account.updateMFA({
-                mfa: false
+                mfa: false,
             });
 
             const factors = await account.listMFAFactors();
@@ -116,7 +120,7 @@ const submit = async () => {
                 mfaFactors.set(factors);
                 user.set({
                     ...user.value,
-                    mfa: factors.length > 0
+                    mfa: factors.length > 0,
                 });
             }
 
@@ -125,13 +129,13 @@ const submit = async () => {
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 fullscreen: false,
                 maxWidth: "90%",
                 text: "Your TOTP authenticator has been successfully removed from your account. You can re-enable multi-factor authentication from your account settings at any time.",
-                title: "TOTP Removed"
+                title: "TOTP Removed",
             });
             emit("totp-removed");
         } else {
@@ -145,5 +149,5 @@ const submit = async () => {
         code.value = "";
         loading.value = false;
     }
-}; 
+};
 </script>

@@ -1,14 +1,9 @@
 <template>
-    <v-card-title>
-        Select Image
-    </v-card-title>
+    <v-card-title> Select Image </v-card-title>
     <v-card-subtitle>
         Please select the image you would like to use for this item.
     </v-card-subtitle>
-    <v-card-text
-        width="500px"
-        class="text-center"
-    >
+    <v-card-text width="500px" class="text-center">
         <Splide
             :has-track="false"
             :options="mainSliderOptions"
@@ -16,10 +11,7 @@
             aria-label="..."
         >
             <SplideTrack>
-                <SplideSlide
-                    v-for="image in images"
-                    :key="image.src"
-                >
+                <SplideSlide v-for="image in images" :key="image.src">
                     <v-img
                         :src="image.src"
                         height="400"
@@ -27,7 +19,6 @@
                         loading="lazy"
                     />
                 </SplideSlide>
-
             </SplideTrack>
         </Splide>
         <div class="carousel-arrows">
@@ -42,24 +33,13 @@
                 @click="nextSlide"
             />
         </div>
-        <Splide
-            :options="thumbSliderOptions"
-            ref="thumbnail"
-            class="thumbnail"
-        >
-            <SplideSlide
-                v-for="image in images"
-                :key="image.src"
-            >
-                <v-img
-                    :src="image.src"
-                    contain
-                    loading="lazy"
-                />
+        <Splide :options="thumbSliderOptions" ref="thumbnail" class="thumbnail">
+            <SplideSlide v-for="image in images" :key="image.src">
+                <v-img :src="image.src" contain loading="lazy" />
             </SplideSlide>
         </Splide>
         <v-chip
-            :text="`${ currentImageIndex + 1 } / ${images.length }`"
+            :text="`${currentImageIndex + 1} / ${images.length}`"
             color="primary"
             size="small"
             variant="flat"
@@ -80,12 +60,20 @@
 </template>
 
 <script setup>
-import { onMounted, shallowRef, useTemplateRef } from "vue";
-import { Splide, SplideSlide, SplideTrack } from "@splidejs/vue-splide";
-import { VBtn, VCardActions, VCardSubtitle, VCardText, VCardTitle, VChip, VImg, VSpacer } from "vuetify/components";
 import { mdiChevronRight } from "@mdi/js";
-
+import { Splide, SplideSlide, SplideTrack } from "@splidejs/vue-splide";
 import "@splidejs/vue-splide/css";
+import { onMounted, shallowRef, useTemplateRef } from "vue";
+import {
+    VBtn,
+    VCardActions,
+    VCardSubtitle,
+    VCardText,
+    VCardTitle,
+    VChip,
+    VImg,
+    VSpacer,
+} from "vuetify/components";
 
 const currentImageIndex = shallowRef(0);
 defineEmits(["select-image"]);
@@ -95,7 +83,7 @@ const mainSliderOptions = {
     arrows: false,
     pagination: false,
     perPage: 1,
-    type: "slide"
+    type: "slide",
 };
 
 const thumbSliderOptions = {
@@ -105,7 +93,7 @@ const thumbSliderOptions = {
     gap: 0,
     isNavigation: true,
     pagination: false,
-    type: "slide"
+    type: "slide",
 };
 
 const mainSlider = useTemplateRef("main");
@@ -114,8 +102,8 @@ const thumbnailSlider = useTemplateRef("thumbnail");
 defineProps({
     images: {
         required: true,
-        type: Array
-    }
+        type: Array,
+    },
 });
 
 const nextSlide = () => {
@@ -133,7 +121,6 @@ onMounted(() => {
         currentImageIndex.value = newIndex;
     });
 });
-
 </script>
 
 <style lang="scss">

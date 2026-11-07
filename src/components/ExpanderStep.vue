@@ -42,27 +42,34 @@
 </template>
 
 <script setup>
-import { VAlert, VExpansionPanel, VExpansionPanels, VExpansionPanelText, VExpansionPanelTitle, VTimelineItem } from "vuetify/components";
-import { computed } from "vue";
 import { mdiNumeric1 } from "@mdi/js";
+import { computed } from "vue";
+import {
+    VAlert,
+    VExpansionPanel,
+    VExpansionPanels,
+    VExpansionPanelText,
+    VExpansionPanelTitle,
+    VTimelineItem,
+} from "vuetify/components";
 
 const props = defineProps({
     currentStep: {
         required: true,
-        type: Number
+        type: Number,
     },
     error: {
         required: false,
-        type: String
+        type: String,
     },
     icon: {
         default: () => mdiNumeric1,
-        type: String
+        type: String,
     },
     step: {
         required: true,
-        type: Number
-    }
+        type: Number,
+    },
 });
 
 const completed = computed(() => props.currentStep > props.step);

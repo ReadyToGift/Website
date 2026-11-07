@@ -4,11 +4,19 @@ export const handleFetch = async (...args) => {
 
         if (!response.ok) {
             let error;
-            if (response.headers.get("Content-Type")?.includes("application/json")) {
+            if (
+                response.headers
+                    .get("Content-Type")
+                    ?.includes("application/json")
+            ) {
                 try {
                     error = await response.json();
                 } catch {
-                    error = { message: response.status + " " + response.statusText || "An unknown error occurred." };
+                    error = {
+                        message:
+                            response.status + " " + response.statusText ||
+                            "An unknown error occurred.",
+                    };
                 }
             } else {
                 let textError = await response.text();
@@ -16,7 +24,7 @@ export const handleFetch = async (...args) => {
                     textError = response.status + " " + response.statusText;
                 }
                 error = { message: textError || "An unknown error occurred." };
-            }                
+            }
 
             error.status = response.status;
 
@@ -26,6 +34,9 @@ export const handleFetch = async (...args) => {
         return [await response.json(), null];
     } catch (error) {
         console.error("Fetch error:", error);
-        return [null, { message: error.message || "An unknown error occurred." }];
+        return [
+            null,
+            { message: error.message || "An unknown error occurred." },
+        ];
     }
 };

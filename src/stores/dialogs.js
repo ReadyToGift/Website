@@ -22,7 +22,7 @@ export const create = (dialog) => {
 export const close = (id, actionText, data = null) => {
     const dialog = dialogs.get()[id];
     if (!dialog) return;
-    
+
     if (dialog.async) {
         dialog.resolvePromise({ action: actionText, data });
     }

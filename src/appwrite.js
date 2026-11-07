@@ -1,11 +1,13 @@
-import { Account, Avatars, Client } from "appwrite";
 import {
     APPWRITE_DEV_KEY,
     APPWRITE_ENDPOINT,
-    APPWRITE_PROJECT
+    APPWRITE_PROJECT,
 } from "astro:env/client";
+import { Account, Avatars, Client } from "appwrite";
 
-const client = new Client().setEndpoint(APPWRITE_ENDPOINT).setProject(APPWRITE_PROJECT);
+const client = new Client()
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT);
 
 if (APPWRITE_DEV_KEY) {
     console.log("Setting dev key for Appwrite client");
@@ -15,4 +17,4 @@ if (APPWRITE_DEV_KEY) {
 const account = new Account(client);
 const avatars = new Avatars(client);
 
-export { avatars, account };
+export { account, avatars };

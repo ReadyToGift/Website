@@ -36,10 +36,7 @@
                     />
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="error"
                         text="Delete"
@@ -56,8 +53,15 @@
 
 <script>
 import { mdiAlert, mdiDelete } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
 import { AppwriteException } from "appwrite";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
 import { getJwt } from "@/stores/auth";
 import { handleFetch } from "@/utils/handleFetch";
 export default {
@@ -68,17 +72,17 @@ export default {
         VCard,
         VCardText,
         VCardActions,
-        VAlert
+        VAlert,
     },
     props: {
         item: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -87,7 +91,7 @@ export default {
             listId: null,
             loading: false,
             mdiAlert,
-            mdiDelete
+            mdiDelete,
         };
     },
     methods: {
@@ -99,27 +103,32 @@ export default {
                 if (!jwt) {
                     this.alert = {
                         text: "You must be logged in to delete an item.",
-                        title: "Error"
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
                 }
 
-                const [, deleteItemError] = await handleFetch("/api/content/item", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [, deleteItemError] = await handleFetch(
+                    "/api/content/item",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${jwt}`,
+                        },
+                        body: JSON.stringify({
+                            itemId: this.item.$id,
+                        }),
                     },
-                    body: JSON.stringify({
-                        itemId: this.item.$id
-                    })
-                });
+                );
 
                 if (deleteItemError) {
                     this.alert = {
-                        text: deleteItemError.message || "An error occurred while deleting the item.",
-                        title: "Error"
+                        text:
+                            deleteItemError.message ||
+                            "An error occurred while deleting the item.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -129,12 +138,12 @@ export default {
                 if (e instanceof AppwriteException) {
                     this.alert = {
                         text: e.message,
-                        title: "Error"
+                        title: "Error",
                     };
                 } else {
                     this.alert = {
                         text: "An unknown error occurred.",
-                        title: "Error"
+                        title: "Error",
                     };
                 }
                 this.loading = false;
@@ -142,12 +151,12 @@ export default {
             }
 
             this.$emit("removeItem", {
-                item: this.item.$id
+                item: this.item.$id,
             });
 
             this.dialogOpen = false;
             this.loading = false;
-        }
-    }
+        },
+    },
 };
 </script>
