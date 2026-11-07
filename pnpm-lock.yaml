@@ -254,6 +254,9 @@ importers:
       nanostores:
         specifier: ^1.5.5
         version: 1.5.5
+      plunk-node-sdk:
+        specifier: ^0.3.0
+        version: 0.3.0
       redis:
         specifier: ^6.3.1
         version: 6.3.1(@opentelemetry/api@1.9.1)
@@ -3422,6 +3425,10 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  plunk-node-sdk@0.3.0:
+    resolution: {integrity: sha512-on24O65+JX7fHWke2g6qcyDaE/yektML/nwUO0SAgkdg2cKhR/d7/Rs88t3URtKSUHvh0JblCPtRJgu+UqbATA==}
+    engines: {node: '>=18.0.0', pnpm: '>=8'}
 
   postcss@8.5.32:
     resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
@@ -6838,6 +6845,8 @@ snapshots:
       '@vue/devtools-api': 7.7.10
       vue: 3.5.45
     optional: true
+
+  plunk-node-sdk@0.3.0: {}
 
   postcss@8.5.32:
     dependencies:

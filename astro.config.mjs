@@ -1,8 +1,7 @@
 // @ts-check
 import { execFileSync } from "node:child_process";
-import { defineConfig, envField } from "astro/config";
-
 import vue from "@astrojs/vue";
+import { defineConfig, envField } from "astro/config";
 import vuetifyPlugin from "vite-plugin-vuetify";
 
 const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map(
@@ -52,40 +51,6 @@ export default defineConfig({
 
     env: {
         schema: {
-            APPWRITE_PROJECT: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_ENDPOINT: envField.string({
-                context: "client",
-                access: "public",
-                default: "https://cloud.appwrite.io/v1",
-            }),
-            APPWRITE_DB: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_ITEM_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_LIST_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_FULFILLMENT_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_IMAGE_BUCKET: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            LOGIN_METHODS: envField.string({
-                context: "client",
-                access: "public",
-                default: "password",
-            }),
             UMAMI_URL: envField.string({
                 context: "client",
                 access: "public",
@@ -105,15 +70,6 @@ export default defineConfig({
                 context: "client",
                 access: "public",
                 optional: true,
-            }),
-            APPWRITE_DEV_KEY: envField.string({
-                context: "client",
-                access: "public",
-                optional: true,
-            }),
-            APPWRITE_KEY: envField.string({
-                context: "server",
-                access: "secret",
             }),
             FREE_TIER_PUBLIC_LIST_LIMIT: envField.number({
                 context: "client",
@@ -216,6 +172,19 @@ export default defineConfig({
             DB_ID: envField.string({ context: "server", access: "secret" }),
             D1_TOKEN: envField.string({ context: "server", access: "secret" }),
             CF_ACCOUNT_ID: envField.string({
+                context: "server",
+                access: "secret",
+            }),
+
+            PLUNK_SECRET_KEY: envField.string({
+                context: "server",
+                access: "secret",
+            }),
+            PLUNK_BASE_URL: envField.string({
+                context: "server",
+                access: "secret",
+            }),
+            PLUNK_SENDING_EMAIL: envField.string({
                 context: "server",
                 access: "secret",
             }),

@@ -46,6 +46,7 @@
         "image-size": "^2.0.3",
         "mime-types": "^3.0.2",
         "nanostores": "^1.5.5",
+        "plunk-node-sdk": "^0.3.0",
         "redis": "^6.3.1",
         "sass": "^1.107.1",
         "sse.js": "^2.8.0",
