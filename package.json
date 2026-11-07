@@ -12,11 +12,15 @@
         "preview": "astro preview",
         "astro": "astro",
         "op": "op --account my.1password.eu run --no-masking --env-file=\"./1password.env\" -- pnpm",
-        "make:lists-public-read": "node scripts/make-items-public-read.js"
+        "make:lists-public-read": "node scripts/make-items-public-read.js",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate:prod": "wrangler d1 migrations apply d1-demo-prod-db --remote",
+        "db:studio:prod": "drizzle-kit studio"
     },
     "dependencies": {
         "@astrojs/cloudflare": "^14.4.6",
         "@astrojs/vue": "^7.1.2",
+        "@better-auth/drizzle-adapter": "^1.7.18",
         "@nanostores/persistent": "^1.3.5",
         "@nanostores/vue": "^1.1.0",
         "@polar-sh/checkout": "0.6.0",
@@ -29,11 +33,13 @@
         "abort-controller": "^3.0.0",
         "appwrite": "^21.5.0",
         "astro": "^7.4.7",
+        "better-auth": "^1.7.18",
         "cheerio": "^1.2.0",
         "country-data-list": "^1.6.3",
         "cross-fetch": "^4.1.0",
         "currency-codes": "^2.2.0",
         "dotenv": "^16.6.1",
+        "drizzle-orm": "^0.45.4",
         "https-proxy-agent": "^9.1.0",
         "image-size": "^2.0.3",
         "mime-types": "^3.0.2",
@@ -54,6 +60,9 @@
         "@biomejs/biome": "2.6.5",
         "@mdi/js": "^7.4.47",
         "@types/node": "^26.6.6",
+        "better-sqlite3": "^13.0.3",
+        "cross-env": "^10.1.0",
+        "drizzle-kit": "^0.31.11",
         "node-appwrite": "^20.3.0",
         "vite": "^7.3.7"
     }
