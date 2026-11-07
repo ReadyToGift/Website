@@ -3,9 +3,10 @@
 import process from "node:process";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
-import { Client, Query, TablesDB, Users } from "node-appwrite";
+import { Client, Query, Storage, TablesDB, Users } from "node-appwrite";
 import { account, user } from "../src/auth-schema.js";
 import { autofills, fulfillments, items, lists } from "../src/schema.js";
+import { bucket } from "../src/storage.js";
 
 const PAGE_SIZE = 100;
 const TABLES = {
@@ -32,6 +33,41 @@ const idOf = (value) => {
     if (!value) return null;
     return typeof value === "object" ? value.$id || value.id || null : value;
 };
+
+async function listImages(storage, bucketId) {
+    const files = [];
+
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+        let page;
+        try {
+            page = await storage.listFiles({
+                bucketId,
+                queries: [Query.limit(PAGE_SIZE), Query.offset(offset)],
+            });
+        } catch (error) {
+            throw new Error(
+                `Appwrite files read failed (${bucketId}, offset ${offset})`,
+                { cause: error },
+            );
+        }
+        files.push(...page.files);
+        if (page.files.length < PAGE_SIZE) break;
+    }
+
+    const filesData = [];
+
+    for (const file of files) {
+        const fileData = await storage.getFileDownload({
+            bucketId,
+            fileId: file.$id,
+        });
+        filesData.push(fileData);
+    }
+
+    console.log(filesData);
+
+    return filesData;
+}
 
 async function listRows(tablesDB, databaseId, tableId) {
     const rows = [];
@@ -95,6 +131,10 @@ function createD1Database() {
         }
         return { rows: payload.result?.[0]?.results || [] };
     });
+}
+
+function uploadFile(file) {
+    const endpoint = `https://api.cloudflare.com/accounts/{account_id}/r2/buckets/{bucket_name}/objects/{object_key}`;
 }
 
 async function migrateUsers(db, users) {
@@ -210,6 +250,9 @@ async function migrateContent(db, source) {
             .onConflictDoNothing()
             .run();
     }
+
+    for (const row of source.images) {
+    }
 }
 
 async function main() {
@@ -223,6 +266,7 @@ async function main() {
         .setKey(key);
     const tablesDB = new TablesDB(client);
     const usersApi = new Users(client);
+    const storage = new Storage(client);
     console.log("Reading Appwrite data...");
     const [users, source] = await Promise.all([
         listUsers(usersApi),
@@ -231,16 +275,18 @@ async function main() {
             listRows(tablesDB, databaseId, TABLES.items),
             listRows(tablesDB, databaseId, TABLES.fulfillments),
             listRows(tablesDB, databaseId, TABLES.autofills),
-        ]).then(([lists, items, fulfillments, autofills]) => ({
+            listImages(storage, process.env.APPWRITE_IMAGE_BUCKET || "default"),
+        ]).then(([lists, items, fulfillments, autofills, images]) => ({
             lists,
             items,
             fulfillments,
             autofills,
+            images,
         })),
     ]);
 
     console.log(
-        `Users: ${users.length}; lists: ${source.lists.length}; items: ${source.items.length}; fulfillments: ${source.fulfillments.length}; autofills: ${source.autofills.length}`,
+        `Users: ${users.length}; lists: ${source.lists.length}; items: ${source.items.length}; fulfillments: ${source.fulfillments.length}; autofills: ${source.autofills.length}; images: ${source.images.length}`,
     );
 
     if (!process.argv.includes("--apply")) {
