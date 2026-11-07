@@ -7,12 +7,15 @@ import {
     uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import { v7 as uuidv7 } from "uuid";
+import { user } from "./auth-schema.js";
 
 export const lists = sqliteTable("lists", {
     id: text("id")
         .primaryKey()
         .$defaultFn(() => uuidv7()),
-    author: text("author").notNull(),
+    author: text("author")
+        .notNull()
+        .references(() => user.id, { onDelete: "cascade" }),
     authorName: text("authorName").notNull(),
     title: text("title").notNull(),
     description: text("description"),
@@ -77,7 +80,11 @@ export const autofills = sqliteTable("autofills", {
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });
 
-export const listRelations = relations(lists, ({ many }) => ({
+export const listRelations = relations(lists, ({ many, one }) => ({
+    authorUser: one(user, {
+        fields: [lists.author],
+        references: [user.id],
+    }),
     items: many(items, { relationName: "list" }),
 }));
 

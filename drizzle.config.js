@@ -1,5 +1,5 @@
 export default {
-    schema: "./src/schema.js",
+    schema: ["./src/schema.js", "./src/auth-schema.js"],
     out: "./migrations",
     dialect: "sqlite",
     driver: "d1-http",
