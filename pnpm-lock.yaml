@@ -283,16 +283,16 @@ importers:
         specifier: 2.6.5
         version: 2.6.5
       '@mdi/js':
-        specifier: ^7.4.47
+        specifier: 7.4.47
         version: 7.4.47
       '@types/node':
-        specifier: ^26.6.6
+        specifier: 26.6.6
         version: 26.6.6
       node-appwrite:
-        specifier: ^20.3.0
+        specifier: 20.3.0
         version: 20.3.0
       vite:
-        specifier: ^7.3.7
+        specifier: 7.3.7
         version: 7.3.7(@types/node@26.6.6)(lightningcss@1.33.0)(sass@1.107.1)(yaml@2.9.1)
 
   functions/polar-update-customers:
@@ -305,7 +305,7 @@ importers:
         version: 14.2.0
     devDependencies:
       prettier:
-        specifier: ^3.2.5
+        specifier: 3.9.10
         version: 3.9.10
 
 packages:

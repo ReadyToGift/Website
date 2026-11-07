@@ -21,7 +21,7 @@ services:
       - "4321:4321"
   redis:
     container_name: readytogift-redis
-    image: redis:latest
+    image: redis:latest@sha256:1f88291b4c57bdf249f02eb085a8669889b2d2954e91d4de5118a5da6b78dd53
     restart: unless-stopped
     networks:
       - dokploy-network
