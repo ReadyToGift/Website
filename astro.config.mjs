@@ -35,7 +35,6 @@ export default defineConfig({
     site: "https://readyto.gift",
     adapter: cloudflare({
         sessionKVBindingName: "SESSION",
-        prerenderEnvironment: "node",
     }),
 
     devToolbar: {
@@ -248,9 +247,6 @@ export default defineConfig({
         },
         build: {
             // cssCodeSplit: true,
-            rollupOptions: {
-                external: ["cloudflare:workers"],
-            },
         },
         //         output: {
         //             manualChunks(id) {
