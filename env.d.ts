@@ -1,7 +1,6 @@
 /// <reference types="astro/client" />
 
 type ENV = {
-    // replace `MY_KV` with your KV namespace
     CACHE: KVNamespace;
 };
 

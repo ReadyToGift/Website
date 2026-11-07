@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794073675534,
+      "tag": "0000_bumpy_darwin",
+      "breakpoints": true
+    }
+  ]
+}
