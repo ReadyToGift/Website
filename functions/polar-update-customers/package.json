@@ -12,6 +12,6 @@
     "node-appwrite": "^14.1.0"
   },
   "devDependencies": {
-    "prettier": "^3.2.5"
+    "prettier": "3.9.10"
   }
 }
