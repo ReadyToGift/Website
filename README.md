@@ -69,6 +69,17 @@ Just build it and deploy it to wherever you want. It doesn't need any backup set
 pnpm install
 ```
 
+### Migrating from Appwrite to D1
+
+The migration script copies Appwrite users, lists, items, fulfillments, and autofill records into the current D1 schema using Drizzle ORM. It preserves Appwrite IDs and timestamps and is a dry run by default:
+
+```sh
+pnpm op db:migrate:appwrite
+pnpm op db:migrate:appwrite -- --apply
+```
+
+The command needs the existing `APPWRITE_*` and Cloudflare credentials from `1password.env`. Appwrite does not expose password hashes, so migrated users must set new passwords through the new authentication system.
+
 ### Compile and Hot-Reload for Development
 
 ```sh

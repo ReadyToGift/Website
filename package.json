@@ -4,7 +4,7 @@
     "version": "0.0.1",
     "packageManager": "pnpm@12.16.1+sha512.091d1dee7927575661b25dab3c2ae31cafc1c54d6b71ed6a6600cf0c1cb10434a447eae14015f1b23e2e6bedeed79df94a932e2164d2832280dce3fb32f656d1",
     "engines": {
-        "node": "24.x"
+        "node": "22.x"
     },
     "scripts": {
         "dev": "astro dev",
@@ -13,6 +13,7 @@
         "astro": "astro",
         "op": "op --account my.1password.eu run --no-masking --env-file=\"./1password.env\" -- pnpm",
         "make:lists-public-read": "node scripts/make-items-public-read.js",
+        "db:migrate:appwrite": "node scripts/migrate-appwrite-to-d1.js",
         "db:generate": "drizzle-kit generate",
         "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
         "db:studio:prod": "drizzle-kit studio",
