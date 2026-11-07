@@ -32,5 +32,12 @@
             "database_id": "c5a00055-e5d6-4e47-8f46-212f9c9e9e81",
             "remote": true
         }
+    ],
+    "r2_buckets": [
+        {
+            "bucket_name": "readytogift",
+            "binding": "BUCKET",
+            "remote": true
+        }
     ]
 }
