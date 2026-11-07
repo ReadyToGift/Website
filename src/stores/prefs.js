@@ -1,5 +1,4 @@
 import { persistentMap } from "@nanostores/persistent";
-import { account } from "@/appwrite";
 import { user } from "./auth";
 
 const defaultPrefs = {

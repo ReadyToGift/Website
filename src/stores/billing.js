@@ -8,7 +8,6 @@ import {
 } from "astro:env/client";
 import { computed, map } from "nanostores";
 import { handleFetch } from "@/utils/handleFetch";
-import { getJwt } from "./auth";
 import { userLists } from "./userLists";
 
 export const billing = map({
@@ -84,15 +83,8 @@ export const getBillingDetails = async () => {
         return;
     }
 
-    const jwt = await getJwt();
-    if (!jwt) return console.error("Unable to get jwt for user.");
-
     try {
-        const [billingResp, billingError] = await handleFetch("/api/billing", {
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
-        });
+        const [billingResp, billingError] = await handleFetch("/api/billing");
 
         if (billingError) {
             console.error("Failed to fetch billing details:", billingError);
@@ -149,16 +141,10 @@ export const init = async () => {
 };
 
 export const getProCheckout = async () => {
-    const jwt = await getJwt();
-    if (!jwt) return console.error("Unable to get jwt for user.");
-
     const [proCheckout, proCheckoutError] = await handleFetch(
         "/api/billing/pro/checkout",
         {
             method: "POST",
-            headers: {
-                Authorization: `Bearer ${jwt}`,
-            },
         },
     );
 

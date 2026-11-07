@@ -110,7 +110,6 @@ import {
     VSpacer,
     VSwitch,
 } from "vuetify/components";
-import { account } from "@/appwrite";
 import { user as authUser } from "@/stores/auth";
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 

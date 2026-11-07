@@ -100,7 +100,7 @@ import {
     VDialog,
     VSkeletonLoader,
 } from "vuetify/components";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 
 import {
     allLimits as allLimitsStore,
@@ -168,24 +168,8 @@ export default {
         async getLists() {
             this.loading = true;
             try {
-                const jwt = await getJwt();
-
-                if (!jwt) {
-                    this.alert = {
-                        text: "You must be logged in to move an item.",
-                        title: "Error",
-                    };
-                    this.loading = false;
-                    return;
-                }
-
                 const [response, listsError] = await handleFetch(
                     "/api/content/lists",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${jwt}`,
-                        },
-                    },
                 );
 
                 if (listsError) {
@@ -235,17 +219,6 @@ export default {
         async moveToList() {
             this.loadingMove = true;
 
-            const jwt = await getJwt();
-
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to move an item.",
-                    title: "Error",
-                };
-                this.loadingMove = false;
-                return;
-            }
-
             try {
                 const [, moveItemError] = await handleFetch(
                     "/api/content/item",
@@ -253,7 +226,6 @@ export default {
                         method: "PUT",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${jwt}`,
                         },
                         body: JSON.stringify({
                             itemId: this.item.$id,

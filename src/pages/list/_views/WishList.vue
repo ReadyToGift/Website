@@ -131,7 +131,6 @@ import ListItem from "@/components/ListItem.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
 import { clientRouter } from "@/router";
 import {
-    getJwt,
     previouslyLoggedInUserID as previouslyLoggedInUserIDStore,
     user as userStore,
 } from "@/stores/auth";
@@ -573,17 +572,8 @@ export default {
             if (typeof listId === "string" && listId) {
                 query.set("listId", listId);
             }
-            const jwt = await getJwt();
-
             const [listData, listError] = await handleFetch(
                 `/api/content/list?${query.toString()}`,
-                {
-                    headers: jwt
-                        ? {
-                              Authorization: `Bearer ${jwt}`,
-                          }
-                        : {},
-                },
             );
 
             if (listError) {
@@ -716,34 +706,21 @@ export default {
         }
 
         if (this.user) {
-            const jwt = await getJwt();
+            const [listsData, listsError] = await handleFetch(
+                "/api/content/lists",
+            );
 
-            if (jwt) {
-                const [listsData, listsError] = await handleFetch(
-                    "/api/content/lists",
-                    {
-                        headers: {
-                            Authorization: `Bearer ${jwt}`,
-                        },
-                    },
+            if (!listsError && listsData?.lists) {
+                const ownLists = listsData.lists.filter(
+                    (list) => list.author === this.user.$id,
                 );
+                const publicLists = ownLists.filter((list) => !list.private);
+                const privateLists = ownLists.filter((list) => list.private);
 
-                if (!listsError && listsData?.lists) {
-                    const ownLists = listsData.lists.filter(
-                        (list) => list.author === this.user.$id,
-                    );
-                    const publicLists = ownLists.filter(
-                        (list) => !list.private,
-                    );
-                    const privateLists = ownLists.filter(
-                        (list) => list.private,
-                    );
-
-                    setListCount({
-                        private: privateLists.length,
-                        public: publicLists.length,
-                    });
-                }
+                setListCount({
+                    private: privateLists.length,
+                    public: publicLists.length,
+                });
             }
         }
         clientRouter.afterEach(async (to, from) => {

@@ -6,6 +6,9 @@ import { db } from "@/db";
 import { sendEmail } from "@/utils/email";
 
 export const auth = betterAuth({
+    baseURL: {
+        allowedHosts: ["https://readyto.gift", "localhost:*"],
+    },
     database: drizzleAdapter(db, {
         provider: "sqlite",
         schema,
@@ -13,12 +16,47 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url }) => {
-            void sendEmail({
+            await sendEmail({
                 to: user.email,
                 subject: "Reset Password",
-                body: `Click here to reset: ${url}`,
+                body: `Click here to reset: <a href="${url}">${url}</a>`,
             });
         },
     },
     plugins: [twoFactor()],
+    user: {
+        additionalFields: {
+            darkMode: {
+                type: "boolean",
+                defaultValue: false,
+            },
+            spoilSurprises: {
+                type: "boolean",
+                defaultValue: false,
+            },
+            showTotalPrice: {
+                type: "boolean",
+                defaultValue: false,
+            },
+            savedLists: {
+                type: "string[]",
+                defaultValue: [],
+            },
+            listSorting: {
+                type: "json",
+                defaultValue: {
+                    type: { name: "Last updated", value: "$updatedAt" },
+                    order: "asc",
+                },
+            },
+            history: {
+                type: "json",
+                defaultValue: [],
+            },
+            hidePWAInstallPrompt: {
+                type: "boolean",
+                defaultValue: false,
+            },
+        },
+    },
 });

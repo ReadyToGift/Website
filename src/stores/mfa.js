@@ -1,5 +1,4 @@
 import { markRaw } from "vue";
-import { account } from "@/appwrite";
 import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
 import { create as createDialog } from "./dialogs";
 

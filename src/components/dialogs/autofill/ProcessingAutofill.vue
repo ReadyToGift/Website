@@ -72,7 +72,6 @@ import {
     VTimeline,
     VTimelineItem,
 } from "vuetify/components";
-import { getJwt } from "@/stores/auth";
 import { setUsedAutofillAllowance } from "@/stores/billing";
 
 const totalAttempts = shallowRef(0);
@@ -147,20 +146,12 @@ const autofill = async () => {
     try {
         pollingFallback = null;
 
-        const jwt = await getJwt();
-
-        if (!jwt) {
-            throw new Error("User is not authenticated.");
-        }
-
         let sseClient;
 
         try {
             sseClient = new SSE("/api/content/item/autofill", {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
+                credentials: "include",
                 payload: JSON.stringify({
                     itemID: props.itemID,
                     url: props.url,

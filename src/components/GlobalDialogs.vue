@@ -3,10 +3,19 @@
         v-for="dialog in Object.values(dialogs || {})"
         :key="dialog.id"
         :model-value="dialog.open"
-        @update:model-value="(value) => !value && closeDialog(dialog.id, 'closed')"
-        :max-width="dialog.maxWidth || (
-            $vuetify.display.mobile ? '100%' : '500px')"
-        :fullscreen="dialog.fullscreen !== undefined ? dialog.fullscreen : $vuetify.display.mobile ? true : false"
+        @update:model-value="
+            (value) => !value && closeDialog(dialog.id, 'closed')
+        "
+        :max-width="
+            dialog.maxWidth || ($vuetify.display.mobile ? '100%' : '500px')
+        "
+        :fullscreen="
+            dialog.fullscreen !== undefined
+                ? dialog.fullscreen
+                : $vuetify.display.mobile
+                  ? true
+                  : false
+        "
         :persistent="dialog.persistent"
         :scrim="dialog.opaque ? 'rgb(var(--v-theme-background))' : true"
         :opacity="dialog.opaque ? 1 : undefined"
@@ -14,10 +23,7 @@
     >
         <v-card :title="dialog.title">
             <v-card-text v-if="dialog.text">
-                <p
-                    v-for="line in dialog.text.split("\n")"
-                    :key="line"
-                >
+                <p v-for="line in dialog.text.split('\n')" :key="line">
                     {{ line }}
                 </p>
             </v-card-text>
@@ -42,7 +48,6 @@
         </v-card>
     </v-dialog>
 </template>
-
 
 <script setup>
 import { useStore } from "@nanostores/vue";
@@ -92,5 +97,4 @@ const actionHandler = (action, id) => {
         closeDialog(id, action.text);
     }
 };
-
 </script>

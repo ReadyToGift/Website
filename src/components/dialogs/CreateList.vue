@@ -163,7 +163,6 @@ import {
     VDialog,
 } from "vuetify/components";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { getJwt } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
@@ -255,24 +254,12 @@ export default {
                 return;
             }
 
-            const jwt = await getJwt();
-
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to create a list.",
-                    title: "Error",
-                };
-                this.loading = false;
-                return;
-            }
-
             const [createListData, createListError] = await handleFetch(
                 "/api/content/list",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`,
                     },
                     body: JSON.stringify({
                         ...this.newList,

@@ -1,6 +1,9 @@
-export const handleFetch = async (...args) => {
+export const handleFetch = async (input, options = {}) => {
     try {
-        const response = await fetch(...args);
+        const response = await fetch(input, {
+            ...options,
+            credentials: "include",
+        });
 
         if (!response.ok) {
             let error;

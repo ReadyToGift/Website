@@ -161,7 +161,7 @@ import {
     VDialog,
 } from "vuetify/components";
 import ListFields from "@/components/dialogs/fields/ListFields.vue";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
@@ -267,23 +267,12 @@ export default {
                 }
             }
 
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to edit a list.",
-                    title: "Error",
-                };
-                this.loading = false;
-                return;
-            }
-
             const [editedListResponse, editedListError] = await handleFetch(
                 "/api/content/list",
                 {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`,
                     },
                     body: JSON.stringify({
                         listId: this.listId,

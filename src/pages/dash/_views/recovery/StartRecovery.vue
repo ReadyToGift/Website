@@ -34,10 +34,9 @@
 </template>
 
 <script>
-import { LOGIN_METHODS } from "astro:env/client";
 import { mdiAlert, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
-import { account } from "@/appwrite";
+import { authClient } from "@/stores/auth";
 
 export default {
     components: {
@@ -52,7 +51,6 @@ export default {
             loadingRecovery: false,
             mdiAlert,
             mdiGithub,
-            methods: LOGIN_METHODS ? LOGIN_METHODS.split(",") : [],
             recoveryDetails: {
                 email: "",
             },
@@ -68,23 +66,26 @@ export default {
         async startRecovery() {
             this.alert = false;
             this.loadingRecovery = true;
-            try {
-                await account.createRecovery(
-                    this.recoveryDetails.email,
-                    "https://readyto.gift/dash/recovery/complete",
-                );
+            const { error } = await authClient.requestPasswordReset({
+                email: this.recoveryDetails.email,
+                redirectTo: `/dash/recovery/complete`,
+            });
+
+            this.loadingRecovery = false;
+
+            if (error) {
+                this.alert = {
+                    title: "Login Failed",
+                    text: error.message || "Login failed.",
+                    type: "error",
+                };
+            } else {
                 this.alert = {
                     text: "Recovery email sent",
                     title: "Success",
                     type: "success",
                 };
-            } catch (error) {
-                this.alert = {
-                    text: error.message,
-                    title: "Error",
-                };
             }
-            this.loadingRecovery = false;
         },
     },
 };

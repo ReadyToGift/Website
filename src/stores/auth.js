@@ -1,11 +1,15 @@
 import { persistentAtom } from "@nanostores/persistent";
+import { createAuthClient } from "better-auth/client";
+import { twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
-import { account, avatars } from "@/appwrite";
-import { createTOTPChallengeDialog } from "./mfa";
-import { loadPrefs } from "./prefs";
 
+export const authClient = createAuthClient({
+    plugins: [twoFactorClient],
+});
+
+export const session = authClient.useSession;
 export const user = atom(null);
-export const mfaFactors = atom([]);
+export const mfaFactors = atom({});
 export const previouslyLoggedInUserID = persistentAtom(
     "previouslyLoggedInUserID",
     null,
@@ -13,67 +17,23 @@ export const previouslyLoggedInUserID = persistentAtom(
 export const authInitialized = atom(false);
 let initPromise = null;
 
-const dev = process.env.NODE_ENV === "development";
-
-// Store jwt in localStorage for dev only
-const appwriteJwtExp = dev ? persistentAtom("appwriteJwtExp", "") : atom("");
-
-const appwriteJwt = dev ? persistentAtom("appwriteJwt", "") : atom("");
-
-if (dev) {
-    if (appwriteJwt.get() && appwriteJwtExp.get() < new Date().getTime()) {
-        appwriteJwt.set("");
-        appwriteJwtExp.set("");
-    }
-}
-
-export const getJwt = async () => {
-    if (!authInitialized.get()) {
-        await init();
-    }
-
-    if (!user.get()) {
-        console.error("No user logged in, cannot get JWT");
-        return false;
-    }
-
-    if (appwriteJwt.get() && appwriteJwtExp.get()) {
-        const jwtExpired = new Date().getTime() > appwriteJwtExp.get();
-
-        if (!jwtExpired) return appwriteJwt.get();
-    }
-
-    try {
-        const jwtResp = await account.createJWT();
-        appwriteJwt.set(jwtResp.jwt);
-        appwriteJwtExp.set(new Date().getTime() + 15 * 60 * 1000);
-
-        return appwriteJwt.get();
-    } catch (err) {
-        console.log(err);
-    }
-
-    return false;
-};
-
-export const setUser = ({ user: userData }) => {
-    user.set({
-        ...user.get(),
-        account: userData,
+const updateUser = (sessionData) => {
+    const sessionUser = sessionData?.user ?? null;
+    user.set(sessionUser);
+    mfaFactors.set({
+        totp: Boolean(sessionUser?.twoFactorEnabled),
     });
+    return sessionUser;
 };
 
-const redirectToLogin = (router) => {
-    const currentUrl = encodeURIComponent(window.location.pathname);
-    if (router) {
-        router.push({
-            path: "/dash/login",
-            query: { redirect: window.location.pathname },
-        });
-    } else {
-        window.location.href = `/dash/login?redirect=${currentUrl}`;
+session.listen((state) => {
+    if (!state.isPending) {
+        updateUser(state.data);
+        authInitialized.set(true);
     }
-};
+});
+
+export const setUser = ({ user: userData }) => user.set(userData);
 
 export const getCurrentUser = async () => {
     try {
@@ -89,34 +49,18 @@ export const getCurrentUser = async () => {
 };
 
 export const getMFAFactors = async () => {
-    const mfaFactorsList = await account.listMFAFactors();
-    mfaFactors.set(mfaFactorsList);
-    return mfaFactorsList;
+    await session.get().refetch();
+    updateUser(session.get().data);
+    return mfaFactors.get();
 };
 
-const isUnauthorizedError = (error) => {
-    return error?.type === "user_unauthorized" || error?.code === 401;
-};
-
-const runInit = async ({ currentAccount = null } = {}) => {
-    if (!currentAccount) {
-        currentAccount = await account.get();
-    }
-
-    if (currentAccount.prefs) {
-        loadPrefs(currentAccount.prefs);
-    }
-
-    user.set({
-        ...currentAccount,
-        avatar: currentAccount?.name
-            ? avatars.getInitials(currentAccount.name)
-            : null,
-    });
+const runInit = async () => {
+    await session.get().refetch();
+    updateUser(session.get().data);
     authInitialized.set(true);
 };
 
-export const init = async ({ router = null, currentAccount = null } = {}) => {
+export const init = async () => {
     if (initPromise) {
         return initPromise;
     }
@@ -124,29 +68,10 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
     console.log("Initialising auth");
     initPromise = (async () => {
         try {
-            await runInit({ currentAccount });
-        } catch (err) {
-            if (err?.type === "user_more_factors_required") {
-                console.log("MFA required, initiating TOTP challenge dialog.");
-                const totpChallengeResp = await createTOTPChallengeDialog();
-                console.log({ totpChallengeResp });
-                if (totpChallengeResp.action !== "success") {
-                    await logOut();
-                    return redirectToLogin(router);
-                }
-                console.log({ totpChallengeResp });
-                window.location.reload();
-                return;
-            }
-
-            if (isUnauthorizedError(err)) {
-                user.set(null);
-                authInitialized.set(true);
-                return;
-            }
-
+            await runInit();
+        } catch (error) {
             authInitialized.set(false);
-            console.error("Auth init error:", err);
+            console.error("Auth init error:", error);
         }
     })();
 
@@ -159,13 +84,14 @@ export const init = async ({ router = null, currentAccount = null } = {}) => {
 
 export async function logOut() {
     try {
-        await account.deleteSession({ sessionId: "current" });
-        appwriteJwt.set("");
-        appwriteJwtExp.set("");
+        await authClient.signOut();
     } catch (error) {
-        console.error("Error deleting session during logout:", error);
+        console.error("Error signing out:", error);
+    } finally {
+        user.set(null);
+        mfaFactors.set({});
+        authInitialized.set(true);
     }
-    user.set(null);
 }
 
 export default {

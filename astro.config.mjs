@@ -169,9 +169,15 @@ export default defineConfig({
                 default: buildCommit,
             }),
 
-            DB_ID: envField.string({ context: "server", access: "secret" }),
-            D1_TOKEN: envField.string({ context: "server", access: "secret" }),
-            CF_ACCOUNT_ID: envField.string({
+            CLOUDFLARE_DATABASE_ID: envField.string({
+                context: "server",
+                access: "secret",
+            }),
+            CLOUDFLARE_D1_TOKEN: envField.string({
+                context: "server",
+                access: "secret",
+            }),
+            CLOUDFLARE_ACCOUNT_ID: envField.string({
                 context: "server",
                 access: "secret",
             }),

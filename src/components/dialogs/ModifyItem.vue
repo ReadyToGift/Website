@@ -134,7 +134,7 @@ import {
 import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
 import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
 import ImageSelector from "@/components/dialogs/ImageSelector.vue";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import {
     autofillUsage as autofillUsageStore,
     limits as limitsStore,
@@ -466,11 +466,6 @@ export default {
         },
         async loadExistingImageFile(imageID) {
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
-                    return;
-                }
-
                 const params = new URLSearchParams({
                     fileId: imageID,
                     itemId: this.itemID,
@@ -478,11 +473,6 @@ export default {
 
                 const [data, error] = await handleFetch(
                     `/api/content/item/image?${params.toString()}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${jwt}`,
-                        },
-                    },
                 );
 
                 if (error || !data?.file) {
@@ -513,16 +503,14 @@ export default {
                 console.error("Failed to load existing image metadata:", error);
             }
         },
-        async uploadImageFile({ jwt }) {
+        async uploadImageFile() {
             const formData = new FormData();
             formData.append("file", this.modifiedItem.imageFile);
             formData.append("listId", this.listId);
 
             const response = await fetch("/api/content/item/image", {
                 method: "POST",
-                headers: {
-                    Authorization: `Bearer ${jwt}`,
-                },
+                credentials: "include",
                 body: formData,
             });
 
@@ -553,16 +541,6 @@ export default {
                 return;
             }
 
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to create an item.",
-                    title: "Error",
-                };
-                this.loading = false;
-                return;
-            }
-
             try {
                 if (this.modifiedItem.image) {
                     await this.downloadRemoteImage(this.modifiedItem.image);
@@ -573,7 +551,7 @@ export default {
                     let fileUpload;
 
                     try {
-                        fileUpload = await this.uploadImageFile({ jwt });
+                        fileUpload = await this.uploadImageFile();
                     } finally {
                         this.uploadingFile = false;
                     }
@@ -588,7 +566,6 @@ export default {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${jwt}`,
                         },
                         body: JSON.stringify({
                             itemData: {
@@ -661,16 +638,6 @@ export default {
             this.alert = false;
             this.loading = true;
 
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to edit an item.",
-                    title: "Error",
-                };
-                this.loading = false;
-                return;
-            }
-
             try {
                 // Upload hotlinked image if present (manually added)
                 if (this.modifiedItem.image) {
@@ -687,7 +654,7 @@ export default {
                     let fileUpload;
 
                     try {
-                        fileUpload = await this.uploadImageFile({ jwt });
+                        fileUpload = await this.uploadImageFile();
                     } finally {
                         this.uploadingFile = false;
                     }
@@ -702,7 +669,6 @@ export default {
                         method: "PUT",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${jwt}`,
                         },
                         body: JSON.stringify({
                             itemId: this.item.$id,

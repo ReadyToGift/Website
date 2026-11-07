@@ -62,7 +62,6 @@ import {
     VCardText,
     VDialog,
 } from "vuetify/components";
-import { getJwt } from "@/stores/auth";
 import { handleFetch } from "@/utils/handleFetch";
 export default {
     title: "ListDialog",
@@ -99,23 +98,12 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
-                    this.alert = {
-                        text: "You must be logged in to delete an item.",
-                        title: "Error",
-                    };
-                    this.loading = false;
-                    return;
-                }
-
                 const [, deleteItemError] = await handleFetch(
                     "/api/content/item",
                     {
                         method: "DELETE",
                         headers: {
                             "Content-Type": "application/json",
-                            Authorization: `Bearer ${jwt}`,
                         },
                         body: JSON.stringify({
                             itemId: this.item.$id,

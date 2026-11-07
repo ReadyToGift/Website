@@ -99,7 +99,7 @@ import {
     VDialog,
     VTextField,
 } from "vuetify/components";
-import { getJwt, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import { handleFetch } from "@/utils/handleFetch";
 
 export default {
@@ -141,14 +141,12 @@ export default {
             this.alert = false;
             let result;
             try {
-                const jwt = await getJwt();
                 const [resp, fulfillError] = await handleFetch(
                     "/api/content/item/fulfillment",
                     {
                         method: "POST",
                         headers: {
                             "Content-Type": "application/json",
-                            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
                         },
                         body: JSON.stringify({
                             itemId: this.item.$id,
@@ -187,14 +185,12 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
                 const [, unfulfillError] = await handleFetch(
                     "/api/content/item/fulfillment",
                     {
                         method: "DELETE",
                         headers: {
                             "Content-Type": "application/json",
-                            ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
                         },
                         body: JSON.stringify({
                             fulfillmentId: this.item.fulfillment.$id,

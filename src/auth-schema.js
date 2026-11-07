@@ -19,6 +19,28 @@ export const user = sqliteTable("user", {
     twoFactorEnabled: integer("two_factor_enabled", {
         mode: "boolean",
     }).default(false),
+    darkMode: integer("dark_mode", { mode: "boolean" })
+        .default(false)
+        .notNull(),
+    spoilSurprises: integer("spoil_surprises", { mode: "boolean" })
+        .default(false)
+        .notNull(),
+    showTotalPrice: integer("show_total_price", { mode: "boolean" })
+        .default(false)
+        .notNull(),
+    savedLists: text("saved_lists", { mode: "json" }).default([]).notNull(),
+    listSorting: text("list_sorting", { mode: "json" })
+        .default({
+            type: { name: "Last updated", value: "$updatedAt" },
+            order: "asc",
+        })
+        .notNull(),
+    history: text("history", { mode: "json" }).default([]).notNull(),
+    hidePWAInstallPrompt: integer("hide_pwa_install_prompt", {
+        mode: "boolean",
+    })
+        .default(false)
+        .notNull(),
 });
 
 export const session = sqliteTable(
