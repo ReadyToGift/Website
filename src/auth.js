@@ -1,3 +1,4 @@
+import { waitUntil } from "cloudflare:workers";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
@@ -6,6 +7,11 @@ import { db } from "@/db";
 import { sendEmail } from "@/utils/email/index";
 
 export const auth = betterAuth({
+    advanced: {
+        backgroundTasks: {
+            handler: waitUntil,
+        },
+    },
     baseURL: {
         allowedHosts: ["https://readyto.gift", "localhost:*"],
     },
@@ -20,13 +26,13 @@ export const auth = betterAuth({
                 Click the link below to reset your password.<br/><br/>
                 <a href="${url}">${url}</a>`;
             const footer = `If you didn't request this, you can ignore this email.`;
-            void sendEmail({
+            return sendEmail({
                 to: user.email,
                 name: user.name,
                 subject: "Reset Password",
                 body,
                 footer,
-                contactSupportDefaultSubject: `Password Reset Support Request ${new Date().toLocaleString("en-GB")}}`,
+                contactSupportDefaultSubject: `Password Reset Support Request - ${new Date().toLocaleString("en-GB")}`,
             });
         },
     },
