@@ -67,32 +67,8 @@ export const createSessionClient = ({ request, jwt }) => {
 };
 
 export const requireAuth = async (context) => {
-    let sessionClient;
-    try {
-        sessionClient = createSessionClient(context);
-    } catch (err) {
-        console.log(err);
-
-        return new Response(
-            JSON.stringify({
-                message: "Unauthenticated",
-            }),
-            {
-                status: 401,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
-    }
-
-    const account = await sessionClient.account.get();
-
-    if (!account) {
-        return new Response(null, {
-            status: 401,
-        });
-    }
+    const { user, session } = context.locals;
+    if (!user) return new Response(null, { status: 401 });
 
     return { sessionClient, account };
 };

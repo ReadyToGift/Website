@@ -13,7 +13,7 @@
     <mj-body>
         <mj-section padding="0">
             <mj-column background-color="#405F91">
-                <mj-image src="https://readyto.gift/manifest-icon-192.maskable.png" width="92px" href="https://readyto.gift" alt="logo" />
+                <mj-image src="https://readyto.gift/manifest-icon-192.maskable.png" width="92px" href="https://readyto.gift" alt="readytogift logo" />
                 <mj-text align="center" font-size="24px" padding="0 0 20px">
                     <a href="https://readyto.gift" style="color: white; text-decoration: none;">
                         ReadyTo.Gift

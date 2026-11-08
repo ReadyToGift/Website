@@ -6,6 +6,18 @@ import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { sendEmail } from "@/utils/email/index";
 
+export const requireAuth = (context) => {
+    const { user, session } = context.locals;
+    if (!user)
+        return {
+            unauthorizedResponse: new Response(null, { status: 401 }),
+            user: null,
+            session: null,
+        };
+
+    return { unauthorizedResponse: null, user, session };
+};
+
 export const auth = betterAuth({
     advanced: {
         backgroundTasks: {

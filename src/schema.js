@@ -16,12 +16,10 @@ export const lists = sqliteTable("lists", {
     author: text("author")
         .notNull()
         .references(() => user.id, { onDelete: "cascade" }),
-    authorName: text("authorName").notNull(),
     title: text("title").notNull(),
     description: text("description"),
     currency: text("currency").default("USD"),
     shortUrl: text("shortUrl").unique(),
-    itemCount: integer("itemCount"),
     private: integer("private", { mode: "boolean" }).default(0),
     createdAt: integer("createdAt", { mode: "timestamp" }),
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
@@ -43,8 +41,7 @@ export const items = sqliteTable("items", {
     communityList: text("communityList").references(() => lists.id, {
         onDelete: "cascade",
     }),
-    contributorName: text("contributorName"),
-    contributorId: text("contributorId"),
+    contributor: text("contributor"),
     createdAt: integer("createdAt", { mode: "timestamp" }),
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });

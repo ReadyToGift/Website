@@ -1,93 +1,44 @@
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-export const prerender = false;
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import { user as users } from "@/auth-schema";
+import { db } from "@/db";
+import { items, lists } from "@/schema";
 
-import { Query } from "node-appwrite";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
+export const prerender = false;
 
 export const GET = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
-
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated",
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        let adminClient;
-
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
-        const sortField = searchParams.get("sort") || "$createdAt";
+        const requestedSortField = searchParams.get("sort") || "createdAt";
+        const sortFieldAliases = {
+            $createdAt: "createdAt",
+            $updatedAt: "updatedAt",
+        };
+        const sortField =
+            sortFieldAliases[requestedSortField] || requestedSortField;
 
-        const savedListIDs = account?.prefs?.savedLists || [];
-
-        const listQuery = [
-            Query.limit(1000),
-            sortOrder === "asc"
-                ? Query.orderAsc(sortField)
-                : Query.orderDesc(sortField),
+        const validSortFields = [
+            "createdAt",
+            "updatedAt",
+            "title",
+            "itemCount",
         ];
-
-        const authorQuery = Query.equal("author", account.$id);
-
-        if (savedListIDs.length > 0) {
-            listQuery.push(
-                Query.or([
-                    authorQuery,
-                    Query.and([
-                        Query.equal("$id", savedListIDs),
-                        Query.equal("private", false),
-                    ]),
-                ]),
-            );
-        } else {
-            listQuery.push(authorQuery);
-        }
-
-        let lists;
-
-        try {
-            lists = await adminClient.tablesDB.listRows({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                queries: listQuery,
+        if (!validSortFields.includes(sortField)) {
+            console.warn("Invalid list sort field", {
+                requestedSortField,
+                validSortFields,
             });
-        } catch (err) {
-            console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error fetching lists",
+                    message: `Invalid sort field: ${requestedSortField}`,
                 }),
                 {
-                    status: 500,
+                    status: 400,
                     headers: {
                         "Content-Type": "application/json",
                     },
@@ -95,9 +46,55 @@ export const GET = async (context) => {
             );
         }
 
+        const savedListIDs = user?.savedLists || [];
+
+        const authorQuery = eq(lists.author, user.id);
+        const savedListsQuery =
+            savedListIDs.length > 0
+                ? and(inArray(lists.id, savedListIDs), eq(lists.private, false))
+                : undefined;
+
+        const itemCount = count(items.id);
+
+        const returnedLists = await db
+            .select({
+                id: lists.id,
+                author: users.id,
+                authorName: users.name,
+                title: lists.title,
+                description: lists.description,
+                currency: lists.currency,
+                shortUrl: lists.shortUrl,
+                private: lists.private,
+                createdAt: lists.createdAt,
+                updatedAt: lists.updatedAt,
+                itemCount,
+            })
+            .from(lists)
+            .leftJoin(users, eq(users.id, lists.author))
+            .leftJoin(
+                items,
+                or(eq(items.list, lists.id), eq(items.communityList, lists.id)),
+            )
+            .where(or(authorQuery, savedListsQuery))
+            .groupBy(lists.id, users.id, users.name)
+            .orderBy(
+                sortOrder === "asc"
+                    ? asc(
+                          sortField === "itemCount"
+                              ? itemCount
+                              : lists[sortField],
+                      )
+                    : desc(
+                          sortField === "itemCount"
+                              ? itemCount
+                              : lists[sortField],
+                      ),
+            );
+
         return new Response(
             JSON.stringify({
-                lists: lists.rows,
+                lists: returnedLists,
             }),
             {
                 status: 200,

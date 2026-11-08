@@ -107,7 +107,7 @@
                         </div>
                     </v-chip>
                     <v-chip :prepend-icon="mdiUpdate" variant="tonal" rounded>
-                        {{ new Date(list.$updatedAt).toLocaleString() }}
+                        {{ new Date(list.updatedAt).toLocaleString() }}
                     </v-chip>
                     <v-chip
                         :prepend-icon="mdiInvoiceList"
