@@ -12,7 +12,7 @@ import {
     verification,
 } from "../src/auth-schema.js";
 import { autofills, fulfillments, items, lists } from "../src/schema.js";
-import { createAvatar } from "../src/utils/avatar.js";
+import { getAvatar } from "../src/utils/avatar.js";
 
 const PAGE_SIZE = 100;
 const TABLES = {
@@ -203,7 +203,7 @@ async function migrateUsers(db, users) {
                 name: source.name || source.email,
                 email: source.email,
                 emailVerified: Boolean(source.emailVerification),
-                image: await createAvatar({
+                image: await getAvatar({
                     name: source.name || source.email,
                 }),
                 createdAt,

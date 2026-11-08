@@ -16,7 +16,6 @@
                 <v-btn type="submit" color="primary" :loading="loadingRecovery">
                     Recover Account
                 </v-btn>
-                {{ { recoveryDetails } }}
             </v-form>
             <v-alert
                 :type="alert.type || 'error'"

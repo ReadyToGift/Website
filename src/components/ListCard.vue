@@ -75,6 +75,9 @@
                 <div class="chips">
                     <v-chip
                         v-if="!props.ownList && props.type !== 'selectable'"
+                        :prepend-avatar="
+                            getAvatar({ name: list.authorName, type: 'svg' })
+                        "
                         variant="tonal"
                         color="primary"
                         rounded
@@ -222,6 +225,7 @@ import { user as userStore } from "@/stores/auth";
 import { limits as limitsStore } from "@/stores/billing";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { $prefs } from "@/stores/prefs";
+import { getAvatar } from "@/utils/avatar";
 import DeleteList from "./dialogs/DeleteList.vue";
 import EditList from "./dialogs/EditList.vue";
 
@@ -275,10 +279,6 @@ const props = defineProps({
         type: String,
     },
 });
-
-// const userAvatar = (name) => {
-//     return avatars.getInitials(name, 32, 32);
-// };
 </script>
 
 <style lang="scss" scoped>
