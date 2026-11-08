@@ -4,9 +4,15 @@ import process from "node:process";
 import "dotenv/config";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import { Client, Query, Storage, TablesDB, Users } from "node-appwrite";
-import { account, user } from "../src/auth-schema.js";
+import {
+    account,
+    session,
+    twoFactor,
+    user,
+    verification,
+} from "../src/auth-schema.js";
 import { autofills, fulfillments, items, lists } from "../src/schema.js";
-import { bucket } from "../src/storage.js";
+import { createAvatar } from "../src/utils/avatar.js";
 
 const PAGE_SIZE = 100;
 const TABLES = {
@@ -61,10 +67,13 @@ async function listImages(storage, bucketId) {
             bucketId,
             fileId: file.$id,
         });
-        filesData.push(fileData);
+        filesData.push({
+            id: file.$id,
+            name: file.name,
+            mimeType: file.mimeType,
+            data: Buffer.from(fileData),
+        });
     }
-
-    console.log(filesData);
 
     return filesData;
 }
@@ -133,8 +142,54 @@ function createD1Database() {
     });
 }
 
-function uploadFile(file) {
-    const endpoint = `https://api.cloudflare.com/accounts/{account_id}/r2/buckets/{bucket_name}/objects/{object_key}`;
+function createR2Client() {
+    const accountId = required("CLOUDFLARE_ACCOUNT_ID");
+    const bucketName = process.env.CLOUDFLARE_R2_BUCKET || "readytogift";
+    const token = required("CLOUDFLARE_R2_TOKEN");
+    const baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects`;
+
+    return {
+        async upload(file) {
+            const response = await fetch(
+                `${baseUrl}/${encodeURIComponent(file.id)}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type":
+                            file.mimeType || "application/octet-stream",
+                        "Content-Length": String(file.data.byteLength),
+                    },
+                    body: file.data,
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `R2 upload failed for ${file.id}: ${response.status} ${await response.text()}`,
+                );
+            }
+        },
+    };
+}
+
+async function clearDatabase(db) {
+    console.log("Clearing existing D1 data...");
+
+    // Delete children before parents because production D1 has foreign keys enabled.
+    for (const table of [
+        session,
+        account,
+        verification,
+        twoFactor,
+        fulfillments,
+        items,
+        lists,
+        autofills,
+        user,
+    ]) {
+        await db.delete(table).run();
+    }
 }
 
 async function migrateUsers(db, users) {
@@ -148,7 +203,9 @@ async function migrateUsers(db, users) {
                 name: source.name || source.email,
                 email: source.email,
                 emailVerified: Boolean(source.emailVerification),
-                image: null,
+                image: await createAvatar({
+                    name: source.name || source.email,
+                }),
                 createdAt,
                 updatedAt,
             })
@@ -250,8 +307,12 @@ async function migrateContent(db, source) {
             .onConflictDoNothing()
             .run();
     }
+}
 
-    for (const row of source.images) {
+async function migrateImages(r2, images) {
+    for (const image of images) {
+        await r2.upload(image);
+        console.log(`Migrated image ${image.id}`);
     }
 }
 
@@ -289,18 +350,30 @@ async function main() {
         `Users: ${users.length}; lists: ${source.lists.length}; items: ${source.items.length}; fulfillments: ${source.fulfillments.length}; autofills: ${source.autofills.length}; images: ${source.images.length}`,
     );
 
-    if (!process.argv.includes("--apply")) {
+    const apply = process.argv.includes("--apply");
+    const reset = process.argv.includes("--reset");
+
+    if (!apply) {
         console.log(
-            "Dry run only. Apply with --apply to write through Drizzle.",
+            "Dry run only. Apply with --apply --reset to clear D1 and migrate.",
         );
         return;
     }
 
+    if (!reset) {
+        throw new Error(
+            "Refusing to write: --reset is required because this migration clears existing D1 data.",
+        );
+    }
+
     const db = createD1Database();
+    const r2 = createR2Client();
+    await clearDatabase(db);
     await migrateUsers(db, users);
     await migrateContent(db, source);
+    await migrateImages(r2, source.images);
     console.log(
-        "Migration applied. Appwrite passwords were not transferable; users need to set new passwords.",
+        "Migration applied. Appwrite passwords were not transferable; users need to set new passwords. Image files were copied to R2.",
     );
 }
 
