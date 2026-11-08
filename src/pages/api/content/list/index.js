@@ -1,19 +1,11 @@
-import {
-    APPWRITE_DB,
-    APPWRITE_FULFILLMENT_COLLECTION,
-    APPWRITE_IMAGE_BUCKET,
-    APPWRITE_ITEM_COLLECTION,
-    APPWRITE_LIST_COLLECTION,
-} from "astro:env/client";
-export const prerender = false;
-
-import { AppwriteException, Permission, Query, Role } from "node-appwrite";
-import {
-    createAdminClient,
-    createSessionClient,
-    requireAuth,
-} from "@/server/appwrite";
+import { and, count, eq, inArray, isNull } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import { user as users } from "@/auth-schema";
+import { db } from "@/db";
+import { fulfillments, items, lists } from "@/schema";
 import { getUserLimits } from "@/server/billing";
+
+export const prerender = false;
 
 const getListUsage = async ({ account, adminClient }) => {
     const { limits } = await getUserLimits({ account, adminClient });
@@ -52,35 +44,7 @@ const getListUsage = async ({ account, adminClient }) => {
 
 export const GET = async (context) => {
     try {
-        let account = null;
-        try {
-            const sessionClient = createSessionClient({
-                request: context.request,
-            });
-            account = await sessionClient.account.get();
-        } catch {
-            // Public list access is allowed without authentication.
-        }
-
-        let adminClient;
-
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        const user = context.locals.user;
 
         const searchParams = context.url.searchParams;
         const listID = searchParams.get("listId");
@@ -100,145 +64,86 @@ export const GET = async (context) => {
             );
         }
 
-        let list;
+        const listRows = await db
+            .select({
+                id: lists.id,
+                author: users.id,
+                authorName: users.name,
+                title: lists.title,
+                description: lists.description,
+                currency: lists.currency,
+                shortUrl: lists.shortUrl,
+                private: lists.private,
+                createdAt: lists.createdAt,
+                updatedAt: lists.updatedAt,
+                itemCount: count(items.id),
+            })
+            .from(lists)
+            .leftJoin(users, eq(users.id, lists.author))
+            .leftJoin(
+                items,
+                and(eq(items.list, lists.id), isNull(items.communityList)),
+            )
+            .where(eq(lists.id, listID))
+            .groupBy(lists.id, users.id, users.name);
 
-        try {
-            list = await adminClient.tablesDB.getRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                rowId: listID,
-                queries: [Query.select(["*", "items.*"])],
+        if (!listRows.length) {
+            return new Response(JSON.stringify({ message: "List not found" }), {
+                status: 404,
+                headers: { "Content-Type": "application/json" },
             });
-
-            if (!list) {
-                return new Response(
-                    JSON.stringify({
-                        message: "List not found",
-                    }),
-                    {
-                        status: 404,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
-            }
-
-            list.items = (list.items || []).filter(
-                (item) => !item.communityList,
-            );
-
-            if (list.private && (!account || list.author !== account.$id)) {
-                return new Response(
-                    JSON.stringify({
-                        message: "Unauthorized",
-                    }),
-                    {
-                        status: 403,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
-            }
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error fetching list",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
         }
 
-        let communityItems;
+        const list = listRows[0];
 
-        try {
-            const communityItemsResp = await adminClient.tablesDB.listRows({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_ITEM_COLLECTION,
-                queries: [Query.equal("communityList", list.$id)],
+        if (list.private && list.author !== user?.id) {
+            return new Response(JSON.stringify({ message: "Unauthorized" }), {
+                status: 403,
+                headers: { "Content-Type": "application/json" },
             });
-
-            communityItems = communityItemsResp.rows;
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error getting community items",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
         }
 
-        let fulfillments = [];
+        const listItems = await db
+            .select()
+            .from(items)
+            .where(and(eq(items.list, listID), isNull(items.communityList)));
 
-        if (list.items?.length) {
-            try {
-                const fulfillmentsResp = await adminClient.tablesDB.listRows({
-                    databaseId: APPWRITE_DB,
-                    tableId: APPWRITE_FULFILLMENT_COLLECTION,
-                    queries: [
-                        Query.equal(
-                            "item",
-                            list.items.map((item) => item.$id),
-                        ),
-                        Query.select(["*", "item.*"]),
-                        Query.limit(list.items.length),
-                    ],
-                });
+        const communityItems = await db
+            .select()
+            .from(items)
+            .where(eq(items.communityList, listID));
 
-                fulfillments = fulfillmentsResp.rows;
-            } catch (err) {
-                console.log(err);
+        const itemIDs = listItems.map((item) => item.id);
+        const fulfillmentRows = itemIDs.length
+            ? await db
+                  .select()
+                  .from(fulfillments)
+                  .where(inArray(fulfillments.item, itemIDs))
+            : [];
 
-                return new Response(
-                    JSON.stringify({
-                        message: "Error getting fulfillments",
-                    }),
-                    {
-                        status: 500,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
-            }
-        }
-
-        list.items = (list.items || [])
+        list.items = listItems
             .sort((a, b) => {
                 if (sort === "price") {
-                    return a.price - b.price;
+                    return (a.price ?? 0) - (b.price ?? 0);
                 }
 
                 return a.title.localeCompare(b.title);
             })
             .map((item) => {
-                item.fulfillment =
-                    fulfillments.find(
-                        (fulfillment) => fulfillment.item.$id === item.$id,
-                    ) || null;
-                return item;
+                return {
+                    ...item,
+                    fulfillment:
+                        fulfillmentRows.find(
+                            (fulfillment) => fulfillment.item === item.id,
+                        ) || null,
+                };
             });
 
         return new Response(
             JSON.stringify({
                 list,
-                loadedAsAuthor: !!account && list.author === account.$id,
-                fulfillments,
+                loadedAsAuthor: list.author === user?.id,
+                fulfillments: fulfillmentRows,
                 communityItems,
             }),
             {

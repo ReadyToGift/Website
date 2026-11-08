@@ -34,7 +34,7 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url }) => {
-            const body = `You've recently requested a password reset.<br/>
+            const body = `You recently requested a password reset.<br/>
                 Click the link below to reset your password.<br/><br/>
                 <a href="${url}">${url}</a>`;
             const footer = `If you didn't request this, you can ignore this email.`;
@@ -42,6 +42,7 @@ export const auth = betterAuth({
                 to: user.email,
                 name: user.name,
                 subject: "Reset Password",
+                preview: "You recently requested a password reset. Click the link below to reset your password",
                 body,
                 footer,
                 contactSupportDefaultSubject: `Password Reset Support Request - ${new Date().toLocaleString("en-GB")}`,

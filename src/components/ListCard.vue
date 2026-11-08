@@ -3,7 +3,7 @@
         :to="
             props.header || props.type === 'selectable'
                 ? undefined
-                : `/list/${props.list.$id}${quickCreateURL && ownList ? `?quickCreateURL=${props.quickCreateURL}` : ''}`
+                : `/list/${props.list.id}${quickCreateURL && ownList ? `?quickCreateURL=${props.quickCreateURL}` : ''}`
         "
         :title="props.list.title"
         variant="tonal"

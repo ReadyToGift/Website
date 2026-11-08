@@ -124,7 +124,6 @@ import {
     VSpacer,
     VSwitch,
 } from "vuetify/components";
-import { avatars } from "@/appwrite";
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
@@ -145,6 +144,7 @@ import {
     setCount as setListCount,
     userLists as userListsStore,
 } from "@/stores/userLists";
+import { getAvatar } from "@/utils/avatar";
 import { handleFetch } from "@/utils/handleFetch";
 import NotFound from "../../404/_NotFound.vue";
 
@@ -628,7 +628,10 @@ export default {
                 window.document.title = `${this.list.title} - Readyto.gift`;
 
                 this.addToHistory({
-                    avatar: avatars.getInitials(this.list.authorName),
+                    avatar: getAvatar({
+                        name: this.list.authorName,
+                        type: "svg",
+                    }),
                     id: this.list.$id,
                     subtitle: `By ${this.list.authorName}`,
                     title: this.list.title,
@@ -706,9 +709,8 @@ export default {
         }
 
         if (this.user) {
-            const [listsData, listsError] = await handleFetch(
-                "/api/content/lists",
-            );
+            const [listsData, listsError] =
+                await handleFetch("/api/content/lists");
 
             if (!listsError && listsData?.lists) {
                 const ownLists = listsData.lists.filter(

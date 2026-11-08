@@ -168,24 +168,19 @@
 </template>
 
 <script>
-import {
-    APPWRITE_ENDPOINT,
-    APPWRITE_IMAGE_BUCKET,
-    APPWRITE_PROJECT,
-} from "astro:env/client";
+import { CLOUDFLARE_R2_ENDPOINT } from "astro:env/client";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import VueMarkdown from "vue-markdown-render";
 import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
-import { avatars } from "@/appwrite";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
 import { user as userStore } from "@/stores/auth";
 import { formatter as currencyFormatter } from "@/stores/currency";
-
 import { $prefs } from "@/stores/prefs";
 import { convertPriority } from "@/utils";
+import { getAvatar } from "@/utils/avatar";
 import validation from "@/utils/validation";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 
@@ -235,18 +230,7 @@ export default {
     computed: {
         imageURL() {
             if (this.item.imageID) {
-                try {
-                    const params = new URLSearchParams({
-                        project: APPWRITE_PROJECT,
-                        output: "png",
-                        height: "400",
-                    });
-
-                    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_IMAGE_BUCKET}/files/${this.item.imageID}/preview?${params.toString()}`;
-                } catch (error) {
-                    console.error(error);
-                    return null;
-                }
+                return `${CLOUDFLARE_R2_ENDPOINT}/${this.item.imageID}`;
             } else if (this.item.image) {
                 return this.item.image;
             } else {
@@ -265,7 +249,7 @@ export default {
         },
         userAvatar(name) {
             try {
-                return avatars.getInitials(name, 32, 32);
+                return getAvatar({ name, type: "svg" });
             } catch (error) {
                 console.error(error);
                 return null;
