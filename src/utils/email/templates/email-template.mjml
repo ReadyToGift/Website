@@ -1,0 +1,47 @@
+<mjml>
+    <mj-head>
+        <mj-attributes>
+            <mj-text font-size="16px" line-height="1.4" />
+        </mj-attributes>
+        <mj-style>
+            a {
+                color: #405F91;
+                font-weight: bold;
+            }
+        </mj-style>
+    </mj-head>
+    <mj-body>
+        <mj-section padding="0">
+            <mj-column background-color="#405F91">
+                <mj-image src="https://readyto.gift/manifest-icon-192.maskable.png" width="92px" href="https://readyto.gift" alt="logo" />
+                <mj-text align="center" font-size="24px" padding="0 0 20px">
+                    <a href="https://readyto.gift" style="color: white; text-decoration: none;">
+                        ReadyTo.Gift
+                    </a>
+                </mj-text>
+            </mj-column>
+        </mj-section>
+        <mj-section>
+            <mj-column>
+                <mj-text>
+                    {{greeting}}<br/><br/>
+                </mj-text>
+                <mj-text>
+                    {{body}}
+                </mj-text>
+                <mj-text>
+                    <br/>
+                    Regards,<br/>
+                    ReadyToGift
+                </mj-text>
+            </mj-column>
+        </mj-section>
+        <mj-section background-color="#f0f0f0">
+            <mj-column>
+                <mj-text font-size="14px">
+                    {{footer}}
+                </mj-text>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>

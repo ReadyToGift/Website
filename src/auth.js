@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
-import { sendEmail } from "@/utils/email";
+import { sendEmail } from "@/utils/email/index";
 
 export const auth = betterAuth({
     baseURL: {
@@ -16,10 +16,17 @@ export const auth = betterAuth({
     emailAndPassword: {
         enabled: true,
         sendResetPassword: async ({ user, url }) => {
-            await sendEmail({
+            const body = `You've recently requested a password reset.<br/>
+                Click the link below to reset your password.<br/><br/>
+                <a href="${url}">${url}</a>`;
+            const footer = `If you didn't request this, you can ignore this email.`;
+            void sendEmail({
                 to: user.email,
+                name: user.name,
                 subject: "Reset Password",
-                body: `Click here to reset: <a href="${url}">${url}</a>`,
+                body,
+                footer,
+                contactSupportDefaultSubject: `Password Reset Support Request ${new Date().toLocaleString("en-GB")}}`,
             });
         },
     },

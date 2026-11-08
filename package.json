@@ -45,6 +45,7 @@
         "https-proxy-agent": "^9.1.0",
         "image-size": "^2.0.3",
         "mime-types": "^3.0.2",
+        "mjml": "^5.4.1",
         "nanostores": "^1.5.5",
         "plunk-node-sdk": "^0.3.0",
         "redis": "^6.3.1",
