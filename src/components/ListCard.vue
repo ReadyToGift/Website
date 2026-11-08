@@ -75,7 +75,6 @@
                 <div class="chips">
                     <v-chip
                         v-if="!props.ownList && props.type !== 'selectable'"
-                        :prepend-avatar="userAvatar(list.authorName)"
                         variant="tonal"
                         color="primary"
                         rounded
@@ -218,7 +217,6 @@ import {
     VProgressLinear,
     VSpeedDial,
 } from "vuetify/components";
-import { avatars } from "@/appwrite";
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
 import { user as userStore } from "@/stores/auth";
 import { limits as limitsStore } from "@/stores/billing";
@@ -278,9 +276,9 @@ const props = defineProps({
     },
 });
 
-const userAvatar = (name) => {
-    return avatars.getInitials(name, 32, 32);
-};
+// const userAvatar = (name) => {
+//     return avatars.getInitials(name, 32, 32);
+// };
 </script>
 
 <style lang="scss" scoped>

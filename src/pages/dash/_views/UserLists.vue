@@ -295,11 +295,10 @@ import {
     VTabsWindow,
     VTabsWindowItem,
 } from "vuetify/components";
-import { account } from "@/appwrite";
 import CreateList from "@/components/dialogs/CreateList.vue";
 import ListCard from "@/components/ListCard.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-import { user as userStore } from "@/stores/auth";
+import { authClient, user as userStore } from "@/stores/auth";
 import { limits as limitsStore } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
