@@ -7,7 +7,7 @@
             (!wishlistOwner || spoilSurprises)
         "
         variant="tonal"
-        :data-item-id="item.$id"
+        :data-item-id="item.id"
     >
         <div class="item-header">
             <h2>{{ item.title }}</h2>
@@ -19,7 +19,7 @@
                     "
                     :item="item"
                     @fulfillItem="$emit('fulfillItem', $event)"
-                    @unfulfillItem="$emit('unfulfillItem', item.$id)"
+                    @unfulfillItem="$emit('unfulfillItem', item.id)"
                 />
                 <template v-if="item.url">
                     <v-btn
@@ -50,7 +50,7 @@
                     :wishlistOwner="wishlistOwner"
                     v-if="
                         (wishlistOwner && !item.communityList) ||
-                        (user && item.contributorId === user.$id)
+                        (user && item.contributorId === user.id)
                     "
                 />
                 <MoveItem
@@ -67,7 +67,7 @@
                     @removeItem="$emit('removeItem', $event)"
                     v-if="
                         (wishlistOwner && !item.communityList) ||
-                        (user && item.contributorId === user.$id)
+                        (user && item.contributorId === user.id)
                     "
                 />
             </v-btn-group>
@@ -155,7 +155,7 @@
                     rounded
                     v-if="item.communityList"
                 >
-                    <template v-if="user && item.contributorId === user.$id">
+                    <template v-if="user && item.contributorId === user.id">
                         You contributed this item
                     </template>
                     <template v-else>

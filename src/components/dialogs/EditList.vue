@@ -223,7 +223,7 @@ export default {
                     title: this.list.title,
                 };
                 this.previousValues = { ...this.editedList };
-                this.listId = this.list.$id;
+                this.listId = this.list.id;
             } else {
                 this.$emit("dialogClosed");
 

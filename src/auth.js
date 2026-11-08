@@ -71,7 +71,7 @@ export const auth = betterAuth({
             listSorting: {
                 type: "json",
                 defaultValue: {
-                    type: { name: "Last updated", value: "$updatedAt" },
+                    type: { name: "Last updated", value: "updatedAt" },
                     order: "asc",
                 },
             },

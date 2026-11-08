@@ -13,13 +13,7 @@ export const GET = async (context) => {
 
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
-        const requestedSortField = searchParams.get("sort") || "createdAt";
-        const sortFieldAliases = {
-            $createdAt: "createdAt",
-            $updatedAt: "updatedAt",
-        };
-        const sortField =
-            sortFieldAliases[requestedSortField] || requestedSortField;
+        const sortField = searchParams.get("sort") || "createdAt";
 
         const validSortFields = [
             "createdAt",
@@ -29,13 +23,13 @@ export const GET = async (context) => {
         ];
         if (!validSortFields.includes(sortField)) {
             console.warn("Invalid list sort field", {
-                requestedSortField,
+                sortField,
                 validSortFields,
             });
 
             return new Response(
                 JSON.stringify({
-                    message: `Invalid sort field: ${requestedSortField}`,
+                    message: `Invalid sort field: ${sortField}`,
                 }),
                 {
                     status: 400,

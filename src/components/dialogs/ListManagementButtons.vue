@@ -3,8 +3,6 @@
         base-color="primary"
         divided
         rounded="pill"
-        density="comfortable"
-        size="small"
         :class="props.class"
     >
         <EditList
@@ -134,7 +132,7 @@ const props = defineProps({
     },
 });
 const listSaved = computed(
-    () => prefs.value.savedLists?.includes(props.list.$id) ?? false,
+    () => prefs.value.savedLists?.includes(props.list.id) ?? false,
 );
 
 let quickCreateError = ref({
@@ -146,7 +144,7 @@ let quickcreateDialogOpen = ref(false);
 let listSaveLoading = ref(false);
 
 const copyListURL = async () => {
-    const listURL = `${window.location.origin}/${props.list.shortUrl ? props.list.shortUrl : "list/" + props.list.$id}`;
+    const listURL = `${window.location.origin}/${props.list.shortUrl ? props.list.shortUrl : "list/" + props.list.id}`;
     if (navigator.share) {
         try {
             await navigator.share({
@@ -190,14 +188,14 @@ const saveList = async () => {
     }
     if (
         prefs.value.savedLists &&
-        prefs.value.savedLists.includes(props.list.$id)
+        prefs.value.savedLists.includes(props.list.id)
     ) {
         // Unsave list
         try {
             await updatePrefs({
                 ...prefs.value,
                 savedLists: prefs.value.savedLists.filter(
-                    (listId) => listId !== props.list.$id,
+                    (listId) => listId !== props.list.id,
                 ),
             });
             listSaveLoading.value = false;
@@ -222,7 +220,7 @@ const saveList = async () => {
         try {
             await updatePrefs({
                 ...prefs.value,
-                savedLists: [...prefs.value.savedLists, props.list.$id],
+                savedLists: [...prefs.value.savedLists, props.list.id],
             });
             listSaveLoading.value = false;
         } catch (error) {

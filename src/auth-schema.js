@@ -31,7 +31,7 @@ export const user = sqliteTable("user", {
     savedLists: text("saved_lists", { mode: "json" }).default([]).notNull(),
     listSorting: text("list_sorting", { mode: "json" })
         .default({
-            type: { name: "Last updated", value: "$updatedAt" },
+            type: { name: "Last updated", value: "updatedAt" },
             order: "asc",
         })
         .notNull(),

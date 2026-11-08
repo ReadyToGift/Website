@@ -120,7 +120,7 @@ export default {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            listId: this.list.$id,
+                            listId: this.list.id,
                         }),
                     },
                 );

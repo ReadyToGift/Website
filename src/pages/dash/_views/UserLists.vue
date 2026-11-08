@@ -181,10 +181,10 @@
                         <v-list>
                             <ListCard
                                 v-for="list in publicLists"
-                                :key="list.$id"
+                                :key="list.id"
                                 :list="list"
                                 :quickCreateURL="quickCreateURL"
-                                :ownList="user && list.author === user.$id"
+                                :ownList="user && list.author === user.id"
                             />
                         </v-list>
                         <v-alert
@@ -208,10 +208,10 @@
                         <v-list>
                             <ListCard
                                 v-for="list in privateLists"
-                                :key="list.$id"
+                                :key="list.id"
                                 :list="list"
                                 :quickCreateURL="quickCreateURL"
-                                :ownList="user && list.author === user.$id"
+                                :ownList="user && list.author === user.id"
                             />
                         </v-list>
                         <v-alert
@@ -235,7 +235,7 @@
                         <v-list>
                             <ListCard
                                 v-for="list in savedLists"
-                                :key="list.$id"
+                                :key="list.id"
                                 :list="list"
                                 :ownList="false"
                             />
@@ -321,13 +321,13 @@ const lists = ref([]);
 const loading = ref(true);
 const quickCreateURL = ref(false);
 const savedLists = computed(() =>
-    lists.value.filter((list) => prefs.value.savedLists?.includes(list.$id)),
+    lists.value.filter((list) => prefs.value.savedLists?.includes(list.id)),
 );
 const sorting = ref({
     typeOptions: [
         { name: "Title", value: "title" },
-        { name: "Last updated", value: "$updatedAt" },
-        { name: "Created", value: "$createdAt" },
+        { name: "Last updated", value: "updatedAt" },
+        { name: "Created", value: "createdAt" },
         { name: "Item Count", value: "itemCount" },
     ],
 });
@@ -336,13 +336,13 @@ const verificationDialog = ref(false);
 
 const privateLists = computed(() => {
     return lists.value.filter(
-        (list) => list.private && !prefs.value.savedLists?.includes(list.$id),
+        (list) => list.private && !prefs.value.savedLists?.includes(list.id),
     );
 });
 
 const publicLists = computed(() => {
     return lists.value.filter(
-        (list) => !list.private && !prefs.value.savedLists?.includes(list.$id),
+        (list) => !list.private && !prefs.value.savedLists?.includes(list.id),
     );
 });
 
@@ -353,10 +353,10 @@ const createList = (data) => {
     }
     const urlSearchParams = new URLSearchParams(query).toString();
     if (urlSearchParams.length) {
-        router.push(`/list/${data.list.$id}?` + urlSearchParams);
+                router.push(`/list/${data.list.id}?` + urlSearchParams);
         return;
     }
-    router.push(`/list/${data.list.$id}`);
+    router.push(`/list/${data.list.id}`);
 };
 
 const getLists = async () => {

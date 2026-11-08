@@ -58,13 +58,13 @@
                     <div class="item-group-items">
                         <ListItem
                             v-for="item in itemGroup.items"
-                            :key="item.$id"
+                            :key="item.id"
                             :item="item"
                             :list="list"
                             :wishlistOwner="wishlistOwner"
                             :currency="list.currency"
                             @itemLimitReached="itemLimitReachedDialog"
-                            @removeItem="removeItem(item.$id)"
+                            @removeItem="removeItem(item.id)"
                             @editItem="editItem($event)"
                             @fulfillItem="fulfillItem($event)"
                             @unfulfillItem="unfulfillItem($event)"
@@ -322,7 +322,12 @@ export default {
             return this.prefs.spoilSurprises;
         },
         wishlistOwner() {
-            return this.user && this.user.$id === this.list.author;
+            if (this.loadedAsAuthor) return true;
+
+            const userID = this.user?.id;
+            const authorID = this.list?.author;
+
+            return Boolean(userID && authorID && userID === authorID);
         },
     },
     methods: {
@@ -413,7 +418,7 @@ export default {
             this.list.currency = data.list.currency;
             this.list.shortUrl = data.list.shortUrl;
             this.list.itemCount = data.list.itemCount;
-            this.list.$updatedAt = data.list.$updatedAt;
+            this.list.updatedAt = data.list.updatedAt;
             this.list.private = data.list.private;
         },
         addItem(data) {
@@ -427,7 +432,7 @@ export default {
             this.$nextTick(() => {
                 setTimeout(() => {
                     const newItem = document.body.querySelector(
-                        `[data-item-id="${data.item.$id}"]`,
+                        `[data-item-id="${data.item.id}"]`,
                     );
                     newItem.scrollIntoView({
                         behavior: "smooth",
@@ -439,14 +444,14 @@ export default {
         editItem(data) {
             if (data.item.communityList) {
                 this.communityItems = this.communityItems.map((item) => {
-                    if (item.$id === data.item.$id) {
+                    if (item.id === data.item.id) {
                         return data.item;
                     }
                     return item;
                 });
             } else {
                 this.list.items = this.list.items.map((item) => {
-                    if (item.$id === data.item.$id) {
+                    if (item.id === data.item.id) {
                         return data.item;
                     }
                     return item;
@@ -455,7 +460,7 @@ export default {
             this.$nextTick(() => {
                 setTimeout(() => {
                     const newItem = document.body.querySelector(
-                        `[data-item-id="${data.item.$id}"]`,
+                        `[data-item-id="${data.item.id}"]`,
                     );
                     newItem.scrollIntoView({
                         behavior: "smooth",
@@ -465,21 +470,21 @@ export default {
             });
         },
         async removeItem(id) {
-            if (this.communityItems.find((item) => item.$id === id)) {
+            if (this.communityItems.find((item) => item.id === id)) {
                 this.communityItems = this.communityItems.filter(
-                    (item) => item.$id !== id,
+                    (item) => item.id !== id,
                 );
                 return;
             } else {
                 this.list.items = this.list.items.filter(
-                    (item) => item.$id !== id,
+                    (item) => item.id !== id,
                 );
                 this.list.itemCount = this.list.items.length;
             }
         },
         fulfillItem(data) {
             this.list.items = this.list.items.map((item) => {
-                if (item.$id === data.item.$id) {
+                if (item.id === data.item.id) {
                     item.fulfillment = data;
                 }
                 return item;
@@ -488,7 +493,7 @@ export default {
             if (this.showFulfilled === true) {
                 this.$nextTick(() => {
                     const el = document.body.querySelector(
-                        `[data-item-id="${data.item.$id}"]`,
+                        `[data-item-id="${data.item.id}"]`,
                     );
                     el.scrollIntoView({
                         behavior: "smooth",
@@ -499,7 +504,7 @@ export default {
         },
         unfulfillItem(itemId) {
             this.list.items = this.list.items.map((item) => {
-                if (item.$id === itemId) {
+                if (item.id === itemId) {
                     item.fulfillment = null;
                 }
                 return item;
@@ -632,7 +637,7 @@ export default {
                         name: this.list.authorName,
                         type: "svg",
                     }),
-                    id: this.list.$id,
+                    id: this.list.id,
                     subtitle: `By ${this.list.authorName}`,
                     title: this.list.title,
                 });
@@ -714,7 +719,7 @@ export default {
 
             if (!listsError && listsData?.lists) {
                 const ownLists = listsData.lists.filter(
-                    (list) => list.author === this.user.$id,
+                    (list) => list.author === this.user.id,
                 );
                 const publicLists = ownLists.filter((list) => !list.private);
                 const privateLists = ownLists.filter((list) => list.private);
