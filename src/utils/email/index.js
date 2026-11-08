@@ -15,11 +15,12 @@ const getFooter = ({ footer, contactSupportDefaultSubject }) => {
     return `${footer}<br/><br/>${baseFooter}`;
 };
 
-const createEmail = async ({ greeting, body, footer }) => {
+const createEmail = async ({ greeting, body, footer, preview }) => {
     const populatedTemplate = templateContent
         .replace("{{body}}", body)
         .replace("{{footer}}", footer)
-        .replace("{{greeting}}", greeting);
+        .replace("{{greeting}}", greeting)
+        .replace("{{preview}}", preview);
 
     const { html } = await mjml2html(populatedTemplate);
     return html;
@@ -32,6 +33,7 @@ export const sendEmail = async ({
     body,
     footer,
     contactSupportDefaultSubject,
+    preview,
 }) => {
     console.log(`Sending email to ${to}`);
     const { PLUNK_BASE_URL, PLUNK_SECRET_KEY, PLUNK_SENDING_EMAIL } =
@@ -47,6 +49,7 @@ export const sendEmail = async ({
     const html = await createEmail({
         greeting,
         body,
+        preview,
         footer: getFooter({ footer, contactSupportDefaultSubject }),
     });
 

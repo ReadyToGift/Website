@@ -9,6 +9,9 @@
                 font-weight: bold;
             }
         </mj-style>
+        <mj-preview>
+            {{preview}}
+        </mj-preview>
     </mj-head>
     <mj-body>
         <mj-section padding="0">
@@ -24,13 +27,12 @@
         <mj-section>
             <mj-column>
                 <mj-text>
-                    {{greeting}}<br/><br/>
+                    {{greeting}}
                 </mj-text>
                 <mj-text>
                     {{body}}
                 </mj-text>
                 <mj-text>
-                    <br/>
                     Regards,<br/>
                     ReadyToGift
                 </mj-text>
