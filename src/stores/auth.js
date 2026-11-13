@@ -16,7 +16,10 @@ export const previouslyLoggedInUserID = persistentAtom(
     null,
 );
 export const authInitialized = atom(false);
-let initPromise = null;
+let resolveAuthReady;
+const authReady = new Promise((resolve) => {
+    resolveAuthReady = resolve;
+});
 
 const updateUser = (sessionData) => {
     const sessionUser = sessionData?.user ?? null;
@@ -32,6 +35,7 @@ session.listen((state) => {
     if (!state.isPending) {
         updateUser(state.data);
         authInitialized.set(true);
+        resolveAuthReady();
     }
 });
 
@@ -56,33 +60,7 @@ export const getMFAFactors = async () => {
     return mfaFactors.get();
 };
 
-const runInit = async () => {
-    await session.get().refetch();
-    updateUser(session.get().data);
-    authInitialized.set(true);
-};
-
-export const init = async () => {
-    if (initPromise) {
-        return initPromise;
-    }
-
-    console.log("Initialising auth");
-    initPromise = (async () => {
-        try {
-            await runInit();
-        } catch (error) {
-            authInitialized.set(false);
-            console.error("Auth init error:", error);
-        }
-    })();
-
-    try {
-        await initPromise;
-    } finally {
-        initPromise = null;
-    }
-};
+export const init = () => authReady;
 
 export async function logOut() {
     try {

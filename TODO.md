@@ -30,9 +30,9 @@
   - [x] Read (direct from R2 URL)
   - [x] Metadata lookup
   - [x] Delete (through the item endpoint)
-- [ ] Short URLs
+- [x] Short URLs
   - [x] Lookup
-  - [ ] Validation
+  - [x] Validation
 - [ ] Auth
   - [ ] Account Creation
   - [ ] MFA
