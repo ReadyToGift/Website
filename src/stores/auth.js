@@ -2,6 +2,7 @@ import { persistentAtom } from "@nanostores/persistent";
 import { createAuthClient } from "better-auth/client";
 import { twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
+import { loadPrefs } from "./prefs";
 
 export const authClient = createAuthClient({
     plugins: [twoFactorClient],
@@ -20,6 +21,7 @@ let initPromise = null;
 const updateUser = (sessionData) => {
     const sessionUser = sessionData?.user ?? null;
     user.set(sessionUser);
+    loadPrefs(sessionUser || {});
     mfaFactors.set({
         totp: Boolean(sessionUser?.twoFactorEnabled),
     });

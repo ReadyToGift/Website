@@ -13,7 +13,14 @@ export const GET = async (context) => {
 
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
-        const sortField = searchParams.get("sort") || "createdAt";
+        const requestedSortField = searchParams.get("sort") || "createdAt";
+        // `$updatedAt` was used by the old Appwrite-backed implementation.
+        // Accept it so stale clients/preferences continue to work after the
+        // migration to the local schema.
+        const sortField =
+            requestedSortField === "$updatedAt"
+                ? "updatedAt"
+                : requestedSortField;
 
         const validSortFields = [
             "createdAt",
@@ -23,7 +30,7 @@ export const GET = async (context) => {
         ];
         if (!validSortFields.includes(sortField)) {
             console.warn("Invalid list sort field", {
-                sortField,
+                sortField: requestedSortField,
                 validSortFields,
             });
 

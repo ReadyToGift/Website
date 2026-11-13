@@ -1,5 +1,5 @@
 import { persistentMap } from "@nanostores/persistent";
-import { user } from "./auth";
+import { authClient, user } from "./auth";
 
 const defaultPrefs = {
     darkMode: false,
@@ -14,6 +14,42 @@ const defaultPrefs = {
     hidePWAInstallPrompt: false,
 };
 
+const validListSortFields = new Set([
+    "createdAt",
+    "updatedAt",
+    "title",
+    "itemCount",
+]);
+
+const normalizeListSorting = (listSorting) => {
+    const sorting =
+        listSorting && typeof listSorting === "object"
+            ? listSorting
+            : defaultPrefs.listSorting;
+    const requestedField = sorting.type?.value;
+    const value =
+        requestedField === "$updatedAt"
+            ? "updatedAt"
+            : validListSortFields.has(requestedField)
+              ? requestedField
+              : defaultPrefs.listSorting.type.value;
+
+    return {
+        type: {
+            name:
+                value === "updatedAt"
+                    ? "Last updated"
+                    : value === "createdAt"
+                      ? "Created"
+                      : value === "itemCount"
+                        ? "Item Count"
+                        : "Title",
+            value,
+        },
+        order: sorting.order === "desc" ? "desc" : "asc",
+    };
+};
+
 export const $prefs = persistentMap(
     "userPrefs",
     { ...defaultPrefs },
@@ -26,15 +62,35 @@ export const $prefs = persistentMap(
 export const newUserPrefs = { ...defaultPrefs };
 
 export const loadPrefs = (prefs) => {
-    $prefs.set({ ...defaultPrefs, ...prefs });
-    Object.assign(newUserPrefs, { ...defaultPrefs, ...prefs });
+    const loadedPrefs = {
+        ...defaultPrefs,
+        ...prefs,
+        listSorting: normalizeListSorting(prefs?.listSorting),
+    };
+    $prefs.set(loadedPrefs);
+    Object.assign(newUserPrefs, loadedPrefs);
 };
 
 export const updatePrefs = async (updatedPrefs) => {
     const userAccount = user.get();
-    const newPrefs = Object.assign({}, $prefs.get(), updatedPrefs);
+    const newPrefs = {
+        ...Object.assign({}, $prefs.get(), updatedPrefs),
+        listSorting: normalizeListSorting(
+            updatedPrefs.listSorting || $prefs.get().listSorting,
+        ),
+    };
     if (userAccount) {
-        await account.updatePrefs(newPrefs);
+        const preferenceUpdate = Object.fromEntries(
+            Object.keys(defaultPrefs).map((key) => [key, newPrefs[key]]),
+        );
+        const { data, error } = await authClient.updateUser(preferenceUpdate);
+        if (error) {
+            throw new Error(error.message || "Failed to update preferences");
+        }
+
+        if (data) {
+            user.set(data);
+        }
     }
     $prefs.set(newPrefs);
 };
