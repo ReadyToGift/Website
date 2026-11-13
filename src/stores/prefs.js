@@ -58,13 +58,25 @@ export const $prefs = persistentMap(
         decode: JSON.parse,
     },
 );
+$prefs.listen(() => {});
 
 export const newUserPrefs = { ...defaultPrefs };
 
 export const loadPrefs = (prefs) => {
+    const persistedPrefs = $prefs.get();
+    const accountPrefs = Object.fromEntries(
+        Object.keys(defaultPrefs)
+            .filter((key) => prefs?.[key] !== undefined)
+            .map((key) => [key, prefs[key]]),
+    );
+    const savedLists =
+        prefs?.savedLists?.length > 0
+            ? prefs.savedLists
+            : persistedPrefs.savedLists;
     const loadedPrefs = {
         ...defaultPrefs,
-        ...prefs,
+        ...accountPrefs,
+        savedLists,
         listSorting: normalizeListSorting(prefs?.listSorting),
     };
     $prefs.set(loadedPrefs);

@@ -47,7 +47,12 @@ export const GET = async (context) => {
             );
         }
 
-        const savedListIDs = user?.savedLists || [];
+        const requestedSavedListIDs = (searchParams.get("savedLists") || "")
+            .split(",")
+            .filter(Boolean);
+        const savedListIDs = [
+            ...new Set([...(user?.savedLists || []), ...requestedSavedListIDs]),
+        ];
 
         const authorQuery = eq(lists.author, user.id);
         const savedListsQuery =

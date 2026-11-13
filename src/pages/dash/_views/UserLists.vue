@@ -382,6 +382,7 @@ const getLists = async () => {
             ? prefs.value.listSorting.type.value
             : null,
         order: prefs.value.listSorting ? prefs.value.listSorting.order : null,
+        savedLists: prefs.value.savedLists?.join(",") || "",
     });
 
     const [listsResponse, listsError] = await handleFetch(
