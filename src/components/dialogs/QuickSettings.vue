@@ -40,7 +40,7 @@
                                 />
                             </template>
                         </v-list-item>
-                        <v-list-item v-if="!!account" title="Spoil Surprises">
+                        <v-list-item v-if="!!user" title="Spoil Surprises">
                             <template #prepend>
                                 <v-switch
                                     v-model="newUserPrefs.spoilSurprises"

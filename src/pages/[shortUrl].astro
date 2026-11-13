@@ -1,32 +1,21 @@
 ---
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
-import { Query } from "node-appwrite";
-import { createAdminClient } from "@/server/appwrite";
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { lists } from "@/schema";
 
 const { shortUrl } = Astro.params;
 
-const client = createAdminClient();
-
-console.log(`Looking up list with shortUrl: ${shortUrl}`);
-
 export const prerender = false;
 
-const response = await client.tablesDB.listRows({
-    databaseId: APPWRITE_DB,
-    tableId: APPWRITE_LIST_COLLECTION,
-    queries: [Query.equal("shortUrl", shortUrl), Query.limit(1)],
-});
+const [list] = await db
+    .select({ id: lists.id })
+    .from(lists)
+    .where(eq(lists.shortUrl, shortUrl));
 
-if (response.total === 0) {
+if (!list) {
     return new Response("Not Found", { status: 404 });
 }
 
-if (response.total > 1) {
-    console.warn(
-        `Warning: Multiple lists found with the same shortUrl: ${shortUrl}`,
-    );
-}
-
-return Astro.redirect(`/list/${response.rows[0].$id}`);
+return Astro.redirect(`/list/${list.id}`);
 ---
 

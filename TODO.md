@@ -11,7 +11,7 @@
 
 ### TODO
 
-- [ ] Lists
+- [x] Lists
   - [x] Create
   - [x] Read
   - [x] Update
@@ -31,7 +31,7 @@
   - [ ] Metadata lookup
   - [ ] Delete
 - [ ] Short URLs
-  - [ ] Lookup
+  - [x] Lookup
   - [ ] Validation
 - [ ] Auth
   - [ ] Account Creation
