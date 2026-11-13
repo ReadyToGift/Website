@@ -144,7 +144,6 @@ import {
     setCount as setListCount,
     userLists as userListsStore,
 } from "@/stores/userLists";
-import { getAvatar } from "@/utils/avatar";
 import { handleFetch } from "@/utils/handleFetch";
 import NotFound from "../../404/_NotFound.vue";
 
@@ -634,10 +633,7 @@ export default {
                 window.document.title = `${this.list.title} - Readyto.gift`;
 
                 this.addToHistory({
-                    avatar: getAvatar({
-                        name: this.list.authorName,
-                        type: "svg",
-                    }),
+                    avatar: `/api/avatar/${this.list.author}`,
                     id: this.list.id,
                     subtitle: `By ${this.list.authorName}`,
                     title: this.list.title,

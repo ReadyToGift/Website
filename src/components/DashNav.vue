@@ -8,7 +8,7 @@
         >
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="user.image"
+                    :prepend-avatar="user.image || `/api/avatar/${user.id}`"
                     :title="user.name || user.email"
                     :subtitle="user.email"
                 />

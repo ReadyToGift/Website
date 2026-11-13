@@ -6,7 +6,7 @@
         <v-card>
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="user.avatar"
+                    :prepend-avatar="user.image || `/api/avatar/${user.id}`"
                     :subtitle="user.name ? user.email : null"
                     :title="user.name || user.email"
                 />
@@ -99,17 +99,6 @@
 import { mdiCog, mdiInformation } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import { ref } from "vue";
-import {
-    VBtn,
-    VCard,
-    VCardActions,
-    VDivider,
-    VList,
-    VListItem,
-    VMenu,
-    VSpacer,
-    VSwitch,
-} from "vuetify/components";
 import { user as authUser } from "@/stores/auth";
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 

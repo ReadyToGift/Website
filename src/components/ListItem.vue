@@ -149,7 +149,7 @@
                     </v-chip>
                 </div>
                 <v-chip
-                    :prepend-avatar="userAvatar(item.contributorName)"
+                    :prepend-avatar="`/api/avatar/${item.contributorId}`"
                     variant="tonal"
                     color="primary"
                     rounded
@@ -180,7 +180,6 @@ import { user as userStore } from "@/stores/auth";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { $prefs } from "@/stores/prefs";
 import { convertPriority } from "@/utils";
-import { getAvatar } from "@/utils/avatar";
 import validation from "@/utils/validation";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 
@@ -246,14 +245,6 @@ export default {
             const { hostname } = new URL(url);
 
             return hostname.replace(/^www\./, "").toLowerCase();
-        },
-        userAvatar(name) {
-            try {
-                return getAvatar({ name, type: "svg" });
-            } catch (error) {
-                console.error(error);
-                return null;
-            }
         },
     },
 };
