@@ -73,10 +73,13 @@ export const loadPrefs = (prefs) => {
         prefs?.savedLists?.length > 0
             ? prefs.savedLists
             : persistedPrefs.savedLists;
+    const history =
+        prefs?.history?.length > 0 ? prefs.history : persistedPrefs.history;
     const loadedPrefs = {
         ...defaultPrefs,
         ...accountPrefs,
         savedLists,
+        history,
         listSorting: normalizeListSorting(prefs?.listSorting),
     };
     $prefs.set(loadedPrefs);
@@ -114,4 +117,10 @@ export const addToHistory = (item) => {
         .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
         .slice(0, 5);
     $prefs.set({ ...$prefs.get(), history });
+
+    if (user.get()) {
+        updatePrefs({ history }).catch((error) => {
+            console.error("Failed to sync history:", error);
+        });
+    }
 };
