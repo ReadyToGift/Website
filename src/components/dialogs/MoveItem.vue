@@ -34,7 +34,7 @@
                         <div class="lists mt-5" v-else>
                             <ListCard
                                 v-for="list in lists"
-                                :key="list.$id"
+                                :key="list.id"
                                 :list="list"
                                 :selected="selectedList === list"
                                 @click="selectList(list)"
@@ -163,14 +163,13 @@ export default {
     methods: {
         closeAfterSuccess() {
             this.dialogOpen = false;
-            this.$emit("removeItem", this.item.$id);
+            this.$emit("removeItem", this.item.id);
         },
         async getLists() {
             this.loading = true;
             try {
-                const [response, listsError] = await handleFetch(
-                    "/api/content/lists",
-                );
+                const [response, listsError] =
+                    await handleFetch("/api/content/lists");
 
                 if (listsError) {
                     this.alert = {
@@ -185,13 +184,13 @@ export default {
                 const userLists = (response.lists || [])
                     .filter(
                         (list) =>
-                            list.author === this.user.$id &&
-                            list.$id !== this.list.$id,
+                            list.author === this.user.id &&
+                            list.id !== this.list.id,
                     )
                     .sort(
                         (a, b) =>
-                            new Date(b.$updatedAt).getTime() -
-                            new Date(a.$updatedAt).getTime(),
+                            new Date(b.updatedAt).getTime() -
+                            new Date(a.updatedAt).getTime(),
                     );
 
                 if (userLists.length === 0) {
@@ -228,9 +227,9 @@ export default {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            itemId: this.item.$id,
+                            itemId: this.item.id,
                             updateData: {
-                                list: this.selectedList.$id,
+                                list: this.selectedList.id,
                             },
                         }),
                     },
@@ -260,11 +259,14 @@ export default {
             }
         },
         goToList() {
-            this.$router.push(`/list/${this.selectedList.$id}`);
+            this.$router.push(`/list/${this.selectedList.id}`);
             this.dialogOpen = false;
         },
         selectList(list) {
-            if (list.itemCount + 1 >= this.limits.itemsPerList) {
+            if (
+                this.limits.itemsPerList !== -1 &&
+                list.itemCount + 1 > this.limits.itemsPerList
+            ) {
                 this.selectedList = null;
                 createDialog(
                     ENABLE_BILLING
@@ -301,7 +303,7 @@ export default {
             } else {
                 this.alert = false;
             }
-            if (this.selectedList && this.selectedList.$id === list.$id) {
+            if (this.selectedList && this.selectedList.id === list.id) {
                 this.selectedList = null;
                 return;
             }

@@ -119,7 +119,6 @@
 import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
-import { ID } from "appwrite";
 import mime from "mime-types";
 import { markRaw } from "vue";
 import {
@@ -224,10 +223,10 @@ export default {
                     this.dialogOpen = false;
                     this.$emit("itemLimitReached");
                 }
-                this.listId = this.list.$id;
+                this.listId = this.list.id;
 
                 if (this.item) {
-                    this.itemID = this.item.$id;
+                    this.itemID = this.item.id;
                     this.modifiedItem = {
                         description: this.item.description,
                         displayPrice: this.item.displayPrice,
@@ -248,7 +247,7 @@ export default {
                         this.loadExistingImageFile(this.item.imageID);
                     }
                 } else {
-                    this.itemID = ID.unique();
+                    this.itemID = crypto.randomUUID();
                 }
             } else {
                 this.fileState = false;
@@ -270,7 +269,7 @@ export default {
             if (newURL) {
                 this.dialogOpen = false;
                 this.modifiedItem.url = newURL;
-                this.itemID = ID.unique();
+                this.itemID = crypto.randomUUID();
                 this.$emit("unsetQuickCreateURL", "");
 
                 await this.autofill();
@@ -503,30 +502,6 @@ export default {
                 console.error("Failed to load existing image metadata:", error);
             }
         },
-        async uploadImageFile() {
-            const formData = new FormData();
-            formData.append("file", this.modifiedItem.imageFile);
-            formData.append("listId", this.listId);
-
-            const response = await fetch("/api/content/item/image", {
-                method: "POST",
-                credentials: "include",
-                body: formData,
-            });
-
-            let data;
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-
-            if (!response.ok) {
-                throw new Error(data?.message || "Failed to upload image");
-            }
-
-            return data.file;
-        },
         async createItem() {
             let result;
             this.alert = false;
@@ -546,50 +521,31 @@ export default {
                     await this.downloadRemoteImage(this.modifiedItem.image);
                 }
 
-                if (this.modifiedItem.imageFile && !this.modifiedItem.imageID) {
-                    this.uploadingFile = true;
-                    let fileUpload;
-
-                    try {
-                        fileUpload = await this.uploadImageFile();
-                    } finally {
-                        this.uploadingFile = false;
-                    }
-
-                    this.modifiedItem.imageID = fileUpload.$id;
-                    this.modifiedItem.image = "";
+                const itemData = {
+                    communityList: this.wishlistOwner ? null : this.listId,
+                    contributorId: this.wishlistOwner ? null : this.user.id,
+                    contributorName: this.wishlistOwner ? null : this.user.name,
+                    description: this.modifiedItem.description || null,
+                    displayPrice: this.modifiedItem.displayPrice,
+                    image: this.modifiedItem.image || null,
+                    imageID: this.modifiedItem.imageID || null,
+                    list: this.listId,
+                    price: parseFloat(this.modifiedItem.price) || 0,
+                    priority: this.modifiedItem.priority,
+                    title: this.modifiedItem.title,
+                    url: this.modifiedItem.url || null,
+                };
+                const formData = new FormData();
+                formData.append("itemData", JSON.stringify(itemData));
+                if (this.modifiedItem.imageFile) {
+                    formData.append("file", this.modifiedItem.imageFile);
                 }
 
                 const [createRespData, createError] = await handleFetch(
                     "/api/content/item",
                     {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            itemData: {
-                                communityList: this.wishlistOwner
-                                    ? null
-                                    : this.listId,
-                                contributorId: this.wishlistOwner
-                                    ? null
-                                    : this.user.$id,
-                                contributorName: this.wishlistOwner
-                                    ? null
-                                    : this.user.name,
-                                description:
-                                    this.modifiedItem.description || null,
-                                displayPrice: this.modifiedItem.displayPrice,
-                                image: this.modifiedItem.image || null,
-                                imageID: this.modifiedItem.imageID || null,
-                                list: this.listId,
-                                price: parseFloat(this.modifiedItem.price) || 0,
-                                priority: this.modifiedItem.priority,
-                                title: this.modifiedItem.title,
-                                url: this.modifiedItem.url || null,
-                            },
-                        }),
+                        body: formData,
                     },
                 );
 
@@ -649,41 +605,37 @@ export default {
                     this.modifiedItem.image = null;
                 }
 
-                if (["added", "replaced"].includes(this.fileState)) {
-                    this.uploadingFile = true;
-                    let fileUpload;
-
-                    try {
-                        fileUpload = await this.uploadImageFile();
-                    } finally {
-                        this.uploadingFile = false;
-                    }
-
-                    this.modifiedItem.imageID = fileUpload.$id;
-                    this.modifiedItem.image = "";
+                const itemData = {
+                    description: this.modifiedItem.description || null,
+                    displayPrice: this.modifiedItem.displayPrice,
+                    image: this.modifiedItem.image || null,
+                    imageID: this.modifiedItem.imageID || null,
+                    price: parseFloat(this.modifiedItem.price) || 0,
+                    priority: this.modifiedItem.priority,
+                    title: this.modifiedItem.title,
+                    url: this.modifiedItem.url || null,
+                };
+                const formData = new FormData();
+                formData.append(
+                    "itemData",
+                    JSON.stringify({
+                        itemId: this.item.id,
+                        updateData: itemData,
+                        removeImage: this.fileState === "removed",
+                    }),
+                );
+                if (
+                    ["added", "replaced"].includes(this.fileState) &&
+                    this.modifiedItem.imageFile
+                ) {
+                    formData.append("file", this.modifiedItem.imageFile);
                 }
 
                 const [updateRespData, updateError] = await handleFetch(
                     "/api/content/item",
                     {
                         method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                            itemId: this.item.$id,
-                            updateData: {
-                                description:
-                                    this.modifiedItem.description || null,
-                                displayPrice: this.modifiedItem.displayPrice,
-                                image: this.modifiedItem.image || null,
-                                imageID: this.modifiedItem.imageID || null,
-                                price: parseFloat(this.modifiedItem.price) || 0,
-                                priority: this.modifiedItem.priority,
-                                title: this.modifiedItem.title,
-                                url: this.modifiedItem.url || null,
-                            },
-                        }),
+                        body: formData,
                     },
                 );
 
@@ -746,7 +698,7 @@ export default {
         if (this.quickCreateURL) {
             this.dialogOpen = false;
             this.modifiedItem.url = this.quickCreateURL;
-            this.itemID = ID.unique();
+            this.itemID = crypto.randomUUID();
             this.$emit("unsetQuickCreateURL", "");
             await this.autofill();
 

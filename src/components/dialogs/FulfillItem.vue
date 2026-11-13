@@ -149,7 +149,7 @@ export default {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            itemId: this.item.$id,
+                            itemId: this.item.id,
                             name: this.name !== "" ? this.name : null,
                         }),
                     },
@@ -176,7 +176,10 @@ export default {
                 return;
             }
 
-            this.$emit("fulfillItem", result);
+            this.$emit("fulfillItem", {
+                ...result,
+                itemId: this.item.id,
+            });
 
             this.dialogOpen = false;
             this.loading = false;
@@ -193,8 +196,8 @@ export default {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            fulfillmentId: this.item.fulfillment.$id,
-                            itemId: this.item.$id,
+                            fulfillmentId: this.item.fulfillment.id,
+                            itemId: this.item.id,
                         }),
                     },
                 );

@@ -1,228 +1,115 @@
-import {
-    APPWRITE_DB,
-    APPWRITE_IMAGE_BUCKET,
-    APPWRITE_ITEM_COLLECTION,
-    APPWRITE_LIST_COLLECTION,
-} from "astro:env/client";
+import { eq } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import { db } from "@/db";
+import { items, lists } from "@/schema";
+import { bucket } from "@/storage";
+
 export const prerender = false;
 
-import { Buffer } from "buffer";
-import { Permission, Query, Role } from "node-appwrite";
-import { InputFile } from "node-appwrite/file";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
+const json = (body, status = 200) =>
+    new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
+    });
+
+const getItem = async (itemId) => {
+    const [item] = await db
+        .select({
+            id: items.id,
+            imageID: items.imageID,
+            communityList: items.communityList,
+            contributorId: items.contributor,
+            listAuthor: lists.author,
+        })
+        .from(items)
+        .leftJoin(lists, eq(lists.id, items.list))
+        .where(eq(items.id, itemId));
+    return item;
+};
+
+const canManageItem = (item, userId) =>
+    (item.communityList && item.contributorId === userId) ||
+    (!item.communityList && item.listAuthor === userId);
 
 export const GET = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({ message: "Unauthenticated" }),
-                {
-                    status: 401,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-
-        let adminClient;
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-            return new Response(
-                JSON.stringify({ message: "Error creating admin client" }),
-                {
-                    status: 500,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-
-        const { searchParams } = new URL(context.request.url);
+        const { searchParams } = context.url;
         const fileId = searchParams.get("fileId");
         const itemId = searchParams.get("itemId");
+        if (!fileId) return json({ message: "Missing file ID" }, 400);
+        if (!itemId) return json({ message: "Missing item ID" }, 400);
 
-        if (!fileId) {
-            return new Response(
-                JSON.stringify({ message: "Missing file ID" }),
-                {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-
-        if (!itemId) {
-            return new Response(
-                JSON.stringify({ message: "Missing item ID" }),
-                {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-
-        const item = await adminClient.tablesDB.getRow({
-            databaseId: APPWRITE_DB,
-            tableId: APPWRITE_ITEM_COLLECTION,
-            rowId: itemId,
-            queries: [Query.select(["*", "list.*"])],
-        });
-
+        const item = await getItem(itemId);
         if (!item || item.imageID !== fileId) {
-            return new Response(JSON.stringify({ message: "File not found" }), {
-                status: 404,
-                headers: { "Content-Type": "application/json" },
-            });
+            return json({ message: "File not found" }, 404);
+        }
+        if (!canManageItem(item, user.id)) {
+            return json({ message: "Unauthorized" }, 403);
         }
 
-        const communityItem =
-            item.communityList && item.contributorId && item.contributorName;
-        const isCommunityitemContributor =
-            communityItem && item.contributorId === account.$id;
-        const isListAuthor =
-            !communityItem && item.list?.author === account.$id;
+        const file = await bucket.head(fileId);
+        if (!file) return json({ message: "File not found" }, 404);
 
-        if (!isCommunityitemContributor && !isListAuthor) {
-            return new Response(JSON.stringify({ message: "Unauthorized" }), {
-                status: 403,
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-        const file = await adminClient.storage.getFile({
-            bucketId: APPWRITE_IMAGE_BUCKET,
-            fileId,
+        return json({
+            file: {
+                id: fileId,
+                mimeType: file.httpMetadata?.contentType || "image/*",
+                name: file.customMetadata?.name || "Current image",
+                size: file.size,
+                updatedAt: file.uploaded,
+            },
         });
-
-        return new Response(
-            JSON.stringify({
-                file: {
-                    mimeType: file.mimeType,
-                    name: file.name,
-                    size: file.sizeOriginal,
-                    updatedAt: file.$updatedAt,
-                },
-            }),
-            {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            },
-        );
-    } catch (err) {
-        console.log(err);
-        return new Response(
-            JSON.stringify({ message: "Internal server error" }),
-            {
-                status: 500,
-                headers: { "Content-Type": "application/json" },
-            },
-        );
+    } catch (error) {
+        console.error(error);
+        return json({ message: "Internal server error" }, 500);
     }
 };
 
 export const POST = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
-
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({ message: "Unauthenticated" }),
-                {
-                    status: 401,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
-
-        let adminClient;
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-            return new Response(
-                JSON.stringify({ message: "Error creating admin client" }),
-                {
-                    status: 500,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
-        }
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
         const formData = await context.request.formData();
         const file = formData.get("file");
         const listId = formData.get("listId");
-
         if (!file || typeof file === "string") {
-            return new Response(JSON.stringify({ message: "Missing file" }), {
-                status: 400,
-                headers: { "Content-Type": "application/json" },
-            });
+            return json({ message: "Missing file" }, 400);
         }
-
         if (!listId || typeof listId !== "string") {
-            return new Response(
-                JSON.stringify({ message: "Missing list ID" }),
-                {
-                    status: 400,
-                    headers: { "Content-Type": "application/json" },
-                },
-            );
+            return json({ message: "Missing list ID" }, 400);
         }
 
-        const list = await adminClient.tablesDB.getRow({
-            databaseId: APPWRITE_DB,
-            tableId: APPWRITE_LIST_COLLECTION,
-            rowId: listId,
-            queries: [Query.select(["$id", "author", "private"])],
-        });
-
-        if (!list) {
-            return new Response(JSON.stringify({ message: "List not found" }), {
-                status: 404,
-                headers: { "Content-Type": "application/json" },
-            });
+        const [list] = await db
+            .select({ author: lists.author, private: lists.private })
+            .from(lists)
+            .where(eq(lists.id, listId));
+        if (!list) return json({ message: "List not found" }, 404);
+        if (list.private && list.author !== user.id) {
+            return json({ message: "Unauthorized" }, 403);
         }
 
-        if (list.private && list.author !== account.$id) {
-            return new Response(JSON.stringify({ message: "Unauthorized" }), {
-                status: 403,
-                headers: { "Content-Type": "application/json" },
-            });
-        }
-
-        const permissions = [
-            Permission.write(Role.user(account.$id)),
-            Permission.delete(Role.user(account.$id)),
-            Permission.update(Role.user(account.$id)),
-            list.private
-                ? Permission.read(Role.user(account.$id))
-                : Permission.read(Role.any()),
-        ];
-
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const fileInput = InputFile.fromBuffer(buffer, file.name);
-
-        const uploaded = await adminClient.storage.createFile({
-            bucketId: APPWRITE_IMAGE_BUCKET,
-            fileId: "unique()",
-            file: fileInput,
-            permissions,
-        });
-
-        return new Response(JSON.stringify({ file: uploaded }), {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-        });
-    } catch (err) {
-        console.log(err);
-        return new Response(
-            JSON.stringify({ message: "Internal server error" }),
-            {
-                status: 500,
-                headers: { "Content-Type": "application/json" },
+        const id = crypto.randomUUID();
+        await bucket.put(id, await file.arrayBuffer(), {
+            httpMetadata: {
+                contentType: file.type || "application/octet-stream",
             },
-        );
+            customMetadata: { name: file.name || "Uploaded image" },
+        });
+
+        return json({
+            file: {
+                id,
+                name: file.name || "Uploaded image",
+                mimeType: file.type || "application/octet-stream",
+                size: file.size,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+        return json({ message: "Internal server error" }, 500);
     }
 };

@@ -16,20 +16,20 @@
   - [x] Read
   - [x] Update
   - [x] Delete
-- [ ] Items
-  - [ ] Create
-  - [ ] Read
-  - [ ] Update
-  - [ ] Delete
-  - [ ] Moving
-  - [ ] Community Items
-  - [ ] Fulfillment
-  - [ ] Autofill
-- [ ] Images / R2
-  - [ ] Create
+- [x] Items
+  - [x] Create
+  - [x] Read
+  - [x] Update
+  - [x] Delete
+  - [x] Moving
+  - [x] Community Items
+  - [x] Fulfillment
+  - [x] Autofill
+- [x] Images / R2
+  - [x] Create (through the item endpoint)
   - [x] Read (direct from R2 URL)
-  - [ ] Metadata lookup
-  - [ ] Delete
+  - [x] Metadata lookup
+  - [x] Delete (through the item endpoint)
 - [ ] Short URLs
   - [x] Lookup
   - [ ] Validation
@@ -38,9 +38,9 @@
   - [ ] MFA
   - [ ] Verification
   - [ ] Account Settings
-- [ ] User Preferences
-  - [ ] Update
-  - [ ] Read
+- [x] User Preferences
+  - [x] Update
+  - [x] Read
 - [ ] Billing
   - [ ] Move to user:{id} rather than appwrite:{id}
   - [ ] Update polar customers from Appwrite function

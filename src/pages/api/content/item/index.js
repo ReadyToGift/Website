@@ -1,83 +1,99 @@
-import {
-    APPWRITE_DB,
-    APPWRITE_IMAGE_BUCKET,
-    APPWRITE_ITEM_COLLECTION,
-    APPWRITE_LIST_COLLECTION,
-} from "astro:env/client";
+import { and, count, eq, isNull } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import { user as users } from "@/auth-schema";
+import { db } from "@/db";
+import { items, lists } from "@/schema";
+import { getUserLimits } from "@/server/billing";
+import { bucket } from "@/storage";
+
 export const prerender = false;
 
-import { Permission, Query, Role } from "node-appwrite";
-import { createAdminClient, requireAuth } from "@/server/appwrite";
-import { getUserLimits } from "@/server/billing";
-
-const updateItemCount = async ({ adminClient, listId, itemCount = null }) => {
-    if (!listId || typeof listId !== "string") {
-        return;
-    }
-
-    if (itemCount === null) {
-        const list = await adminClient.tablesDB.getRow({
-            databaseId: APPWRITE_DB,
-            tableId: APPWRITE_LIST_COLLECTION,
-            rowId: listId,
-            queries: [Query.select(["*", "items.*"])],
-        });
-
-        itemCount =
-            list.items?.filter((item) => !item.communityList).length ?? 0;
-    }
-
-    await adminClient.tablesDB.updateRow({
-        databaseId: APPWRITE_DB,
-        tableId: APPWRITE_LIST_COLLECTION,
-        rowId: listId,
-        data: { itemCount },
+const json = (body, status = 200) =>
+    new Response(JSON.stringify(body), {
+        status,
+        headers: { "Content-Type": "application/json" },
     });
+
+const getItem = async (itemId) => {
+    const [item] = await db
+        .select({
+            id: items.id,
+            communityList: items.communityList,
+            contributorId: items.contributor,
+            contributorName: users.name,
+            listId: items.list,
+            listAuthor: lists.author,
+            imageID: items.imageID,
+        })
+        .from(items)
+        .leftJoin(lists, eq(lists.id, items.list))
+        .leftJoin(users, eq(users.id, items.contributor))
+        .where(eq(items.id, itemId));
+    return item;
+};
+
+const isCommunityItem = (item) => Boolean(item.communityList);
+
+const canManageItem = (item, userId) =>
+    (isCommunityItem(item) && item.contributorId === userId) ||
+    (!isCommunityItem(item) && item.listAuthor === userId);
+
+const getItemCount = async (listId) => {
+    const [result] = await db
+        .select({ count: count(items.id) })
+        .from(items)
+        .where(and(eq(items.list, listId), isNull(items.communityList)));
+    return result?.count ?? 0;
+};
+
+const formatItem = (item, contributorName = null) => ({
+    ...item,
+    contributorId: item.contributor,
+    contributorName,
+});
+
+const parseRequest = async (request) => {
+    if (request.headers.get("content-type")?.includes("multipart/form-data")) {
+        const formData = await request.formData();
+        return {
+            data: JSON.parse(formData.get("itemData") || "{}"),
+            file: formData.get("file"),
+        };
+    }
+
+    return { data: await request.json(), file: null };
+};
+
+const uploadImage = async (file) => {
+    if (!file || typeof file === "string") return null;
+    const id = crypto.randomUUID();
+    await bucket.put(id, await file.arrayBuffer(), {
+        httpMetadata: {
+            contentType: file.type || "application/octet-stream",
+        },
+        customMetadata: { name: file.name || "Uploaded image" },
+    });
+    return id;
+};
+
+const deleteImage = async (imageID) => {
+    if (!imageID) return;
+    try {
+        await bucket.delete(imageID);
+    } catch (error) {
+        console.error(`Failed to delete image ${imageID}`, error);
+    }
 };
 
 export const POST = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated",
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        let adminClient;
-
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        const { itemData } = await context.request.json();
+        const { data: itemData, file } = await parseRequest(context.request);
         const {
             communityList,
             contributorId,
-            contributorName,
             description,
             displayPrice,
             image,
@@ -87,673 +103,205 @@ export const POST = async (context) => {
             priority,
             title,
             url,
-        } = itemData;
+        } = itemData || {};
 
-        const isCommunityItem =
-            communityList && contributorId && contributorName;
+        const [list] = await db
+            .select({
+                id: lists.id,
+                author: lists.author,
+                private: lists.private,
+            })
+            .from(lists)
+            .where(eq(lists.id, listId));
+        if (!list) return json({ message: "List not found" }, 404);
 
-        let limits;
-        if (!isCommunityItem) {
-            try {
-                const userLimitsResp = await getUserLimits({ account });
-                limits = userLimitsResp.limits;
-            } catch (err) {
-                console.log(err);
-
-                return new Response(
-                    JSON.stringify({
-                        message: "Error getting user limits",
-                    }),
-                    {
-                        status: 500,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
-            }
+        const communityItem = Boolean(communityList && contributorId);
+        if (communityItem && list.private) {
+            return json(
+                { message: "Cannot add an item to a private list" },
+                403,
+            );
         }
-
-        let list;
-
-        try {
-            list = await adminClient.tablesDB.getRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                rowId: listId,
-                queries: [Query.select(["*", "items.*"])],
+        if (!communityItem && list.author !== user.id) {
+            return json({ message: "Unauthorized" }, 403);
+        }
+        if (!communityItem) {
+            const { limits } = await getUserLimits({
+                account: { $id: user.id },
             });
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error fetching list",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (!list) {
-            return new Response(
-                JSON.stringify({
-                    message: "List not found",
-                }),
-                {
-                    status: 404,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (!isCommunityItem) {
+            const itemCount = await getItemCount(listId);
             if (
-                list.items.length >= limits.itemsPerList &&
-                limits.itemsPerList !== -1
+                limits.itemsPerList !== -1 &&
+                itemCount >= limits.itemsPerList
             ) {
-                return new Response(
-                    JSON.stringify({
-                        message: "Item limit for list reached",
-                    }),
-                    {
-                        status: 400,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
+                return json({ message: "Item limit for list reached" }, 400);
             }
         }
 
-        const permissions = [
-            Permission.write(Role.user(account.$id)),
-            Permission.delete(Role.user(account.$id)),
-            Permission.update(Role.user(account.$id)),
-        ];
-
-        if (list.private) {
-            permissions.push(Permission.read(Role.user(account.$id)));
-        } else {
-            permissions.push(Permission.read(Role.any()));
-        }
-
-        let newItem;
-
+        const imageIDFromFile = await uploadImage(file);
+        let item;
         try {
-            newItem = await adminClient.tablesDB.createRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_ITEM_COLLECTION,
-                rowId: "unique()",
-                data: {
-                    communityList,
-                    contributorId,
-                    contributorName,
-                    description,
-                    displayPrice,
-                    image,
-                    imageID,
+            [item] = await db
+                .insert(items)
+                .values({
+                    communityList: communityList || null,
+                    contributor: contributorId || null,
+                    description: description || null,
+                    displayPrice: Boolean(displayPrice),
+                    image: image || null,
+                    imageID: imageIDFromFile || imageID || null,
                     list: listId,
-                    price,
-                    priority,
+                    price: Number(price) || 0,
+                    priority: priority || "none",
                     title,
-                    url,
-                },
-                permissions,
-            });
-
-            if (!isCommunityItem) {
-                const newCount = list.items.length + 1;
-                await updateItemCount({
-                    adminClient,
-                    listId,
-                    itemCount: newCount,
-                });
-            }
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating item",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+                    url: url || null,
+                })
+                .returning();
+        } catch (error) {
+            await deleteImage(imageIDFromFile);
+            throw error;
         }
 
-        return new Response(
-            JSON.stringify({
-                item: newItem,
-            }),
-            {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
-    } catch (err) {
-        console.log(err);
-
-        return new Response(
-            JSON.stringify({
-                message: "Internal server error",
-            }),
-            {
-                status: 500,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
+        return json({
+            item: formatItem(item, communityItem ? user.name : null),
+        });
+    } catch (error) {
+        console.error(error);
+        return json({ message: "Internal server error" }, 500);
     }
 };
 
 export const DELETE = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
-
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated",
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
         const { itemId } = await context.request.json();
-
-        let adminClient;
-
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+        if (!itemId || typeof itemId !== "string") {
+            return json({ message: "Invalid item ID" }, 400);
         }
 
-        const item = await adminClient.tablesDB.getRow({
-            databaseId: APPWRITE_DB,
-            tableId: APPWRITE_ITEM_COLLECTION,
-            rowId: itemId,
-            queries: [Query.select(["*", "list.*", "communityList.*"])],
-        });
+        const item = await getItem(itemId);
+        if (!item) return json({ message: "Item not found" }, 404);
+        if (!canManageItem(item, user.id))
+            return json({ message: "Unauthorized" }, 403);
 
-        if (!item) {
-            return new Response(
-                JSON.stringify({
-                    message: "Item not found",
-                }),
-                {
-                    status: 404,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        const communityItem =
-            item.communityList && item.contributorId && item.contributorName;
-
-        const isCommunityitemContributor =
-            communityItem && item.contributorId === account.$id;
-        const isListAuthor = !communityItem && item.list.author === account.$id;
-
-        if (!isCommunityitemContributor && !isListAuthor) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthorized",
-                }),
-                {
-                    status: 403,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        await db.delete(items).where(eq(items.id, itemId));
 
         if (item.imageID) {
             try {
-                await adminClient.storage.deleteFile({
-                    bucketId: APPWRITE_IMAGE_BUCKET,
-                    fileId: item.imageID,
-                });
-
-                console.log(
-                    `Deleted image with ID ${item.imageID} for item ${itemId}`,
+                await bucket.delete(item.imageID);
+            } catch (error) {
+                console.error(
+                    `Failed to delete image ${item.imageID} for item ${itemId}`,
+                    error,
                 );
-            } catch (err) {
-                console.log(err);
             }
         }
 
-        try {
-            await adminClient.tablesDB.deleteRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_ITEM_COLLECTION,
-                rowId: itemId,
-            });
-
-            const listId = item.list?.$id || item.list;
-
-            if (!communityItem && listId) {
-                await updateItemCount({ adminClient, listId });
-            }
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error deleting item",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        return new Response(
-            JSON.stringify({
-                message: "Item deleted successfully",
-            }),
-            {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
-    } catch (err) {
-        console.log(err);
-
-        return new Response(
-            JSON.stringify({
-                message: "Internal server error",
-            }),
-            {
-                status: 500,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
+        return json({ message: "Item deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return json({ message: "Internal server error" }, 500);
     }
 };
 
 export const PUT = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated",
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        const { itemId, updateData } = await context.request.json();
-
+        const { data, file } = await parseRequest(context.request);
+        const { itemId, updateData = {}, removeImage = false } = data;
         if (!itemId || typeof itemId !== "string") {
-            return new Response(
-                JSON.stringify({
-                    message: "Invalid item ID",
-                }),
-                {
-                    status: 400,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+            return json({ message: "Invalid item ID" }, 400);
         }
-
         if (
             !updateData ||
             typeof updateData !== "object" ||
             Array.isArray(updateData)
         ) {
-            return new Response(
-                JSON.stringify({
-                    message: "Invalid update data",
-                }),
-                {
-                    status: 400,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+            return json({ message: "Invalid update data" }, 400);
         }
-        let adminClient;
 
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
+        const item = await getItem(itemId);
+        if (!item) return json({ message: "Item not found" }, 404);
+        if (!canManageItem(item, user.id))
+            return json({ message: "Unauthorized" }, 403);
 
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
+        const targetListId = updateData.list || item.listId;
+        if (isCommunityItem(item) && targetListId !== item.listId) {
+            return json(
+                { message: "Community items cannot be moved between lists" },
+                400,
             );
         }
 
-        let item;
+        const [targetList] = await db
+            .select({ id: lists.id, author: lists.author })
+            .from(lists)
+            .where(eq(lists.id, targetListId));
+        if (!targetList) return json({ message: "List not found" }, 404);
 
-        try {
-            item = await adminClient.tablesDB.getRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_ITEM_COLLECTION,
-                rowId: itemId,
-                queries: [Query.select(["*", "list.*"])],
+        const moving = !isCommunityItem(item) && targetListId !== item.listId;
+        if (moving && targetList.author !== user.id) {
+            return json({ message: "Unauthorized" }, 403);
+        }
+        if (moving) {
+            const { limits } = await getUserLimits({
+                account: { $id: user.id },
             });
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error fetching item",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (!item) {
-            return new Response(
-                JSON.stringify({
-                    message: "Item not found",
-                }),
-                {
-                    status: 404,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        const communityItem =
-            item.communityList && item.contributorId && item.contributorName;
-
-        const isCommunityitemContributor =
-            communityItem && item.contributorId === account.$id;
-        const isListAuthor =
-            !communityItem && item.list?.author === account.$id;
-
-        if (!isCommunityitemContributor && !isListAuthor) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthorized",
-                }),
-                {
-                    status: 403,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (
-            communityItem &&
-            updateData.list &&
-            updateData.list !== (item.list?.$id || item.list)
-        ) {
-            return new Response(
-                JSON.stringify({
-                    message: "Community items cannot be moved between lists",
-                }),
-                {
-                    status: 400,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        let list;
-
-        const previousListId = item.list?.$id || item.list;
-        const targetListId = updateData.list || item.list?.$id || item.list;
-        const movingToDifferentList =
-            !communityItem &&
-            !!updateData.list &&
-            targetListId !== previousListId;
-
-        try {
-            list = await adminClient.tablesDB.getRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                rowId: targetListId,
-                queries: [Query.select(["private", "author", "itemCount"])],
-            });
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error fetching item list",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (!communityItem && list.author !== account.$id) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthorized",
-                }),
-                {
-                    status: 403,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (!list) {
-            return new Response(
-                JSON.stringify({
-                    message: "List not found",
-                }),
-                {
-                    status: 404,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
-
-        if (movingToDifferentList) {
-            let userLimitsResp;
-
-            try {
-                userLimitsResp = await getUserLimits({ account });
-            } catch (err) {
-                console.log(err);
-
-                return new Response(
-                    JSON.stringify({
-                        message: "Error getting user limits",
-                    }),
-                    {
-                        status: 500,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
-            }
-
-            const { limits } = userLimitsResp;
-            const targetItemCount = list.itemCount ?? 0;
-
+            const itemCount = await getItemCount(targetListId);
             if (
                 limits.itemsPerList !== -1 &&
-                targetItemCount >= limits.itemsPerList
+                itemCount >= limits.itemsPerList
             ) {
-                return new Response(
-                    JSON.stringify({
-                        message: "Item limit for list reached",
-                    }),
-                    {
-                        status: 400,
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    },
-                );
+                return json({ message: "Item limit for list reached" }, 400);
             }
         }
 
-        const permissions = [
-            Permission.write(Role.user(account.$id)),
-            Permission.delete(Role.user(account.$id)),
-            Permission.update(Role.user(account.$id)),
+        const allowedFields = [
+            "description",
+            "displayPrice",
+            "image",
+            "imageID",
+            "price",
+            "priority",
+            "title",
+            "url",
         ];
-
-        if (list.private) {
-            permissions.push(Permission.read(Role.user(account.$id)));
-        } else {
-            permissions.push(Permission.read(Role.any()));
-        }
-
-        const differentImage =
-            !!updateData.imageID && updateData.imageID !== item.imageID;
-        const removedImage = updateData.imageID === null && !!item.imageID;
-
-        if ((differentImage || removedImage) && item.imageID) {
-            try {
-                await adminClient.storage.deleteFile({
-                    bucketId: APPWRITE_IMAGE_BUCKET,
-                    fileId: item.imageID,
-                });
-
-                console.log(
-                    `Deleted old image with ID ${item.imageID} for item ${itemId}`,
-                );
-            } catch (err) {
-                console.log(err);
-            }
-        }
+        const changes = Object.fromEntries(
+            allowedFields
+                .filter((field) => field in updateData)
+                .map((field) => [field, updateData[field]]),
+        );
+        const newImageID = await uploadImage(file);
+        if (newImageID) changes.imageID = newImageID;
+        if (removeImage) changes.imageID = null;
+        if (moving) changes.list = targetListId;
 
         let updatedItem;
-
         try {
-            updatedItem = await adminClient.tablesDB.updateRow({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_ITEM_COLLECTION,
-                rowId: itemId,
-                data: updateData,
-                permissions,
-            });
-
-            if (movingToDifferentList) {
-                await Promise.all([
-                    updateItemCount({ adminClient, listId: previousListId }),
-                    updateItemCount({ adminClient, listId: targetListId }),
-                ]);
-            }
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error updating item",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
+            [updatedItem] = await db
+                .update(items)
+                .set(changes)
+                .where(eq(items.id, itemId))
+                .returning();
+        } catch (error) {
+            await deleteImage(newImageID);
+            throw error;
         }
 
-        return new Response(
-            JSON.stringify({
-                message: "Item updated successfully",
-                item: updatedItem,
-            }),
-            {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
-    } catch (err) {
-        console.log(err);
+        if (newImageID || removeImage) {
+            await deleteImage(item.imageID);
+        }
 
-        return new Response(
-            JSON.stringify({
-                message: "Internal server error",
-            }),
-            {
-                status: 500,
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            },
-        );
+        return json({
+            message: "Item updated successfully",
+            item: formatItem(updatedItem, item.contributorName),
+        });
+    } catch (error) {
+        console.error(error);
+        return json({ message: "Internal server error" }, 500);
     }
 };

@@ -97,6 +97,31 @@ export const GET = async (context) => {
             .from(items)
             .where(eq(items.communityList, listID));
 
+        const contributorIDs = [
+            ...new Set(
+                [...listItems, ...communityItems]
+                    .map((item) => item.contributor)
+                    .filter(Boolean),
+            ),
+        ];
+        const contributorRows = contributorIDs.length
+            ? await db
+                  .select({ id: users.id, name: users.name })
+                  .from(users)
+                  .where(inArray(users.id, contributorIDs))
+            : [];
+        const contributorNames = new Map(
+            contributorRows.map((contributor) => [
+                contributor.id,
+                contributor.name,
+            ]),
+        );
+        const formatItem = (item) => ({
+            ...item,
+            contributorId: item.contributor,
+            contributorName: contributorNames.get(item.contributor) || null,
+        });
+
         const itemIDs = listItems.map((item) => item.id);
         const fulfillmentRows = itemIDs.length
             ? await db
@@ -115,7 +140,7 @@ export const GET = async (context) => {
             })
             .map((item) => {
                 return {
-                    ...item,
+                    ...formatItem(item),
                     fulfillment:
                         fulfillmentRows.find(
                             (fulfillment) => fulfillment.item === item.id,
@@ -128,7 +153,7 @@ export const GET = async (context) => {
                 list,
                 loadedAsAuthor: list.author === user?.id,
                 fulfillments: fulfillmentRows,
-                communityItems,
+                communityItems: communityItems.map(formatItem),
             }),
             {
                 status: 200,

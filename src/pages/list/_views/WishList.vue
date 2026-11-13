@@ -483,8 +483,9 @@ export default {
             }
         },
         fulfillItem(data) {
+            const itemId = data.itemId || data.item?.id || data.item;
             this.list.items = this.list.items.map((item) => {
-                if (item.id === data.item.id) {
+                if (item.id === itemId) {
                     item.fulfillment = data;
                 }
                 return item;
@@ -493,9 +494,9 @@ export default {
             if (this.showFulfilled === true) {
                 this.$nextTick(() => {
                     const el = document.body.querySelector(
-                        `[data-item-id="${data.item.id}"]`,
+                        `[data-item-id="${itemId}"]`,
                     );
-                    el.scrollIntoView({
+                    el?.scrollIntoView({
                         behavior: "smooth",
                         block: "center",
                     });
@@ -514,7 +515,7 @@ export default {
                 const el = document.body.querySelector(
                     `[data-item-id="${itemId}"]`,
                 );
-                el.scrollIntoView({
+                el?.scrollIntoView({
                     behavior: "smooth",
                     block: "center",
                 });

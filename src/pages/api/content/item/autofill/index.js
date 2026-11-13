@@ -18,7 +18,7 @@ import {
 import { createPolar } from "@polar-sh/sdk/2026-10";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { TidyURL } from "tidy-url";
-import { requireAuth } from "@/server/appwrite.js";
+import { requireAuth } from "@/auth";
 import { getUserAutofillMeter, getUserLimits } from "@/server/billing.js";
 import getSite from "./_modules/get-site.js";
 import { getLinkPreview } from "./_modules/link-preview-js.js";
@@ -266,27 +266,16 @@ const getPreview = async ({
 
 export const POST = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
+        const { unauthorizedResponse, user } = requireAuth(context);
 
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated",
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        if (unauthorizedResponse) return unauthorizedResponse;
 
         try {
             const autofillStartTime = new Date();
             const { url, currency, itemID } = await context.request.json();
 
-            const userID = account.$id;
+            const userID = user.id;
+            const account = { $id: user.id };
 
             if (!url) {
                 return new Response(

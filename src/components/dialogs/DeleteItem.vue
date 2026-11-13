@@ -53,7 +53,6 @@
 
 <script>
 import { mdiAlert, mdiDelete } from "@mdi/js";
-import { AppwriteException } from "appwrite";
 import {
     VAlert,
     VBtn,
@@ -106,7 +105,7 @@ export default {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            itemId: this.item.$id,
+                            itemId: this.item.id,
                         }),
                     },
                 );
@@ -123,23 +122,16 @@ export default {
                 }
             } catch (e) {
                 console.log(e);
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error",
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error",
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error",
+                };
                 this.loading = false;
                 return;
             }
 
             this.$emit("removeItem", {
-                item: this.item.$id,
+                item: this.item.id,
             });
 
             this.dialogOpen = false;
