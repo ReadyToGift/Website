@@ -6,7 +6,7 @@
         <v-card>
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="`/api/avatar/${user.id}`"
+                    :prepend-avatar="user.image || `/api/avatar/${user.id}`"
                     :subtitle="user.name ? user.email : null"
                     :title="user.name || user.email"
                 />

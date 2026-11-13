@@ -633,7 +633,7 @@ export default {
                 window.document.title = `${this.list.title} - Readyto.gift`;
 
                 this.addToHistory({
-                    avatar: `/api/avatar/${this.list.author}`,
+                    author: this.list.author,
                     id: this.list.id,
                     subtitle: `By ${this.list.authorName}`,
                     title: this.list.title,

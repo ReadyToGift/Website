@@ -8,7 +8,7 @@
         >
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="`/api/avatar/${user.id}`"
+                    :prepend-avatar="user.image || `/api/avatar/${user.id}`"
                     :title="user.name || user.email"
                     :subtitle="user.email"
                 />
@@ -39,7 +39,11 @@
                     :title="history.title"
                     :subtitle="history.subtitle"
                     :to="`/list/${history.id}`"
-                    :prepend-avatar="history.avatar"
+                    :prepend-avatar="
+                        history.author
+                            ? `/api/avatar/${history.author}`
+                            : undefined
+                    "
                 />
             </v-list>
             <template v-slot:append>

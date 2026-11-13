@@ -50,6 +50,13 @@ const normalizeListSorting = (listSorting) => {
     };
 };
 
+const normalizeHistory = (history) =>
+    (Array.isArray(history) ? history : []).map((entry) => {
+        const normalizedEntry = { ...entry };
+        delete normalizedEntry.avatar;
+        return normalizedEntry;
+    });
+
 export const $prefs = persistentMap(
     "userPrefs",
     { ...defaultPrefs },
@@ -73,8 +80,9 @@ export const loadPrefs = (prefs) => {
         prefs?.savedLists?.length > 0
             ? prefs.savedLists
             : persistedPrefs.savedLists;
-    const history =
-        prefs?.history?.length > 0 ? prefs.history : persistedPrefs.history;
+    const history = normalizeHistory(
+        prefs?.history?.length > 0 ? prefs.history : persistedPrefs.history,
+    );
     const loadedPrefs = {
         ...defaultPrefs,
         ...accountPrefs,
@@ -112,7 +120,7 @@ export const updatePrefs = async (updatedPrefs) => {
 
 export const addToHistory = (item) => {
     let history = $prefs.get().history;
-    history.unshift(item);
+    history.unshift(normalizeHistory([item])[0]);
     history = history
         .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
         .slice(0, 5);

@@ -1,5 +1,30 @@
 <template>
     <v-card variant="tonal">
+        <v-card-title> Profile Picture </v-card-title>
+        <v-card-text class="profile-picture-settings">
+            <v-avatar size="96">
+                <v-img :src="profilePicture" alt="Profile picture" />
+            </v-avatar>
+            <input
+                ref="fileInput"
+                type="file"
+                accept="image/*"
+                hidden
+                @change="selectProfilePicture"
+            >
+            <v-btn color="primary" variant="tonal" @click="openFilePicker">
+                Upload picture
+            </v-btn>
+            <v-btn
+                v-if="user?.image"
+                variant="text"
+                @click="resetProfilePicture"
+            >
+                Reset to initials
+            </v-btn>
+        </v-card-text>
+    </v-card>
+    <v-card class="mt-4" variant="tonal">
         <v-card-title> Personal Information </v-card-title>
 
         <v-list class="mt-0">
@@ -41,18 +66,116 @@
             <MFA />
         </v-list>
     </v-card>
+    <v-dialog v-model="cropDialog" max-width="600">
+        <v-card>
+            <v-card-title> Crop Profile Picture </v-card-title>
+            <v-card-text>
+                <Cropper
+                    ref="cropper"
+                    class="profile-picture-cropper"
+                    :src="profilePictureSource"
+                    :stencil-props="{ aspectRatio: 1 }"
+                />
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn @click="cancelCrop">Cancel</v-btn>
+                <v-btn
+                    color="primary"
+                    :loading="savingProfilePicture"
+                    @click="saveProfilePicture"
+                >
+                    Save picture
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup>
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
-import { reactive } from "vue";
+import { computed, reactive, ref } from "vue";
+import { Cropper } from "vue-advanced-cropper";
+import "vue-advanced-cropper/dist/style.css";
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
-import { authClient, setUser, user as userStore } from "@/stores/auth";
+import { authClient, refreshSession, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 
 const user = useStore(userStore);
+const fileInput = ref(null);
+const cropper = ref(null);
+const cropDialog = ref(false);
+const profilePictureSource = ref("");
+const savingProfilePicture = ref(false);
+
+const profilePicture = computed(() => {
+    if (!user.value) return "";
+    return user.value.image || `/api/avatar/${user.value.id}`;
+});
+
+const openFilePicker = () => fileInput.value?.click();
+
+const closeCrop = () => {
+    if (profilePictureSource.value.startsWith("blob:")) {
+        URL.revokeObjectURL(profilePictureSource.value);
+    }
+    profilePictureSource.value = "";
+    cropDialog.value = false;
+};
+
+const cancelCrop = () => closeCrop();
+
+const selectProfilePicture = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file?.type.startsWith("image/")) return;
+
+    closeCrop();
+    profilePictureSource.value = URL.createObjectURL(file);
+    cropDialog.value = true;
+};
+
+const saveProfilePicture = async () => {
+    const canvas = cropper.value?.getResult()?.canvas;
+    if (!canvas) return;
+
+    savingProfilePicture.value = true;
+    try {
+        const image = canvas.toDataURL("image/jpeg", 0.9);
+        const { error } = await authClient.updateUser({ image });
+        if (error) throw new Error(error.message);
+
+        await refreshSession();
+        closeCrop();
+    } catch (error) {
+        createDialog({
+            text: error.message || "Unable to save your profile picture.",
+            title: "Error Updating Profile Picture",
+            type: "error",
+        });
+    } finally {
+        savingProfilePicture.value = false;
+    }
+};
+
+const resetProfilePicture = async () => {
+    savingProfilePicture.value = true;
+    try {
+        const { error } = await authClient.updateUser({ image: null });
+        if (error) throw new Error(error.message);
+        await refreshSession();
+    } catch (error) {
+        createDialog({
+            text: error.message || "Unable to reset your profile picture.",
+            title: "Error Resetting Profile Picture",
+            type: "error",
+        });
+    } finally {
+        savingProfilePicture.value = false;
+    }
+};
 
 const personalInfo = reactive({
     email: {
@@ -79,11 +202,11 @@ userStore.subscribe((mutation) => {
 });
 
 const saveName = async () => {
-    const { data, error } = await authClient.updateUser({
+    const { error } = await authClient.updateUser({
         name: personalInfo.fullName.value,
     });
     if (!error) {
-        setUser({ user: data?.user || data });
+        await refreshSession();
         personalInfo.fullName.passwordConfirmation = "";
         return true;
     }
@@ -174,6 +297,18 @@ const savePassword = async (newValue) => {
 </script>
 
 <style lang="scss" scoped>
+.profile-picture-settings {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-picture-cropper {
+    height: min(70vw, 480px);
+    max-height: 480px;
+    background: #222;
+}
+
 main {
     .page-content {
         width: var(--section-width);
