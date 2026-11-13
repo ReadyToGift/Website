@@ -90,11 +90,45 @@
                                         </template>
                                         <template #content>
                                             <p v-if="!errors[0]">
+                                                Enter your current password to
+                                                generate your authenticator
+                                                setup details.
+                                            </p>
+                                            <v-text-field
+                                                v-model="password"
+                                                label="Current password"
+                                                type="password"
+                                                autocomplete="current-password"
+                                                class="mt-4"
+                                            />
+                                            <v-btn
+                                                class="mt-4"
+                                                color="primary"
+                                                @click="nextStep"
+                                                :disabled="!password"
+                                                v-if="!errors[0]"
+                                            >
+                                                Next
+                                            </v-btn>
+                                        </template>
+                                    </ExpanderStep>
+                                    <ExpanderStep
+                                        :currentStep="currentStep"
+                                        :icon="mdiShieldCheck"
+                                        :step="2"
+                                        :error="errors[1]"
+                                    >
+                                        <template #title>
+                                            Verify authenticator
+                                        </template>
+                                        <template #content>
+                                            <p>
                                                 Scan the QR code or paste the
                                                 secret into your authenticator
                                                 to begin.
                                                 <img
                                                     :src="totpQrcode"
+                                                    alt="TOTP authenticator QR code"
                                                     class="totp-qrcode mt-4"
                                                 >
                                                 <v-text-field
@@ -132,26 +166,6 @@
                                                     </template>
                                                 </v-text-field>
                                             </p>
-                                            <v-btn
-                                                class="mt-4"
-                                                color="primary"
-                                                @click="nextStep"
-                                                v-if="!errors[0]"
-                                            >
-                                                Next
-                                            </v-btn>
-                                        </template>
-                                    </ExpanderStep>
-                                    <ExpanderStep
-                                        :currentStep="currentStep"
-                                        :icon="mdiShieldCheck"
-                                        :step="2"
-                                        :error="errors[1]"
-                                    >
-                                        <template #title>
-                                            Verify authenticator
-                                        </template>
-                                        <template #content>
                                             <p>
                                                 Enter the 6-digit code generated
                                                 by your authenticator app to
@@ -254,28 +268,8 @@ import {
     mdiTrashCan,
 } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
+import QRCode from "qrcode";
 import { computed, reactive, shallowRef, watch } from "vue";
-import {
-    VBtn,
-    VBtnGroup,
-    VCard,
-    VCardActions,
-    VCardText,
-    VCardTitle,
-    VDialog,
-    VIcon,
-    VList,
-    VListItem,
-    VListItemTitle,
-    VMenu,
-    VOtpInput,
-    VProgressCircular,
-    VSnackbar,
-    VSpacer,
-    VTextField,
-    VTimeline,
-} from "vuetify/components";
-import { account, avatars } from "@/appwrite";
 import ExpanderStep from "@/components/ExpanderStep.vue";
 import {
     mfaFactors as mfaFactorsStore,
@@ -285,7 +279,8 @@ import { create as createDialog } from "@/stores/dialogs";
 import {
     completeMFAchallenge,
     createTOTPChallengeDialog,
-    regenerateRecoveryCodes,
+    disableMFA,
+    enableMFA,
 } from "@/stores/mfa";
 import ManageRecoveryCodes from "./ManageRecoveryCodes.vue";
 import RecoveryCodes from "./RecoveryCodes.vue";
@@ -293,7 +288,7 @@ import RecoveryCodes from "./RecoveryCodes.vue";
 const mfaFactors = useStore(mfaFactorsStore);
 const user = useStore(userStore);
 
-const props = defineProps({
+defineProps({
     loading: {
         type: Boolean,
         default: false,
@@ -309,13 +304,14 @@ const totpQrcode = shallowRef("");
 const totpUriCopySnackbar = shallowRef(false);
 
 const totpInput = shallowRef("");
+const password = shallowRef("");
 
 const recoveryCodes = shallowRef([]);
 
 const errors = reactive(Array(3).fill(null));
 
 const totpFactor = computed(() => {
-    return mfaFactors.value && mfaFactors.value.totp;
+    return mfaFactors.value?.totp;
 });
 
 const copyTotpSecret = () => {
@@ -327,27 +323,37 @@ const prevStep = () => {
     currentStep.value -= 1;
 };
 
-const nextStep = () => {
+const nextStep = async () => {
+    if (currentStep.value === 1) {
+        try {
+            const totpResponse = await enableMFA(password.value);
+            recoveryCodes.value = totpResponse.backupCodes;
+            const totpURI = new URL(totpResponse.totpURI);
+            totpSecret.value = totpURI.searchParams.get("secret") || "";
+            totpQrcode.value = await QRCode.toDataURL(totpResponse.totpURI, {
+                margin: 0,
+                width: 800,
+            });
+            currentStep.value += 1;
+        } catch (error) {
+            errors[0] = error.message;
+        }
+        return;
+    }
     currentStep.value += 1;
 };
 
 const removeTOTP = async () => {
     try {
-        const challengeResp = await createTOTPChallengeDialog();
+        const challengeResp = await createTOTPChallengeDialog({
+            requiresPassword: true,
+        });
         if (challengeResp.action === "success") {
-            await account.deleteMFAAuthenticator({
-                type: "totp",
-            });
-
-            await account.updateMFA({
-                mfa: false,
-            });
-
-            const factors = await account.listMFAFactors();
-            mfaFactorsStore.set(factors);
+            await disableMFA(challengeResp.data?.password);
+            mfaFactorsStore.set({ totp: false });
             userStore.set({
                 ...user.value,
-                mfa: false,
+                twoFactorEnabled: false,
             });
 
             await createDialog({
@@ -385,15 +391,8 @@ const removeTOTP = async () => {
 const enableTOTP = async () => {
     try {
         await completeMFAchallenge(totpInput.value, "totp");
-        recoveryCodes.value = await regenerateRecoveryCodes(totpInput.value);
-
-        await account.updateMFAAuthenticator({
-            otp: totpInput.value,
-            type: "totp",
-        });
-
-        const factors = await account.listMFAFactors();
-        mfaFactorsStore.set(factors);
+        mfaFactorsStore.set({ totp: true });
+        userStore.set({ ...user.value, twoFactorEnabled: true });
 
         nextStep(); // Move to recovery codes + success step
     } catch (error) {
@@ -404,28 +403,14 @@ const enableTOTP = async () => {
 
 watch(dialogOpen, async (nowOpen) => {
     if (nowOpen) {
-        if (user.value.mfa) {
+        if (user.value.twoFactorEnabled) {
             // TOTP is already enabled, no need to setup
             return;
         }
-        try {
-            const totpResponse = await account.createMfaAuthenticator({
-                type: "totp",
-            });
-
-            totpSecret.value = totpResponse.secret;
-
-            totpQrcode.value = avatars.getQR({
-                download: false,
-                margin: 0,
-                size: 800,
-                text: totpResponse.uri,
-            });
-        } catch (error) {
-            errors[0] = error.message;
-        }
+        errors.fill(null);
     } else {
         currentStep.value = 1;
+        password.value = "";
         totpSecret.value = "";
         totpQrcode.value = "";
         totpInput.value = "";

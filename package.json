@@ -51,6 +51,7 @@
         "mjml": "^5.4.1",
         "nanostores": "^1.5.5",
         "plunk-node-sdk": "^0.3.0",
+        "qrcode": "^1.5.4",
         "redis": "^6.3.1",
         "sass": "^1.107.1",
         "sse.js": "^2.8.0",

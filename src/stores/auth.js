@@ -60,6 +60,11 @@ export const getMFAFactors = async () => {
     return mfaFactors.get();
 };
 
+export const refreshSession = async () => {
+    await session.get().refetch();
+    return updateUser(session.get().data);
+};
+
 export const init = () => authReady;
 
 export async function logOut() {

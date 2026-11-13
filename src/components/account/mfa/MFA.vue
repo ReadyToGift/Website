@@ -9,7 +9,7 @@
                 <v-tooltip
                     :text="
                         hasAuthenticator
-                            ? user.mfa
+                            ? user.twoFactorEnabled
                                 ? 'Disable MFA'
                                 : 'Enable MFA'
                             : 'You need at least one MFA method enabled to use MFA.'
@@ -24,7 +24,7 @@
                                 hide-details
                                 :disabled="!hasAuthenticator"
                                 class="ml-4"
-                                :model-value="user.mfa"
+                                :model-value="user.twoFactorEnabled"
                                 @change="toggleMFA"
                             />
                         </div>
@@ -45,14 +45,13 @@ import { mdiShieldCheck } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import { computed, onMounted, shallowRef } from "vue";
 import { VList, VListItem, VSwitch, VTooltip } from "vuetify/components";
-import { account } from "@/appwrite";
-
 import {
     getMFAFactors,
     mfaFactors as mfaFactorsStore,
     user as userStore,
 } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
+import { createTOTPChallengeDialog, disableMFA } from "@/stores/mfa";
 import TOTPFactor from "./factors/totp/TOTP.vue";
 
 const user = useStore(userStore);
@@ -64,13 +63,14 @@ const hasAuthenticator = computed(() => mfaFactors.value.totp);
 
 const toggleMFA = async () => {
     try {
-        await account.updateMFA({
-            mfa: !user.mfa,
+        const challengeResp = await createTOTPChallengeDialog({
+            requiresPassword: true,
         });
-        userStore.set({
-            ...user.value,
-            mfa: !user.value.mfa,
-        });
+        if (challengeResp.action !== "success") return;
+
+        await disableMFA(challengeResp.data?.password);
+        await getMFAFactors();
+        userStore.set({ ...user.value, twoFactorEnabled: false });
         createDialog({
             actions: [
                 {
@@ -79,7 +79,7 @@ const toggleMFA = async () => {
                     text: "OK",
                 },
             ],
-            text: `Multi-Factor Authentication has been ${user.value.mfa ? "enabled" : "disabled"}.`,
+            text: "Multi-Factor Authentication has been disabled.",
             title: "MFA Updated",
         });
     } catch (error) {

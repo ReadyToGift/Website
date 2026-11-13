@@ -1,58 +1,51 @@
 import { markRaw } from "vue";
 import TotpChallenge from "@/components/dialogs/account/mfa/totp/TotpChallenge.vue";
+import { authClient } from "./auth";
 import { create as createDialog } from "./dialogs";
 
-export const createTOTPChallengeDialog = () => {
-    return createDialog({
+const unwrap = async (request) => {
+    const { data, error } = await request;
+    if (error) throw new Error(error.message || "MFA request failed");
+    return data;
+};
+
+export const createTOTPChallengeDialog = (props = {}) =>
+    createDialog({
         async: true,
         component: markRaw(TotpChallenge),
         emits: ["cancel", "success", "totp-removed"],
         fullscreen: false,
         maxWidth: "80%",
+        props,
         title: "Multi-Factor Authentication",
     });
-};
 
-export const completeMFAchallenge = async (code, factor = "totp") => {
-    const challenge = await account.createMFAChallenge({
-        factor,
+export const completeMFAchallenge = (code, factor = "totp") =>
+    unwrap(
+        factor === "recoverycode"
+            ? authClient.twoFactor.verifyBackupCode({ code })
+            : authClient.twoFactor.verifyTotp({ code }),
+    );
+
+export const enableMFA = (password) =>
+    unwrap(authClient.twoFactor.enable({ method: "totp", password }));
+
+export const disableMFA = (password) =>
+    unwrap(authClient.twoFactor.disable({ password }));
+
+export const regenerateRecoveryCodes = async () =>
+    (await unwrap(authClient.twoFactor.generateBackupCodes())).backupCodes;
+
+// Better Auth does not expose existing backup codes to the client. This
+// intentionally generates a fresh set after the user has re-authenticated.
+export const getRecoveryCodes = async () => {
+    const response = await fetch("/api/auth/mfa/recovery-codes", {
+        method: "POST",
+        credentials: "include",
     });
-    const challengeId = challenge.$id;
-
-    await account.updateMFAChallenge({
-        challengeId,
-        otp: code,
-    });
-};
-
-export const regenerateRecoveryCodes = async () => {
-    try {
-        return (await account.createMFARecoveryCodes()).recoveryCodes;
-    } catch (error) {
-        if (error.type === "user_recovery_codes_already_exists") {
-            const recoveryCodesResponse =
-                await account.updateMFARecoveryCodes();
-
-            return recoveryCodesResponse.recoveryCodes;
-        } else {
-            throw error;
-        }
+    const result = await response.json();
+    if (!response.ok) {
+        throw new Error(result.message || "Unable to retrieve recovery codes");
     }
-};
-
-export const getRecoveryCodes = async (totp) => {
-    try {
-        return (await account.createMFARecoveryCodes()).recoveryCodes;
-    } catch (error) {
-        if (error.type === "user_recovery_codes_already_exists") {
-            // if no totp, there should be a recent MFA challenge to complete
-            if (totp) await this.completeMFAchallenge(totp);
-
-            const recoveryCodesResponse = await account.getMFARecoveryCodes();
-
-            return recoveryCodesResponse.recoveryCodes;
-        } else {
-            throw error;
-        }
-    }
+    return result.backupCodes;
 };

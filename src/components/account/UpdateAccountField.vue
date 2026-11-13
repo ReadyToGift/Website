@@ -111,18 +111,7 @@
 
 <script setup>
 import { mdiAccount, mdiEye, mdiEyeOff, mdiPencil } from "@mdi/js";
-import { computed, shallowRef } from "vue";
-import {
-    VBtn,
-    VCard,
-    VConfirmEdit,
-    VDialog,
-    VListItem,
-    VListItemSubtitle,
-    VListItemTitle,
-    VSpacer,
-    VTextField,
-} from "vuetify/components";
+import { shallowRef, watch } from "vue";
 
 const dialogOpen = shallowRef(false);
 
@@ -151,6 +140,10 @@ const props = defineProps({
         required: true,
         type: Function,
     },
+    updateOnSave: {
+        default: true,
+        type: Boolean,
+    },
 });
 
 const showCurrentPassword = shallowRef(false);
@@ -158,12 +151,15 @@ const showNewPassword = shallowRef(false);
 
 const emits = defineEmits(["update:modelValue", "save"]);
 
-const formData = computed({
-    get: () => props.modelValue,
-    set: (value) => {
-        if (props.name !== "Password") emits("update:modelValue", value);
+const formData = shallowRef({ ...props.modelValue });
+
+watch(
+    () => props.modelValue,
+    (value) => {
+        formData.value = { ...value };
     },
-});
+    { deep: true },
+);
 
 const cancel = () => {
     dialogOpen.value = false;
@@ -183,10 +179,12 @@ const save = async (newValue) => {
         return;
     }
 
-    emits("update:modelValue", {
-        ...newValue,
-        passwordConfirmation: "",
-    });
+    if (props.updateOnSave) {
+        emits("update:modelValue", {
+            ...newValue,
+            passwordConfirmation: "",
+        });
+    }
 
     showCurrentPassword.value = false;
     showNewPassword.value = false;

@@ -17,6 +17,8 @@
                 v-model="personalInfo.email"
                 :save="saveEmail"
                 autocomplete="email"
+                :requires-password="false"
+                :update-on-save="false"
             />
         </v-list>
     </v-card>
@@ -44,13 +46,10 @@
 <script setup>
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
-import { AppwriteException } from "appwrite";
 import { reactive } from "vue";
-import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
-import { account } from "@/appwrite";
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
-import { setUser, user as userStore } from "@/stores/auth";
+import { authClient, setUser, user as userStore } from "@/stores/auth";
 import { create as createDialog } from "@/stores/dialogs";
 
 const user = useStore(userStore);
@@ -80,33 +79,29 @@ userStore.subscribe((mutation) => {
 });
 
 const saveName = async () => {
-    const result = await account.updateName(personalInfo.fullName.value);
-    if (result.$id) {
-        setUser({ user: result });
+    const { data, error } = await authClient.updateUser({
+        name: personalInfo.fullName.value,
+    });
+    if (!error) {
+        setUser({ user: data?.user || data });
         personalInfo.fullName.passwordConfirmation = "";
         return true;
-    } else {
-        createDialog({
-            text: `There was an error updating your name: ${result.message}`,
-            title: "Error Updating Name",
-            type: "error",
-        });
-        return false;
     }
+    createDialog({
+        text: `There was an error updating your name: ${error.message}`,
+        title: "Error Updating Name",
+        type: "error",
+    });
+    return false;
 };
 
 const saveEmail = async (newValue) => {
     try {
-        const result = await account.updateEmail(
-            newValue.value,
-            newValue.passwordConfirmation,
-        );
-        console.log({ result });
-        if (result.$id) {
-            setUser({ user: result });
-            await account.createEmailVerification({
-                url: "https://readyto.gift/dash/verify",
-            });
+        const { error } = await authClient.changeEmail({
+            newEmail: newValue.value,
+            callbackURL: "/dash/lists",
+        });
+        if (!error) {
             createDialog({
                 actions: [
                     {
@@ -120,37 +115,9 @@ const saveEmail = async (newValue) => {
                 type: "info",
             });
             return true;
-        } else {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK",
-                    },
-                ],
-                text: `There was an error updating your email: ${result.message}`,
-                title: "Error Updating Email",
-                type: "error",
-            });
-            return false;
         }
+        throw new Error(error.message);
     } catch (error) {
-        if (error instanceof AppwriteException) {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK",
-                    },
-                ],
-                text: error.message,
-                title: "Error Updating Email",
-                type: "error",
-            });
-            return false;
-        }
         createDialog({
             actions: [
                 {
@@ -169,10 +136,12 @@ const saveEmail = async (newValue) => {
 
 const savePassword = async (newValue) => {
     try {
-        await account.updatePassword({
-            oldPassword: newValue.passwordConfirmation,
-            password: newValue.value,
+        const { error } = await authClient.changePassword({
+            currentPassword: newValue.passwordConfirmation,
+            newPassword: newValue.value,
+            revokeOtherSessions: false,
         });
+        if (error) throw new Error(error.message);
         createDialog({
             actions: [
                 {
@@ -187,21 +156,6 @@ const savePassword = async (newValue) => {
         });
         return true;
     } catch (error) {
-        if (error instanceof AppwriteException) {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK",
-                    },
-                ],
-                text: error.message,
-                title: "Error Updating Password",
-                type: "error",
-            });
-            return false;
-        }
         createDialog({
             actions: [
                 {

@@ -9,7 +9,7 @@
             text="Please verify your email address to create lists."
             class="mb-4"
             variant="tonal"
-            v-if="user?.emailVerification === false"
+            v-if="user && !user.emailVerified"
         >
             <v-card-actions>
                 <v-btn @click="verifyEmail" color="warning" variant="elevated">
@@ -19,8 +19,8 @@
                     <v-card>
                         <v-card-text>
                             A verification email has been sent to
-                            {{ user.value.email }}. Please check your inbox and
-                            spam folder, the link will be valid for 7 days.
+                            {{ user.email }}. Please check your inbox and spam
+                            folder, the link will be valid for 7 days.
                         </v-card-text>
 
                         <v-card-actions>
@@ -44,7 +44,7 @@
                 <template v-slot:append>
                     <CreateList
                         @createList="createList"
-                        :disabled="user?.emailVerification === false"
+                        :disabled="user && !user.emailVerified"
                         :private="tab === 'private'"
                     />
                 </template>
@@ -353,7 +353,7 @@ const createList = (data) => {
     }
     const urlSearchParams = new URLSearchParams(query).toString();
     if (urlSearchParams.length) {
-                router.push(`/list/${data.list.id}?` + urlSearchParams);
+        router.push(`/list/${data.list.id}?` + urlSearchParams);
         return;
     }
     router.push(`/list/${data.list.id}`);
@@ -451,11 +451,15 @@ const toggleSortDirection = async () => {
 
 const verifyEmail = async () => {
     try {
-        await account.createVerification("https://readyto.gift/dash/verify");
+        const { error } = await authClient.sendVerificationEmail({
+            email: user.value.email,
+            callbackURL: "/dash/lists",
+        });
+        if (error) throw new Error(error.message);
 
         verificationDialog.value = true;
     } catch (error) {
-        alert(error);
+        alert(error.message || "Unable to send a verification email.");
     }
 };
 

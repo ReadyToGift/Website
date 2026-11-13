@@ -49,14 +49,11 @@
 </template>
 
 <script setup>
-import { mdiAlert, mdiCheckCircle, mdiGithub } from "@mdi/js";
-import { createAuthClient } from "better-auth/vue";
+import { mdiAlert } from "@mdi/js";
 import { shallowRef } from "vue";
 import { useRouter } from "vue-router";
-import { VAlert, VBtn, VDivider, VForm, VTextField } from "vuetify/components";
-import { authClient, init as initAuth, logOut } from "@/stores/auth";
-
-// import { createTOTPChallengeDialog } from "@/stores/mfa";
+import { authClient, refreshSession } from "@/stores/auth";
+import { createTOTPChallengeDialog } from "@/stores/mfa";
 
 const props = defineProps({
     redirect: {
@@ -91,8 +88,8 @@ const loading = shallowRef(false);
 const passwordLogin = async (event) => {
     const form = event.target;
     const formData = new FormData(form);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const email = formData.get("email")?.trim();
+    const password = formData.get("password")?.trim();
     loading.value = true;
 
     const { data, error } = await authClient.signIn.email({
@@ -102,8 +99,6 @@ const passwordLogin = async (event) => {
     });
 
     loading.value = false;
-    console.log({ data, error });
-    // await finaliseLogin();
 
     if (error) {
         errorAlert.value = {
@@ -112,32 +107,24 @@ const passwordLogin = async (event) => {
             title: "Login Failed",
             text: error.message || "Login failed.",
         };
+        return;
     }
-    // console.error("Login error:", err);
-    // if (err.type === "user_more_factors_required") {
-    //     const totpChallengeResp = await createTOTPChallengeDialog();
-    //     if (
-    //         totpChallengeResp.action === "success" ||
-    //         totpChallengeResp.action === "totp-removed"
-    //     ) {
-    //         await finaliseLogin();
-    //     } else {
-    //         error.value = {
-    //             type: "error",
-    //             icon: mdiAlert,
-    //             title: "Login Failed",
-    //             text: "TOTP verification failed.",
-    //         };
-    //     }
-    // } else {
-    //     error.value = {
-    //         type: "error",
-    //         icon: mdiAlert,
-    //         title: "Login Failed",
-    //         text:
-    //             err.message || "An unexpected error occurred during login.",
-    //     };
-    // }
+
+    if (data?.twoFactorRedirect) {
+        const challengeResponse = await createTOTPChallengeDialog();
+        if (challengeResponse.action !== "success") {
+            errorAlert.value = {
+                type: "error",
+                icon: mdiAlert,
+                title: "Login Failed",
+                text: "Two-factor authentication was not completed.",
+            };
+            return;
+        }
+        await refreshSession();
+    }
+
+    await router.push(props.redirect);
 };
 </script>
 

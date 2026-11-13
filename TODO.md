@@ -33,11 +33,11 @@
 - [x] Short URLs
   - [x] Lookup
   - [x] Validation
-- [ ] Auth
-  - [ ] Account Creation
-  - [ ] MFA
-  - [ ] Verification
-  - [ ] Account Settings
+- [x] Auth
+  - [x] Account Creation
+  - [x] MFA
+  - [x] Verification
+  - [x] Account Settings
 - [x] User Preferences
   - [x] Update
   - [x] Read

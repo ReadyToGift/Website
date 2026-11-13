@@ -12,6 +12,14 @@
                 @finish="submit"
                 :error="!!errorMessage"
             />
+            <v-text-field
+                v-if="requiresPassword"
+                v-model="password"
+                class="mt-4"
+                label="Current password"
+                type="password"
+                autocomplete="current-password"
+            />
             <a
                 class="text-blue font-weight-bold cursor-pointer"
                 @click="usingRecoveryCode = true"
@@ -32,6 +40,14 @@
                 max-width="400px"
                 @finish="submit"
                 :error="!!errorMessage"
+            />
+            <v-text-field
+                v-if="requiresPassword"
+                v-model="password"
+                class="mt-4"
+                label="Current password"
+                type="password"
+                autocomplete="current-password"
             />
             <a
                 class="text-blue font-weight-bold cursor-pointer"
@@ -69,7 +85,12 @@
         <v-spacer />
         <v-btn
             color="primary"
-            :disabled="code.length !== 6"
+            :disabled="
+                (usingRecoveryCode
+                    ? recoveryCode.length !== 10
+                    : code.length !== 6) ||
+                (requiresPassword && !password)
+            "
             @click="submit"
             :loading="loading"
         >
@@ -87,16 +108,18 @@ import {
     VCardText,
     VOtpInput,
     VSpacer,
+    VTextField,
 } from "vuetify/components";
-import { account } from "@/appwrite";
-import { mfaFactors, user } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
 import { completeMFAchallenge } from "@/stores/mfa";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
+const { requiresPassword = false } = defineProps({
+    requiresPassword: Boolean,
+});
 
 const code = shallowRef("");
 const recoveryCode = shallowRef("");
+const password = shallowRef("");
 const errorMessage = shallowRef("");
 const usingRecoveryCode = shallowRef(false);
 const loading = shallowRef(false);
@@ -107,46 +130,17 @@ const submit = async () => {
     try {
         if (usingRecoveryCode.value) {
             await completeMFAchallenge(recoveryCode.value, "recoverycode");
-            await account.deleteMFAAuthenticator({
-                type: "totp",
-            });
-
-            await account.updateMFA({
-                mfa: false,
-            });
-
-            const factors = await account.listMFAFactors();
-            if (user.value) {
-                mfaFactors.set(factors);
-                user.set({
-                    ...user.value,
-                    mfa: factors.length > 0,
-                });
-            }
-
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK",
-                    },
-                ],
-                fullscreen: false,
-                maxWidth: "90%",
-                text: "Your TOTP authenticator has been successfully removed from your account. You can re-enable multi-factor authentication from your account settings at any time.",
-                title: "TOTP Removed",
-            });
-            emit("totp-removed");
+            emit("success", { password: password.value });
         } else {
             await completeMFAchallenge(code.value, "totp");
-            emit("success");
+            emit("success", { password: password.value });
         }
     } catch (error) {
         console.log("TOTP Challenge Error:", error);
         errorMessage.value = error.message || "An unknown error occurred.";
     } finally {
         code.value = "";
+        password.value = "";
         loading.value = false;
     }
 };

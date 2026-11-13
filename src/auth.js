@@ -19,6 +19,7 @@ export const requireAuth = (context) => {
 };
 
 export const auth = betterAuth({
+    appName: "ReadytoGift",
     advanced: {
         backgroundTasks: {
             handler: waitUntil,
@@ -42,15 +43,47 @@ export const auth = betterAuth({
                 to: user.email,
                 name: user.name,
                 subject: "Reset Password",
-                preview: "You recently requested a password reset. Click the link below to reset your password",
+                preview:
+                    "You recently requested a password reset. Click the link below to reset your password",
                 body,
                 footer,
                 contactSupportDefaultSubject: `Password Reset Support Request - ${new Date().toLocaleString("en-GB")}`,
             });
         },
     },
+    emailVerification: {
+        sendVerificationEmail: async ({ user, url }) => {
+            const body = `You recently requested email verification.<br/>
+                Click the link below to verify your email address.<br/><br/>
+                <a href="${url}">${url}</a>`;
+            return sendEmail({
+                to: user.email,
+                name: user.name,
+                subject: "Verify your email address",
+                preview: "Verify your Readyto.gift email address",
+                body,
+                footer: "If you did not request this, you can ignore this email.",
+            });
+        },
+    },
     plugins: [twoFactor()],
     user: {
+        changeEmail: {
+            enabled: true,
+            sendChangeEmailConfirmation: async ({ user, newEmail, url }) => {
+                const body = `A request was made to change your Readyto.gift email address from ${user.email} to ${newEmail}.<br/>
+                    Confirm this change by clicking the link below.<br/><br/>
+                    <a href="${url}">${url}</a>`;
+                return sendEmail({
+                    to: user.email,
+                    name: user.name,
+                    subject: "Confirm your email address change",
+                    preview: "Confirm your Readyto.gift email address change",
+                    body,
+                    footer: "If you did not request this, you can ignore this email.",
+                });
+            },
+        },
         additionalFields: {
             darkMode: {
                 type: "boolean",
