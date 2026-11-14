@@ -42,9 +42,23 @@
                 :icon="mdiInformation"
                 elevation="2"
                 class="mt-5"
-                text="Mark anything as fulfilled if you've purchased or plan to purchase it. This helps other visitors avoid duplicates. The list owner sees fulfilled gifts only if they enable Spoil surprises."
+                text="The list owner sees fulfilled gifts only if they enable Spoil surprises."
                 color="primary"
-            />
+            >
+                <template v-slot:text>
+                    Mark anything as fulfilled if you've purchased or plan to
+                    purchase it. This helps other visitors avoid duplicates.
+                    <br><br>
+                    <template v-if="list.spoilSurprises">
+                        The owner will see fulfilled and contributed items as
+                        they have spoiled surprises enabled.
+                    </template>
+                    <template v-else>
+                        The owner won't see fulfilled items unless they enable
+                        spoil surprises.
+                    </template>
+                </template>
+            </v-alert>
 
             <div class="items" v-if="itemGroups.length">
                 <div
