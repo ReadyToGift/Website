@@ -20,13 +20,15 @@ export const ensurePolarCustomer = async ({ user }) => {
         return await polar.customers.getExternal(externalId);
     } catch {
         console.log("Customer not found, creating new one");
-        return polar.customers.create({
+        await polar.customers.create({
             individual: {
                 email: user.email,
                 external_id: externalId,
                 name: user.name,
             },
         });
+
+        return await polar.customers.getExternal(externalId);
     }
 };
 
