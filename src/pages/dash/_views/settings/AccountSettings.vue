@@ -112,7 +112,7 @@ const savingProfilePicture = ref(false);
 
 const profilePicture = computed(() => {
     if (!user.value) return "";
-    return `/api/avatar/${user.value.id}`;
+    return `/api/avatar/${user.value.id}?v=${encodeURIComponent(user.value.updatedAt || "")}`;
 });
 
 const openFilePicker = () => fileInput.value?.click();

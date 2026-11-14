@@ -8,7 +8,7 @@
         >
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="`/api/avatar/${user.id}`"
+                    :prepend-avatar="`/api/avatar/${user.id}?v=${encodeURIComponent(user.updatedAt || '')}`"
                     :title="user.name || user.email"
                     :subtitle="user.email"
                 />
