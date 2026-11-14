@@ -17,11 +17,18 @@ const polar = createPolar({
     accessToken: POLAR_ACCESS_TOKEN,
 });
 
-const toPolarExternalCustomerId = (externalCustomerId) => {
-    if (!externalCustomerId) return externalCustomerId;
-    return externalCustomerId.startsWith("appwrite:")
-        ? externalCustomerId
-        : `appwrite:${externalCustomerId}`;
+export const ensurePolarCustomer = async ({ account }) => {
+    const externalId = account.id;
+    try {
+        return await polar.customers.getExternal(externalId);
+    } catch {
+        // console.log("Customer not found, creating new one");
+        // return polar.customers.create({
+        //     email: account.email,
+        //     external_id: externalId,
+        //     name: account.name,
+        // });
+    }
 };
 
 export const getLimits = (benefitNames) => {
@@ -78,11 +85,8 @@ export const getLimits = (benefitNames) => {
 };
 
 export const getCustomerId = async ({ externalCustomerId }) => {
-    const normalizedExternalCustomerId =
-        toPolarExternalCustomerId(externalCustomerId);
-
     const customer = await polar.customers
-        .getExternal(normalizedExternalCustomerId)
+        .getExternal(externalCustomerId)
         .catch((error) => {
             console.log(error);
             throw new Error("Error getting customer", { cause: error });
@@ -100,16 +104,14 @@ export const getLimitsForCustomer = async ({ customerId }) => {
 };
 
 export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
-    const normalizedExternalCustomerId =
-        toPolarExternalCustomerId(externalCustomerId);
     let subscriptions = await getCache(
-        `polarSubscriptions:${normalizedExternalCustomerId}`,
+        `polarSubscriptions:${externalCustomerId}`,
     );
 
     if (!subscriptions) {
         subscriptions = await polar.subscriptions
             .list({
-                external_customer_id: normalizedExternalCustomerId,
+                external_customer_id: externalCustomerId,
             })
             .catch((error) => {
                 console.log(error);
@@ -121,7 +123,7 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
         subscriptions = subscriptions.items;
 
         await setCache(
-            `polarSubscriptions:${normalizedExternalCustomerId}`,
+            `polarSubscriptions:${externalCustomerId}`,
             subscriptions,
             1 * 60 * 1000,
         );
@@ -131,16 +133,12 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
 };
 
 export const getCustomerSession = async ({ externalCustomerId }) => {
-    const normalizedExternalCustomerId =
-        toPolarExternalCustomerId(externalCustomerId);
-    let session = await getCache(
-        `polarCustomerSession:${normalizedExternalCustomerId}`,
-    );
+    let session = await getCache(`polarCustomerSession:${externalCustomerId}`);
 
     if (!session) {
         session = await polar.customerSessions
             .create({
-                external_customer_id: normalizedExternalCustomerId,
+                external_customer_id: externalCustomerId,
             })
             .catch((error) => {
                 console.log(error);
@@ -149,7 +147,7 @@ export const getCustomerSession = async ({ externalCustomerId }) => {
                 });
             });
         await setCache(
-            `polarCustomerSession:${normalizedExternalCustomerId}`,
+            `polarCustomerSession:${externalCustomerId}`,
             session,
             55 * 60 * 1000,
         );
@@ -195,8 +193,7 @@ export const getUserAutofillMeter = async ({ externalCustomerId }) => {
     if (!autofillMeter) {
         const metersResp = await polar.customerMeters
             .list({
-                external_customer_id:
-                    toPolarExternalCustomerId(externalCustomerId),
+                external_customer_id: externalCustomerId,
                 meter_id: POLAR_AUTOFILL_METER_ID,
             })
             .catch((error) => {
@@ -255,9 +252,8 @@ export const getUserLimits = async ({ account }) => {
             };
         }
 
-        const customerId = await getCustomerId({
-            externalCustomerId: account.$id,
-        });
+        const customer = await ensurePolarCustomer({ account });
+        const customerId = customer.id;
         const limits = await getLimitsForCustomer({ customerId });
         return { limits };
     } catch (err) {

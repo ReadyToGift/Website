@@ -1,10 +1,9 @@
-import { getCache, setCache } from "@/server/cache";
 export const prerender = false;
 
 import { ENABLE_BILLING } from "astro:env/client";
-import { createSessionClient } from "@/server/appwrite";
-import { extractJwt } from "@/server/auth";
+import { requireAuth } from "@/auth";
 import {
+    ensurePolarCustomer,
     getCustomerSession,
     getCustomerSubscriptions,
     getLimits,
@@ -38,38 +37,15 @@ export const GET = async (context) => {
             );
         }
 
-        let account;
-        let sessionClient;
-        try {
-            const jwt = extractJwt(context);
-            account = await getCache(`jwt:${jwt}`);
-
-            sessionClient = createSessionClient(context);
-            account = await sessionClient.account.get();
-            if (account) {
-                await setCache(`jwt:${jwt}`, account, 5 * 60 * 1000);
-            }
-        } catch (error) {
-            console.error("Error getting account", error);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Internal server error when getting account",
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                },
-            );
-        }
+        const { unauthorizedResponse, user: account } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
+        await ensurePolarCustomer({ account });
 
         const [customerSession, subscriptions, autofillMeter] =
             await Promise.all([
-                getCustomerSession({ externalCustomerId: account.$id }),
-                getCustomerSubscriptions({ externalCustomerId: account.$id }),
-                getUserAutofillMeter({ externalCustomerId: account.$id }),
+                getCustomerSession({ externalCustomerId: account.id }),
+                getCustomerSubscriptions({ externalCustomerId: account.id }),
+                getUserAutofillMeter({ externalCustomerId: account.id }),
             ]);
 
         const hasPro = subscriptions.some((sub) => sub.status === "active");

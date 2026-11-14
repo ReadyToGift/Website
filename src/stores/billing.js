@@ -104,7 +104,7 @@ export const getBillingDetails = async () => {
         billing.setKey("subscriptions", subscriptions);
         billing.setKey("isPro", isPro);
 
-        setUsedAutofillAllowance(autofillMeter.consumed_units);
+        setUsedAutofillAllowance(autofillMeter?.consumed_units ?? 0);
 
         applyLimits({ isPro, proLimits });
 

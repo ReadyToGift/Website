@@ -31,11 +31,6 @@ if (POLAR_ACCESS_TOKEN) {
     });
 }
 
-const toPolarExternalCustomerId = (id) => {
-    if (!id) return id;
-    return id.startsWith("appwrite:") ? id : `appwrite:${id}`;
-};
-
 const bandwidthCostPerGB = {
     currency: "usd",
     amount: 8,
@@ -134,7 +129,7 @@ const getPreview = async ({
     updateStatus,
 }) => {
     console.log(`Total request methods to try: ${requestMethods.length}`);
-    const externalCustomerId = toPolarExternalCustomerId(userID);
+    const externalCustomerId = userID;
 
     let totalBandwidth = 0;
 

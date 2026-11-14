@@ -1,4 +1,8 @@
+import { ENABLE_BILLING } from "astro:env/client";
+import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { waitUntil } from "cloudflare:workers";
+import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
+import { createPolarCore } from "@polar-sh/sdk/2026-10";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { twoFactor } from "better-auth/plugins";
@@ -18,8 +22,36 @@ export const requireAuth = (context) => {
     return { unauthorizedResponse: null, user, session };
 };
 
+const plugins = [twoFactor()];
+
+if (ENABLE_BILLING) {
+    const polarClient = createPolarCore({
+        accessToken: POLAR_ACCESS_TOKEN,
+    });
+    plugins.push(
+        polar({
+            client: polarClient,
+            createCustomerOnSignUp: true,
+            use: [
+                checkout({
+                    products: [
+                        {
+                            productId: POLAR_PRO_PRODUCT_ID,
+                            slug: "pro",
+                        },
+                    ],
+                    successUrl: "/api/billing/pro/checkout/success",
+                    authenticatedUsersOnly: true,
+                }),
+                portal(),
+                usage(),
+            ],
+        }),
+    );
+}
+
 export const auth = betterAuth({
-    appName: "ReadytoGift",
+    appName: "Readyto.gift",
     advanced: {
         backgroundTasks: {
             handler: waitUntil,
@@ -34,6 +66,7 @@ export const auth = betterAuth({
     }),
     emailAndPassword: {
         enabled: true,
+        requireEmailVerification: true,
         sendResetPassword: async ({ user, url }) => {
             const body = `You recently requested a password reset.<br/>
                 Click the link below to reset your password.<br/><br/>
@@ -52,6 +85,9 @@ export const auth = betterAuth({
         },
     },
     emailVerification: {
+        autoSignInAfterVerification: true,
+        sendOnSignIn: true,
+        sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }) => {
             const body = `You recently requested email verification.<br/>
                 Click the link below to verify your email address.<br/><br/>
@@ -66,7 +102,7 @@ export const auth = betterAuth({
             });
         },
     },
-    plugins: [twoFactor()],
+    plugins,
     user: {
         changeEmail: {
             enabled: true,

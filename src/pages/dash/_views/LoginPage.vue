@@ -105,7 +105,10 @@ const passwordLogin = async (event) => {
             type: "error",
             icon: mdiAlert,
             title: "Login Failed",
-            text: error.message || "Login failed.",
+            text:
+                error.status === 403
+                    ? "Please verify your email address first. A new verification email has been sent."
+                    : error.message || "Login failed.",
         };
         return;
     }

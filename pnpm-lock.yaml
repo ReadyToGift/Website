@@ -200,6 +200,9 @@ importers:
       '@nanostores/vue':
         specifier: ^1.1.0
         version: 1.1.0(@vue/devtools-api@7.7.10)(nanostores@1.5.5)(vue@3.5.45)
+      '@polar-sh/better-auth':
+        specifier: ^2.1.4
+        version: 2.1.4(@polar-sh/sdk@1.0.2)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)
       '@polar-sh/checkout':
         specifier: 0.6.0
         version: 0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)
@@ -1631,6 +1634,18 @@ packages:
 
   '@photostructure/tz-lookup@11.8.0':
     resolution: {integrity: sha512-RvTkAjjWAfgvoaHVXugwi9XOw4rwyrL8wuqox4PwRLW9FZwpmPhNUY31MgY7k5avK6sbD9S7i1/rUtM4A310/g==}
+
+  '@polar-sh/adapter-utils@1.1.0':
+    resolution: {integrity: sha512-v2bh7wggBx7Sp4E9qFWDI3IN4vojSq0q2isl/ek2mi86JoNzjfgn+xJkYGgwGoc+e45P0egJTmiueEWTLGgPxw==}
+    engines: {node: '>=24'}
+
+  '@polar-sh/better-auth@2.1.4':
+    resolution: {integrity: sha512-nf1V3axJX/J0VXPjppuODKQZy3GSBclGQvatYcIYQmx5aSULjEsmn3aq/+JNKasTr2Nvpf+f7pRALKZcMcWEZQ==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      '@polar-sh/sdk': ^1.0.2
+      better-auth: ^1.7.0
+      zod: ^3.25.0 || ^4.0.0
 
   '@polar-sh/checkout@0.6.0':
     resolution: {integrity: sha512-pFlb15vZZ9PVkd0I9cMWyO8CP5LbKNCzbLgALxKkzK0rjE2z1u6TtyvIw67evNkfmcFrrJhuOcs2BneHbVa9fw==}
@@ -6022,6 +6037,23 @@ snapshots:
     optional: true
 
   '@photostructure/tz-lookup@11.8.0': {}
+
+  '@polar-sh/adapter-utils@1.1.0':
+    dependencies:
+      '@polar-sh/sdk': 1.0.2
+      zod: 4.6.7
+
+  '@polar-sh/better-auth@2.1.4(@polar-sh/sdk@1.0.2)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)':
+    dependencies:
+      '@polar-sh/adapter-utils': 1.1.0
+      '@polar-sh/checkout': 0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)
+      '@polar-sh/sdk': 1.0.2
+      better-auth: 1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45)
+      zod: 4.6.7
+    transitivePeerDependencies:
+      - '@stripe/react-stripe-js'
+      - '@stripe/stripe-js'
+      - react
 
   '@polar-sh/checkout@0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)':
     dependencies:

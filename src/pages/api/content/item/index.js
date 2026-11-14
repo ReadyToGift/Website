@@ -127,7 +127,7 @@ export const POST = async (context) => {
         }
         if (!communityItem) {
             const { limits } = await getUserLimits({
-                account: { $id: user.id },
+                account: user,
             });
             const itemCount = await getItemCount(listId);
             if (
@@ -249,7 +249,7 @@ export const PUT = async (context) => {
         }
         if (moving) {
             const { limits } = await getUserLimits({
-                account: { $id: user.id },
+                account: user,
             });
             const itemCount = await getItemCount(targetListId);
             if (

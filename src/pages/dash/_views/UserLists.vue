@@ -1,40 +1,5 @@
 <template>
     <div class="page-content">
-        <v-alert
-            type="warning"
-            border="start"
-            elevation="32"
-            :icon="mdiInformation"
-            title="Verification Required"
-            text="Please verify your email address to create lists."
-            class="mb-4"
-            variant="tonal"
-            v-if="user && !user.emailVerified"
-        >
-            <v-card-actions>
-                <v-btn @click="verifyEmail" color="warning" variant="elevated">
-                    Send Verification Email
-                </v-btn>
-                <v-dialog max-width="500" v-model="verificationDialog">
-                    <v-card>
-                        <v-card-text>
-                            A verification email has been sent to
-                            {{ user.email }}. Please check your inbox and spam
-                            folder, the link will be valid for 7 days.
-                        </v-card-text>
-
-                        <v-card-actions>
-                            <v-spacer />
-
-                            <v-btn
-                                text="Close"
-                                @click="verificationDialog = false"
-                            />
-                        </v-card-actions>
-                    </v-card>
-                </v-dialog>
-            </v-card-actions>
-        </v-alert>
         <PWAPrompt />
         <v-card color="surface" variant="flat" class="pa-0 mb-4">
             <v-card-item class="px-0">
@@ -44,7 +9,6 @@
                 <template v-slot:append>
                     <CreateList
                         @createList="createList"
-                        :disabled="user && !user.emailVerified"
                         :private="tab === 'private'"
                     />
                 </template>
@@ -264,7 +228,6 @@
 <script setup>
 import {
     mdiEarth,
-    mdiInformation,
     mdiLock,
     mdiSortAscending,
     mdiSortDescending,
@@ -273,32 +236,10 @@ import {
 import { useStore } from "@nanostores/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import {
-    VAlert,
-    VBtn,
-    VBtnGroup,
-    VCard,
-    VCardActions,
-    VCardItem,
-    VCardText,
-    VChip,
-    VDialog,
-    VDivider,
-    VList,
-    VMenu,
-    VSelect,
-    VSheet,
-    VSkeletonLoader,
-    VSpacer,
-    VTab,
-    VTabs,
-    VTabsWindow,
-    VTabsWindowItem,
-} from "vuetify/components";
 import CreateList from "@/components/dialogs/CreateList.vue";
 import ListCard from "@/components/ListCard.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-import { authClient, user as userStore } from "@/stores/auth";
+import { user as userStore } from "@/stores/auth";
 import { limits as limitsStore } from "@/stores/billing";
 import { create as createDialog } from "@/stores/dialogs";
 import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
@@ -332,7 +273,6 @@ const sorting = ref({
     ],
 });
 const tab = ref("public");
-const verificationDialog = ref(false);
 
 const privateLists = computed(() => {
     return lists.value.filter(
@@ -446,20 +386,6 @@ const toggleSortDirection = async () => {
     } catch (error) {
         console.error({ error });
         alert("Failed to update user prefs");
-    }
-};
-
-const verifyEmail = async () => {
-    try {
-        const { error } = await authClient.sendVerificationEmail({
-            email: user.value.email,
-            callbackURL: "/dash/lists",
-        });
-        if (error) throw new Error(error.message);
-
-        verificationDialog.value = true;
-    } catch (error) {
-        alert(error.message || "Unable to send a verification email.");
     }
 };
 

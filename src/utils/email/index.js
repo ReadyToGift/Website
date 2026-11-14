@@ -54,7 +54,7 @@ export const sendEmail = async ({
     });
 
     await plunk.send({
-        name: "ReadyToGift",
+        name: "Readyto.gift",
         from: PLUNK_SENDING_EMAIL,
         to,
         subject,

@@ -42,8 +42,8 @@
   - [x] Update
   - [x] Read
 - [ ] Billing
-  - [ ] Move to user:{id} rather than appwrite:{id}
-  - [ ] Update polar customers from Appwrite function
+  - [x] Move to user:{id} rather than appwrite:{id}
+  - [x] Update Polar customers from Better Auth users
     - [ ] Creation
     - [ ] Deletion
     - [ ] Update (name, email etc)

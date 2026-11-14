@@ -1,11 +1,19 @@
+import { ENABLE_BILLING } from "astro:env/client";
 import { persistentAtom } from "@nanostores/persistent";
+import { polarClient } from "@polar-sh/better-auth/client";
 import { createAuthClient } from "better-auth/client";
 import { twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
 import { loadPrefs } from "./prefs";
 
+const plugins = [twoFactorClient()];
+
+if (ENABLE_BILLING) {
+    plugins.push(polarClient());
+}
+
 export const authClient = createAuthClient({
-    plugins: [twoFactorClient],
+    plugins,
 });
 
 export const session = authClient.useSession;

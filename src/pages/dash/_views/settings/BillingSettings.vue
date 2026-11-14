@@ -201,7 +201,8 @@
                         </template>
                         <template v-else>
                             Renews on
-                            {{ formatDate(billing.pro.current_period_end) }} for
+                            {{ formatDate(billing.pro.current_period_end) }}
+                            for
                             <strong
                                 >{{
                                     formatPrice(
@@ -239,23 +240,12 @@
                 </v-skeleton-loader>
             </v-card-subtitle>
             <v-card-text>
-                <v-skeleton-loader
-                    type="button"
-                    :loading="!billing.billingLoaded"
-                >
-                    <v-btn
-                        :href="
-                            billing.session
-                                ? billing.session.customer_portal_url
-                                : ''
-                        "
-                        target="_blank"
-                    >
-                        Open billing portal
-                    </v-btn>
-                </v-skeleton-loader>
+                <v-skeleton-loader type="button"> </v-skeleton-loader>
             </v-card-text>
         </v-card>
+        <v-btn @click="authClient.customer.portal()">
+            Open billing portal
+        </v-btn>
         <v-alert
             v-if="billingDetailsFailure"
             type="error"
@@ -292,6 +282,7 @@ import {
     VProgressCircular,
     VSkeletonLoader,
 } from "vuetify/components";
+import { authClient } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,

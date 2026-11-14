@@ -54,7 +54,6 @@
 <script setup>
 import { mdiAlert, mdiInformation } from "@mdi/js";
 import { reactive, shallowRef } from "vue";
-import { useRouter } from "vue-router";
 import { authClient } from "@/stores/auth";
 
 const props = defineProps({
@@ -64,7 +63,6 @@ const props = defineProps({
     },
 });
 
-const router = useRouter();
 const alert = shallowRef(null);
 const loadingRegistration = shallowRef(false);
 const registrationDetails = reactive({
@@ -100,6 +98,7 @@ const register = async () => {
 
     loadingRegistration.value = true;
     const { error } = await authClient.signUp.email({
+        callbackURL: props.redirect,
         email: details.email.trim(),
         name: details.name.trim(),
         password: details.password.trim(),
@@ -116,14 +115,10 @@ const register = async () => {
 
     alert.value = {
         icon: mdiInformation,
-        text: "Account created successfully, redirecting you now.",
+        text: "Account created. Check your email to verify your address. You’ll be signed in automatically when you follow the verification link.",
         title: "Success",
         type: "success",
     };
-
-    setTimeout(() => {
-        router.push(props.redirect);
-    }, 2000);
 };
 </script>
 
