@@ -1,4 +1,4 @@
-import { waitUntil } from "cloudflare:workers";
+import { env, waitUntil } from "cloudflare:workers";
 import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { createPolarCore } from "@polar-sh/sdk/2026-10";
 import { betterAuth } from "better-auth";
@@ -8,9 +8,7 @@ import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { sendEmail } from "@/utils/email/index";
 
-const ENABLE_BILLING = import.meta.env.ENABLE_BILLING;
-const POLAR_ACCESS_TOKEN = import.meta.env.POLAR_ACCESS_TOKEN;
-const POLAR_PRO_PRODUCT_ID = import.meta.env.POLAR_PRO_PRODUCT_ID;
+const ENABLE_BILLING = String(env.ENABLE_BILLING) === "true";
 
 export const requireAuth = (context) => {
     const { user, session } = context.locals;
@@ -28,7 +26,7 @@ const plugins = [twoFactor()];
 
 if (ENABLE_BILLING) {
     const polarClient = createPolarCore({
-        accessToken: POLAR_ACCESS_TOKEN,
+        accessToken: env.POLAR_ACCESS_TOKEN,
     });
     plugins.push(
         polar({
@@ -38,7 +36,7 @@ if (ENABLE_BILLING) {
                 checkout({
                     products: [
                         {
-                            productId: POLAR_PRO_PRODUCT_ID,
+                            productId: env.POLAR_PRO_PRODUCT_ID,
                             slug: "pro",
                         },
                     ],
