@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
+import { randomBytes } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { createPolar } from "@polar-sh/sdk/2026-10";
 import mjml2html from "mjml";
 import { Plunk } from "plunk-node-sdk";
 
@@ -66,6 +68,35 @@ const createD1Database = () => {
     };
 };
 
+const createPolarClient = () =>
+    createPolar({
+        accessToken: required("POLAR_ACCESS_TOKEN"),
+    });
+
+const createRecipientProCode = async ({ polar, user }) => {
+    const code = `BETA${randomBytes(8).toString("hex").toUpperCase()}`;
+    const discount = await polar.discounts.create({
+        basis_points: 10000,
+        code,
+        duration: "forever",
+        max_redemptions: 1,
+        max_redemptions_per_customer: 1,
+        metadata: {
+            migration_user_id: user.id,
+            migration_email: user.email,
+        },
+        name: `Migration gift for ${user.email}`,
+        products: [required("POLAR_PRO_PRODUCT_ID")],
+        type: "percentage",
+    });
+
+    if (!discount.code) {
+        throw new Error(`Polar did not return a code for ${user.email}`);
+    }
+
+    return discount.code;
+};
+
 const listUsers = async (query) => {
     const users = [];
 
@@ -81,12 +112,19 @@ const listUsers = async (query) => {
 
 const createEmail = async ({ name, email, proCode }) => {
     const template = await readFile(templatePath, "utf8");
+    const contactSupportDefaultSubject = `Readyto.gift migration support - ${email}`;
+    const supportMailto = `mailto:support@readyto.gift?subject=${encodeURIComponent(contactSupportDefaultSubject)}`;
     const proOffer = proCode
-        ? `<p>As a thank you for being part of Readyto.gift's early days and for sharing your feedback, use code <strong>${escapeHtml(proCode)}</strong> for lifetime Readyto.gift Pro. This ensures you can continue using Readyto.gift as you have been. Thanks!</p>`
+        ? `<p>As a thank you for being part of Readyto.gift's early days and for sharing your feedback, use code <strong>${escapeHtml(proCode)}</strong> for free Readyto.gift Pro, valid for a lifetime. This ensures you can continue using Readyto.gift as you have been. Thanks!</p>`
         : "";
+    let footer =
+        `This is an important account migration notice. If you have any problems, please contact our staff at <a href="${supportMailto}">support@readyto.gift</a>.`;
+    if (proCode)
+        footer +=
+            " Use your Pro code for free access. This code is a one-time discount of 100%, renewing indefinitely.";
     const body = `
         <p>Readyto.gift has moved to a new account system to improve security and reliability.</p>
-        <p>Your lists and items have been migrated, but passwords could not be transferred securely. You will need to set a new password before signing in again.</p>
+        <p>Your lists and items have been moved, but passwords could not be transferred securely. You will need to set a new password before signing in again.</p>
         <p style="background:#fff4d6;border-left:4px solid #e6a700;padding:12px 16px;"><strong>What you need to do:</strong><br/>Open the password recovery page and follow the instructions sent to this email address.</p>
         <p style="text-align:center;padding:12px 0 4px;"><a href="${escapeHtml(siteUrl)}/dash/recovery/start?email=${encodeURIComponent(email)}" style="display:inline-block;background:#405F91;color:#ffffff!important;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;">Reset your password</a></p>
         ${proOffer}
@@ -94,7 +132,7 @@ const createEmail = async ({ name, email, proCode }) => {
     `;
     const populatedTemplate = template
         .replace("{{body}}", body)
-        .replace("{{footer}}", "This is an important account migration notice.")
+        .replace("{{footer}}", footer)
         .replace("{{greeting}}", `Hello${name ? ` ${escapeHtml(name)}` : ""},`)
         .replace(
             "{{preview}}",
@@ -113,8 +151,6 @@ const main = async () => {
     const users = await listUsers(query);
     const requestedEmail = getArgumentValue("--email");
     const limitArgument = getArgumentValue("--limit");
-    const proCode =
-        getArgumentValue("--pro-code") || process.env.MIGRATION_PRO_CODE;
     const limit = limitArgument ? Number.parseInt(limitArgument, 10) : null;
     const recipients = users
         .filter((user) => !requestedEmail || user.email === requestedEmail)
@@ -138,9 +174,11 @@ const main = async () => {
         fetch: globalThis.fetch.bind(globalThis),
     });
     const from = required("PLUNK_SENDING_EMAIL");
+    const polar = createPolarClient();
 
     for (const user of recipients) {
         try {
+            const proCode = await createRecipientProCode({ polar, user });
             await plunk.send({
                 type: "transactional",
                 name: "Readyto.gift",
