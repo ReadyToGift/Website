@@ -22,10 +22,10 @@
                     @fulfillItem="$emit('fulfillItem', $event)"
                     @unfulfillItem="$emit('unfulfillItem', item.id)"
                 />
-                <template v-if="item.url">
+                <template v-if="websiteUrl">
                     <v-btn
                         :append-icon="mdiOpenInNew"
-                        :href="item.url"
+                        :href="websiteUrl"
                         target="_blank"
                         v-if="!$vuetify.display.mobile || !wishlistOwner"
                         variant="outlined"
@@ -35,7 +35,7 @@
                     </v-btn>
                     <v-btn
                         :icon="mdiOpenInNew"
-                        :href="item.url"
+                        :href="websiteUrl"
                         target="_blank"
                         v-else
                         variant="outlined"
@@ -105,7 +105,7 @@
                 item.fulfilledBy ||
                 item.price ||
                 item.priority !== 'none' ||
-                item.url ||
+                websiteUrl ||
                 item.communityList
             "
         >
@@ -144,12 +144,12 @@
                     </v-chip>
                     <v-chip
                         :prepend-icon="mdiWeb"
-                        v-if="item.url && validation.urlRegex.test(item.url)"
-                        :href="item.url"
+                        v-if="websiteUrl"
+                        :href="websiteUrl"
                         target="_blank"
                         rounded
                     >
-                        {{ getWebsiteHostname(item.url) }}
+                        {{ websiteHostname }}
                     </v-chip>
                 </div>
                 <v-chip
@@ -225,7 +225,6 @@ export default {
             mdiGift,
             mdiOpenInNew,
             mdiWeb,
-            validation,
             user: useStore(userStore),
             prefs: useStore($prefs),
         };
@@ -240,12 +239,29 @@ export default {
                 return null;
             }
         },
-    },
-    methods: {
-        getWebsiteHostname(url) {
-            const { hostname } = new URL(url);
+        websiteUrl() {
+            if (typeof this.item.url !== "string") return null;
+            const candidate = this.item.url.match(validation.urlRegex)?.[0];
+            if (!candidate) return null;
 
-            return hostname.replace(/^www\./, "").toLowerCase();
+            try {
+                const url = new URL(
+                    candidate.startsWith("www.")
+                        ? `https://${candidate}`
+                        : candidate,
+                );
+                return ["http:", "https:"].includes(url.protocol)
+                    ? url.href
+                    : null;
+            } catch {
+                return null;
+            }
+        },
+        websiteHostname() {
+            if (!this.websiteUrl) return "";
+            return new URL(this.websiteUrl).hostname
+                .replace(/^www\./, "")
+                .toLowerCase();
         },
     },
 };

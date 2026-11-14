@@ -127,7 +127,6 @@ import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import ListCard from "@/components/ListCard.vue";
 import ListItem from "@/components/ListItem.vue";
 import PWAPrompt from "@/components/PWAPrompt.vue";
-import { clientRouter } from "@/router";
 import {
     previouslyLoggedInUserID as previouslyLoggedInUserIDStore,
     user as userStore,
@@ -199,12 +198,6 @@ export default {
             user: useStore(userStore),
             quickCreateURL: null,
         };
-    },
-    props: {
-        listId: {
-            type: String,
-            required: false,
-        },
     },
     computed: {
         itemLimitReached() {
@@ -663,7 +656,8 @@ export default {
                     listId,
                     user: this.user,
                 });
-                if (listData && listData.list) {
+                if (listId !== this.$route.params.listId) return;
+                if (listData?.list) {
                     const continueAnyway = await this.createAvoidSpoilersDialog(
                         listData.list,
                     );
@@ -671,9 +665,11 @@ export default {
                         return; // redirected to login
                     }
                 }
+                if (listId !== this.$route.params.listId) return;
                 await this.setList({ listData });
                 this.quickCreateURL = this.quickCreateURLParam;
             } catch (error) {
+                if (listId !== this.$route.params.listId) return;
                 if (error.code === 404) {
                     removeFromHistory(listId);
                     this.newItem.notFound = true;
@@ -686,10 +682,13 @@ export default {
         showFulfilled(val) {
             localStorage.setItem("showFulfilled", val);
         },
-        async listId() {
+        async "$route.params.listId"(listId) {
+            if (!listId) return;
             this.list = false;
+            this.communityItems = [];
+            this.fulfillments = [];
             this.newItem.notFound = false;
-            this.loadList(this.listId);
+            await this.loadList(listId);
         },
     },
     async created() {
@@ -702,7 +701,7 @@ export default {
         }
     },
     async mounted() {
-        const route = clientRouter.currentRoute.value;
+        const route = this.$route;
         const { listId } = route.params;
         if (!this.list) {
             await this.loadList(listId);
@@ -725,15 +724,6 @@ export default {
                 });
             }
         }
-        clientRouter.afterEach(async (to, from) => {
-            if (to.params.listId !== from.params.listId && to.params.listId) {
-                this.list = false;
-                this.communityItems = [];
-                this.fulfillments = [];
-                this.avoidSpoilersDialogShown = false;
-                await this.loadList(to.params.listId);
-            }
-        });
         this.quickCreateURL = route.query.quickCreateURL || null;
     },
 };
