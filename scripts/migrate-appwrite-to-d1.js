@@ -41,17 +41,6 @@ const idOf = (value) => {
     return typeof value === "object" ? value.$id || value.id || null : value;
 };
 
-const objectOf = (value) => {
-    if (!value) return {};
-    if (typeof value === "object") return value;
-    try {
-        const parsed = JSON.parse(value);
-        return parsed && typeof parsed === "object" ? parsed : {};
-    } catch {
-        return {};
-    }
-};
-
 const jsonText = (value) => {
     if (value == null) return null;
     return typeof value === "string" ? value : JSON.stringify(value);
@@ -263,7 +252,6 @@ async function migrateUsers(db, users) {
                 emailVerified: Boolean(source.emailVerification),
                 image: null,
                 darkMode: Boolean(source.prefs.darkMode),
-                spoilSurprises: Boolean(source.prefs.spoilSurprises),
                 showTotalPrice: Boolean(source.prefs.showTotalPrice),
                 savedLists: Array.isArray(source.prefs.savedLists)
                     ? source.prefs.savedLists
@@ -314,6 +302,7 @@ async function migrateContent(db, source) {
                 currency: row.currency || "USD",
                 shortUrl: row.shortUrl,
                 private: row.private,
+                spoilSurprises: false,
                 createdAt: date(row.$createdAt),
                 updatedAt: date(row.$updatedAt),
             })
