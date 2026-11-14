@@ -19,7 +19,7 @@
     </v-text-field>
     <v-textarea
         label="Description"
-        v-model.trim="list.description"
+        v-model="list.description"
         maxlength="4000"
         counter
         hint="This field supports markdown!"

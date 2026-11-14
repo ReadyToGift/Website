@@ -10,7 +10,7 @@
                     <v-progress-circular indeterminate size="16" width="2" />
                 </template>
             </v-btn>
-            <v-dialog v-model="dialogOpen" v-else>
+            <v-dialog v-model="dialogOpen" persistent v-else>
                 <template v-slot:activator>
                     <v-btn
                         :icon="mdiPlusThick"
@@ -394,7 +394,9 @@ const enableTOTP = async () => {
         mfaFactorsStore.set({ totp: true });
         userStore.set({ ...user.value, twoFactorEnabled: true });
 
-        nextStep(); // Move to recovery codes + success step
+        // Keep the setup dialog open on the recovery-code step so the user
+        // has time to download or save the codes before finishing.
+        currentStep.value = 3;
     } catch (error) {
         console.log({ error });
         errors[1] = error.message;

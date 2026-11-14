@@ -33,7 +33,7 @@
 
         <v-textarea
             label="Description"
-            v-model.trim="item.description"
+            v-model="item.description"
             maxlength="4000"
             counter
             persistent-hint

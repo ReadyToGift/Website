@@ -34,6 +34,11 @@ const escapeHtml = (value) =>
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#39;");
 
+const getArgumentValue = (name) =>
+    process.argv
+        .find((argument) => argument.startsWith(`${name}=`))
+        ?.slice(name.length + 1);
+
 const createD1Database = () => {
     const accountId = required("CLOUDFLARE_ACCOUNT_ID");
     const databaseId = required("CLOUDFLARE_DATABASE_ID");
@@ -74,13 +79,17 @@ const listUsers = async (query) => {
     }
 };
 
-const createEmail = async ({ name, email }) => {
+const createEmail = async ({ name, email, proCode }) => {
     const template = await readFile(templatePath, "utf8");
+    const proOffer = proCode
+        ? `<p>As a thank you for being part of Readyto.gift's early days and for sharing your feedback, use code <strong>${escapeHtml(proCode)}</strong> for lifetime Readyto.gift Pro. This ensures you can continue using Readyto.gift as you have been. Thanks!</p>`
+        : "";
     const body = `
         <p>Readyto.gift has moved to a new account system to improve security and reliability.</p>
         <p>Your lists and items have been migrated, but passwords could not be transferred securely. You will need to set a new password before signing in again.</p>
         <p style="background:#fff4d6;border-left:4px solid #e6a700;padding:12px 16px;"><strong>What you need to do:</strong><br/>Open the password recovery page and follow the instructions sent to this email address.</p>
         <p style="text-align:center;padding:12px 0 4px;"><a href="${escapeHtml(siteUrl)}/dash/recovery/start?email=${encodeURIComponent(email)}" style="display:inline-block;background:#405F91;color:#ffffff!important;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;">Reset your password</a></p>
+        ${proOffer}
         <p>If you have not used Readyto.gift recently, no action is required unless you want to access your account again.</p>
     `;
     const populatedTemplate = template
@@ -102,12 +111,10 @@ const createEmail = async ({ name, email }) => {
 const main = async () => {
     const query = createD1Database();
     const users = await listUsers(query);
-    const requestedEmail = process.argv
-        .find((argument) => argument.startsWith("--email="))
-        ?.slice("--email=".length);
-    const limitArgument = process.argv
-        .find((argument) => argument.startsWith("--limit="))
-        ?.slice("--limit=".length);
+    const requestedEmail = getArgumentValue("--email");
+    const limitArgument = getArgumentValue("--limit");
+    const proCode =
+        getArgumentValue("--pro-code") || process.env.MIGRATION_PRO_CODE;
     const limit = limitArgument ? Number.parseInt(limitArgument, 10) : null;
     const recipients = users
         .filter((user) => !requestedEmail || user.email === requestedEmail)
@@ -140,7 +147,11 @@ const main = async () => {
                 from,
                 to: user.email,
                 subject: "Action required: reset your Readyto.gift password",
-                body: await createEmail({ name: user.name, email: user.email }),
+                body: await createEmail({
+                    name: user.name,
+                    email: user.email,
+                    proCode,
+                }),
             });
         } catch (error) {
             console.error("Plunk validation details:", {

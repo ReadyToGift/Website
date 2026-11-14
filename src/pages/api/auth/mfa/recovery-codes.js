@@ -1,5 +1,7 @@
 import { auth, requireAuth } from "@/auth";
 
+export const prerender = false;
+
 export const POST = async (context) => {
     const { unauthorizedResponse, user } = requireAuth(context);
     if (unauthorizedResponse) return unauthorizedResponse;

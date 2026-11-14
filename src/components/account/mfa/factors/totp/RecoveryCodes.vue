@@ -9,7 +9,9 @@
                 {{ recoveryCode }}
             </li>
         </ol>
-        <v-btn @click="downloadRecoveryCodes" class="mt-4"> Download </v-btn>
+        <v-btn @click="downloadRecoveryCodes" class="mt-4">
+            Download recovery codes
+        </v-btn>
     </v-card-text>
 </template>
 

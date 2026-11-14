@@ -94,16 +94,30 @@ export const auth = betterAuth({
         sendOnSignIn: true,
         sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }) => {
-            const body = `You recently requested email verification.<br/>
-                Click the link below to verify your email address.<br/><br/>
-                <a href="${url}">${url}</a>`;
+            const callbackURL = new URL(url).searchParams.get("callbackURL");
+            const isEmailChange = callbackURL?.includes(
+                "emailChange=pending",
+            );
+            const body = isEmailChange
+                ? `Your email address change is almost complete.<br/>
+                    Click the link below to verify your new email address.<br/><br/>
+                    <a href="${url}">${url}</a>`
+                : `You recently requested email verification.<br/>
+                    Click the link below to verify your email address.<br/><br/>
+                    <a href="${url}">${url}</a>`;
             return sendEmail({
                 to: user.email,
                 name: user.name,
-                subject: "Verify your email address",
-                preview: "Verify your Readyto.gift email address",
+                subject: isEmailChange
+                    ? "Confirm your new email address"
+                    : "Verify your email address",
+                preview: isEmailChange
+                    ? "Confirm your new Readyto.gift email address"
+                    : "Verify your Readyto.gift email address",
                 body,
-                footer: "If you did not request this, you can ignore this email.",
+                footer: isEmailChange
+                    ? "If you did not request an email address change, you can ignore this email."
+                    : "If you did not request this, you can ignore this email.",
             });
         },
     },

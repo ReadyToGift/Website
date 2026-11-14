@@ -20,7 +20,7 @@
                 variant="text"
                 @click="resetProfilePicture"
             >
-                Reset to initials
+                Remove picture
             </v-btn>
         </v-card-text>
     </v-card>
@@ -95,7 +95,7 @@
 <script setup>
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
-import { computed, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { Cropper } from "vue-advanced-cropper";
 import "vue-advanced-cropper/dist/style.css";
 import MFA from "@/components/account/mfa/MFA.vue";
@@ -143,7 +143,27 @@ const saveProfilePicture = async () => {
 
     savingProfilePicture.value = true;
     try {
-        const image = canvas.toDataURL("image/jpeg", 0.9);
+        const maxSize = 256;
+        const scale = Math.min(
+            1,
+            maxSize / Math.max(canvas.width, canvas.height),
+        );
+        const outputCanvas = document.createElement("canvas");
+        outputCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+        outputCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+
+        const context = outputCanvas.getContext("2d");
+        if (!context) throw new Error("Unable to process profile picture.");
+
+        context.drawImage(
+            canvas,
+            0,
+            0,
+            outputCanvas.width,
+            outputCanvas.height,
+        );
+
+        const image = outputCanvas.toDataURL("image/jpeg", 0.85);
         const { error } = await authClient.updateUser({ image });
         if (error) throw new Error(error.message);
 
@@ -201,9 +221,9 @@ userStore.subscribe((mutation) => {
     }
 });
 
-const saveName = async () => {
+const saveName = async (newValue) => {
     const { error } = await authClient.updateUser({
-        name: personalInfo.fullName.value,
+        name: newValue.value,
     });
     if (!error) {
         await refreshSession();
@@ -222,7 +242,7 @@ const saveEmail = async (newValue) => {
     try {
         const { error } = await authClient.changeEmail({
             newEmail: newValue.value,
-            callbackURL: "/dash/lists",
+            callbackURL: `/dash/settings/account?emailChange=pending&email=${encodeURIComponent(newValue.value)}`,
         });
         if (!error) {
             createDialog({
@@ -256,6 +276,41 @@ const saveEmail = async (newValue) => {
         return false;
     }
 };
+
+onMounted(() => {
+    const handleEmailChangeStatus = async () => {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("emailChange") !== "pending") return;
+
+        await refreshSession();
+        const requestedEmail = url.searchParams.get("email");
+        const isConfirmed =
+            requestedEmail?.toLowerCase() === user.value?.email?.toLowerCase();
+
+        createDialog({
+            actions: [
+                {
+                    action: "close",
+                    color: "primary",
+                    text: "OK",
+                },
+            ],
+            text: isConfirmed
+                ? "Your new email address has been confirmed."
+                : "The request was approved. Check your new email inbox for the verification link.",
+            title: isConfirmed
+                ? "Email Address Updated"
+                : "Email Change Approved",
+            type: "info",
+        });
+
+        url.searchParams.delete("emailChange");
+        url.searchParams.delete("email");
+        window.history.replaceState({}, "", url);
+    };
+
+    handleEmailChangeStatus();
+});
 
 const savePassword = async (newValue) => {
     try {

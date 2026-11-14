@@ -12,11 +12,7 @@
         "useIgnoreFile": true
     },
     "files": {
-        "includes": [
-            "**",
-            "!**/*.svg",
-            "!!migrations/meta"
-        ]
+        "includes": ["**", "!**/*.svg", "!!migrations/meta"]
     },
     "formatter": {
         "enabled": true,

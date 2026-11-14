@@ -103,6 +103,13 @@ Test the email with one recipient before sending to everyone:
 pnpm op email:migration -- --email=you@example.com --send
 ```
 
+To include the early-supporter lifetime Pro offer, provide a redemption code with
+`--pro-code=CODE` (or set `MIGRATION_PRO_CODE`):
+
+```sh
+pnpm op email:migration -- --email=you@example.com --pro-code=CODE --send
+```
+
 Send the notice to all users only after verifying the preview:
 
 ```sh

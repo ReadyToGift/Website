@@ -284,6 +284,11 @@ export default {
         grid-template-columns: 1fr max-content;
         gap: 1rem;
         justify-content: space-between;
+        .item-description {
+            :deep(ul) {
+                padding-left: 1.5rem;
+            }
+        }
         .item-image {
             .v-img {
                 margin-left: auto;
