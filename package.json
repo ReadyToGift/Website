@@ -14,6 +14,7 @@
         "op": "op --account my.1password.eu run --no-masking --env-file=\"./1password.env\" -- pnpm",
         "make:lists-public-read": "node scripts/make-items-public-read.js",
         "db:migrate:appwrite": "node scripts/migrate-appwrite-to-d1.js",
+        "email:migration": "node scripts/send-migration-email.js",
         "db:generate": "drizzle-kit generate",
         "db:migrate:prod": "wrangler d1 migrations apply DB --remote",
         "db:studio:prod": "drizzle-kit studio",

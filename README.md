@@ -91,6 +91,26 @@ pnpm op db:migrate:appwrite -- --apply
 
 The migration requires the legacy `APPWRITE_*` credentials and the Cloudflare credentials from `1password.env`. Legacy password hashes cannot be transferred, so migrated users must set new passwords through Better Auth.
 
+After migration, preview the password-reset notice recipients with:
+
+```sh
+pnpm op email:migration
+```
+
+Test the email with one recipient before sending to everyone:
+
+```sh
+pnpm op email:migration -- --email=you@example.com --send
+```
+
+Send the notice to all users only after verifying the preview:
+
+```sh
+pnpm op email:migration -- --send
+```
+
+The email links to `https://readyto.gift` by default. Set `MIGRATION_SITE_URL` to use a staging URL.
+
 ### Development
 
 ```sh

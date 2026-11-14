@@ -56,6 +56,14 @@ export default {
             },
         };
     },
+    mounted() {
+        const email =
+            new URLSearchParams(window.location.search).get("email") ||
+            this.$route?.query?.email;
+        if (typeof email === "string") {
+            this.recoveryDetails.email = email.trim();
+        }
+    },
     props: {
         redirect: {
             type: String,
