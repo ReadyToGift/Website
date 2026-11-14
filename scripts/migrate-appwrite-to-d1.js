@@ -12,9 +12,10 @@ import {
     verification,
 } from "../src/auth-schema.js";
 import { autofills, fulfillments, items, lists } from "../src/schema.js";
-import { getAvatar } from "../src/utils/avatar.js";
 
 const PAGE_SIZE = 100;
+const R2_PAGE_SIZE = 1000;
+const R2_CONCURRENCY = 10;
 const TABLES = {
     lists: process.env.APPWRITE_LIST_COLLECTION || "6679a593003489f76668",
     items: process.env.APPWRITE_ITEM_COLLECTION || "6679a9ff000f53308164",
@@ -40,6 +41,22 @@ const idOf = (value) => {
     return typeof value === "object" ? value.$id || value.id || null : value;
 };
 
+const objectOf = (value) => {
+    if (!value) return {};
+    if (typeof value === "object") return value;
+    try {
+        const parsed = JSON.parse(value);
+        return parsed && typeof parsed === "object" ? parsed : {};
+    } catch {
+        return {};
+    }
+};
+
+const jsonText = (value) => {
+    if (value == null) return null;
+    return typeof value === "string" ? value : JSON.stringify(value);
+};
+
 async function listImages(storage, bucketId) {
     const files = [];
 
@@ -60,22 +77,11 @@ async function listImages(storage, bucketId) {
         if (page.files.length < PAGE_SIZE) break;
     }
 
-    const filesData = [];
-
-    for (const file of files) {
-        const fileData = await storage.getFileDownload({
-            bucketId,
-            fileId: file.$id,
-        });
-        filesData.push({
-            id: file.$id,
-            name: file.name,
-            mimeType: file.mimeType,
-            data: Buffer.from(fileData),
-        });
-    }
-
-    return filesData;
+    return files.map((file) => ({
+        id: file.$id,
+        name: file.name,
+        mimeType: file.mimeType,
+    }));
 }
 
 async function listRows(tablesDB, databaseId, tableId) {
@@ -149,6 +155,50 @@ function createR2Client() {
     const baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects`;
 
     return {
+        async list() {
+            const objects = [];
+            let cursor;
+
+            do {
+                const params = new URLSearchParams({
+                    per_page: String(R2_PAGE_SIZE),
+                });
+                if (cursor) params.set("cursor", cursor);
+
+                const response = await fetch(`${baseUrl}?${params}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(
+                        `R2 object listing failed: ${JSON.stringify(payload.errors || payload)}`,
+                    );
+                }
+
+                objects.push(...(payload.result?.objects || []));
+                cursor = payload.result?.truncated
+                    ? payload.result.cursor
+                    : null;
+            } while (cursor);
+
+            return objects;
+        },
+        async remove(id) {
+            const response = await fetch(
+                `${baseUrl}/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `R2 delete failed for ${id}: ${response.status} ${await response.text()}`,
+                );
+            }
+        },
         async upload(file) {
             const response = await fetch(
                 `${baseUrl}/${encodeURIComponent(file.id)}`,
@@ -171,6 +221,13 @@ function createR2Client() {
             }
         },
     };
+}
+
+async function inBatches(values, callback) {
+    for (let offset = 0; offset < values.length; offset += R2_CONCURRENCY) {
+        const batch = values.slice(offset, offset + R2_CONCURRENCY);
+        await Promise.all(batch.map(callback));
+    }
 }
 
 async function clearDatabase(db) {
@@ -196,6 +253,7 @@ async function migrateUsers(db, users) {
     for (const source of users) {
         const createdAt = date(source.$createdAt) || date(source.registration);
         const updatedAt = date(source.$updatedAt) || createdAt;
+
         await db
             .insert(user)
             .values({
@@ -203,9 +261,23 @@ async function migrateUsers(db, users) {
                 name: source.name || source.email,
                 email: source.email,
                 emailVerified: Boolean(source.emailVerification),
-                image: await getAvatar({
-                    name: source.name || source.email,
-                }),
+                image: null,
+                darkMode: Boolean(source.prefs.darkMode),
+                spoilSurprises: Boolean(source.prefs.spoilSurprises),
+                showTotalPrice: Boolean(source.prefs.showTotalPrice),
+                savedLists: Array.isArray(source.prefs.savedLists)
+                    ? source.prefs.savedLists
+                    : [],
+                listSorting: source.prefs.listSorting || {
+                    type: { name: "Last updated", value: "updatedAt" },
+                    order: "asc",
+                },
+                history: Array.isArray(source.prefs.history)
+                    ? source.prefs.history
+                    : [],
+                hidePWAInstallPrompt: Boolean(
+                    source.prefs.hidePWAInstallPrompt,
+                ),
                 createdAt,
                 updatedAt,
             })
@@ -237,12 +309,10 @@ async function migrateContent(db, source) {
             .values({
                 id: row.$id,
                 author: row.author,
-                authorName: row.authorName,
                 title: row.title,
                 description: row.description,
                 currency: row.currency || "USD",
                 shortUrl: row.shortUrl,
-                itemCount: row.itemCount,
                 private: row.private,
                 createdAt: date(row.$createdAt),
                 updatedAt: date(row.$updatedAt),
@@ -266,8 +336,7 @@ async function migrateContent(db, source) {
                 displayPrice: row.displayPrice ?? true,
                 list: idOf(row.list),
                 communityList: idOf(row.communityList),
-                contributorName: row.contributorName,
-                contributorId: row.contributorId,
+                contributor: row.contributor || row.contributorId || null,
                 createdAt: date(row.$createdAt),
                 updatedAt: date(row.$updatedAt),
             })
@@ -294,12 +363,12 @@ async function migrateContent(db, source) {
             .insert(autofills)
             .values({
                 id: row.$id,
-                attempt: row.attempt,
+                attempt: row.attempt ?? 0,
                 attemptStatus: row.attemptStatus,
                 status: row.status || "processing",
                 autofillURL: row.autofillURL,
                 executionTime: row.executionTime,
-                outputData: row.outputData,
+                outputData: jsonText(row.outputData),
                 totalAttempts: row.totalAttempts,
                 createdAt: date(row.$createdAt),
                 updatedAt: date(row.$updatedAt),
@@ -309,11 +378,35 @@ async function migrateContent(db, source) {
     }
 }
 
-async function migrateImages(r2, images) {
-    for (const image of images) {
-        await r2.upload(image);
-        console.log(`Migrated image ${image.id}`);
-    }
+async function migrateImages(r2, storage, bucketId, images) {
+    const sourceIds = new Set(images.map((image) => image.id));
+    const existingObjects = await r2.list();
+    const existingIds = new Set(existingObjects.map((object) => object.key));
+    const staleIds = existingObjects
+        .map((object) => object.key)
+        .filter((id) => !sourceIds.has(id));
+    const missingImages = images.filter((image) => !existingIds.has(image.id));
+
+    console.log(
+        `R2 sync: ${missingImages.length} upload(s), ${staleIds.length} deletion(s), ${images.length - missingImages.length} unchanged`,
+    );
+
+    await inBatches(staleIds, async (id) => {
+        await r2.remove(id);
+        console.log(`Removed stale image ${id}`);
+    });
+
+    await inBatches(missingImages, async (image) => {
+        const fileData = await storage.getFileDownload({
+            bucketId,
+            fileId: image.id,
+        });
+        await r2.upload({
+            ...image,
+            data: Buffer.from(fileData),
+        });
+        console.log(`Uploaded image ${image.id}`);
+    });
 }
 
 async function main() {
@@ -328,6 +421,7 @@ async function main() {
     const tablesDB = new TablesDB(client);
     const usersApi = new Users(client);
     const storage = new Storage(client);
+    const imageBucket = process.env.APPWRITE_IMAGE_BUCKET || "default";
     console.log("Reading Appwrite data...");
     const [users, source] = await Promise.all([
         listUsers(usersApi),
@@ -336,7 +430,7 @@ async function main() {
             listRows(tablesDB, databaseId, TABLES.items),
             listRows(tablesDB, databaseId, TABLES.fulfillments),
             listRows(tablesDB, databaseId, TABLES.autofills),
-            listImages(storage, process.env.APPWRITE_IMAGE_BUCKET || "default"),
+            listImages(storage, imageBucket),
         ]).then(([lists, items, fulfillments, autofills, images]) => ({
             lists,
             items,
@@ -371,7 +465,7 @@ async function main() {
     await clearDatabase(db);
     await migrateUsers(db, users);
     await migrateContent(db, source);
-    await migrateImages(r2, source.images);
+    await migrateImages(r2, storage, imageBucket, source.images);
     console.log(
         "Migration applied. Appwrite passwords were not transferable; users need to set new passwords. Image files were copied to R2.",
     );
