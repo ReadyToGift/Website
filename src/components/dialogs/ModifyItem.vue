@@ -71,18 +71,10 @@
                     <v-btn
                         :prepend-icon="mdiRobot"
                         variant="tonal"
-                        :disabled="
-                            !(
-                                modifiedItem.url &&
-                                (limits.autofill ||
-                                    autofillUsage.remainingAllowance.value !==
-                                        0)
-                            )
-                        "
+                        :disabled="!modifiedItem.url"
                         @click="autofill"
                         v-if="
-                            limits.autofill ||
-                            autofillUsage.totalAllowance.value > 0
+                            limits.autofill || autofillUsage.totalAllowance > 0
                         "
                     >
                         Autofill

@@ -299,7 +299,6 @@ export const POST = async (context) => {
             const { limits } = await getUserLimits({ user });
 
             let autofillEnabled = false;
-            let usingFreeAllowance = false;
             if (limits.autofill) {
                 autofillEnabled = true;
             }
@@ -317,7 +316,6 @@ export const POST = async (context) => {
                     AUTOFILL_FREE_ALLOWANCE > 0
                 ) {
                     autofillEnabled = true;
-                    usingFreeAllowance = true;
                 }
             }
 
@@ -405,9 +403,7 @@ export const POST = async (context) => {
                                 new Date().getTime() -
                                 autofillStartTime.getTime(),
                             outputData: autofillData,
-                            newConsumedUnits: usingFreeAllowance
-                                ? null
-                                : newConsumedUnits,
+                            newConsumedUnits,
                         });
 
                         controller.close();

@@ -185,8 +185,9 @@ const autofill = async () => {
                 if (payload.status === "completed" && payload.outputData) {
                     completed.value = true;
                     console.log(payload.outputData);
-                    if (payload.newConsumedUnits)
+                    if (payload.newConsumedUnits !== undefined) {
                         setUsedAutofillAllowance(payload.newConsumedUnits);
+                    }
                     emit("complete", JSON.stringify(payload.outputData));
                     sseClient.close();
                 }
