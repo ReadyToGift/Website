@@ -1,5 +1,6 @@
 import mjml2html from "mjml";
 import { Plunk } from "plunk-node-sdk";
+import { env } from "cloudflare:workers";
 import templateContent from "./templates/email-template.mjml?raw";
 
 const getFooter = ({ footer, contactSupportDefaultSubject }) => {
@@ -36,8 +37,11 @@ export const sendEmail = async ({
     preview,
 }) => {
     console.log(`Sending email to ${to}`);
-    const { PLUNK_BASE_URL, PLUNK_SECRET_KEY, PLUNK_SENDING_EMAIL } =
-        await import("astro:env/server");
+    const { PLUNK_BASE_URL, PLUNK_SECRET_KEY, PLUNK_SENDING_EMAIL } = env;
+    if (!PLUNK_SECRET_KEY) {
+        throw new Error("PLUNK_SECRET_KEY is not configured");
+    }
+
     const plunk = new Plunk({
         secretKey: PLUNK_SECRET_KEY,
         baseUrl: PLUNK_BASE_URL,

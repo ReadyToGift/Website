@@ -174,18 +174,6 @@ export default defineConfig({
                 access: "public",
             }),
 
-            PLUNK_SECRET_KEY: envField.string({
-                context: "server",
-                access: "secret",
-            }),
-            PLUNK_BASE_URL: envField.string({
-                context: "server",
-                access: "secret",
-            }),
-            PLUNK_SENDING_EMAIL: envField.string({
-                context: "server",
-                access: "secret",
-            }),
         },
     },
 
