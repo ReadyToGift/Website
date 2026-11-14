@@ -46,6 +46,10 @@ export default defineConfig({
                 hostname: "readyto.gift",
                 protocol: "https",
             },
+            {
+                hostname: "*.readyto.gift",
+                protocol: "https",
+            },
         ],
     },
 
@@ -173,7 +177,6 @@ export default defineConfig({
                 context: "client",
                 access: "public",
             }),
-
         },
     },
 

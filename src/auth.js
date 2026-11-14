@@ -58,7 +58,12 @@ export const auth = betterAuth({
         },
     },
     baseURL: {
-        allowedHosts: ["https://readyto.gift", "localhost:*", "[::1]:*"],
+        allowedHosts: [
+            "https://readyto.gift",
+            "localhost:*",
+            "[::1]:*",
+            "https://*.readyto.gift",
+        ],
     },
     database: drizzleAdapter(db, {
         provider: "sqlite",
