@@ -1,19 +1,24 @@
 <template>
-    <v-list-item :prepend-icon="mdiClockCheck">
-        <v-list-item-title>
-            Time-based One-Time Password (TOTP)
-        </v-list-item-title>
-        <template #append>
+    <div class="totp-factor-controls">
+        <div class="totp-factor-actions">
             <v-btn :disabled="true" v-if="loading">
                 Loading
                 <template v-slot:append>
                     <v-progress-circular indeterminate size="16" width="2" />
                 </template>
             </v-btn>
-            <v-dialog v-model="dialogOpen" persistent v-else>
+            <v-dialog
+                v-model="dialogOpen"
+                persistent
+                max-width="520"
+                width="calc(100% - 32px)"
+                v-else
+            >
                 <template v-slot:activator>
                     <v-btn
                         :icon="mdiPlusThick"
+                        aria-label="Add authenticator"
+                        title="Add authenticator"
                         color="primary"
                         variant="tonal"
                         @click="dialogOpen = true"
@@ -29,6 +34,7 @@
                     >
                         <v-btn
                             :prepend-icon="mdiTrashCan"
+                            aria-label="Remove authenticator"
                             color="error"
                             variant="tonal"
                             size="small"
@@ -69,7 +75,7 @@
                     </v-btn-group>
                 </template>
                 <template v-slot:default>
-                    <v-card>
+                    <v-card class="totp-dialog-card">
                         <v-card-title> Add TOTP Authenticator </v-card-title>
                         <v-card-text>
                             <div class="enable-mfa">
@@ -135,7 +141,7 @@
                                                     :value="totpSecret"
                                                     readonly=""
                                                     variant="outlined"
-                                                    class="mt-4"
+                                                    class="mt-4 mb-4 totp-secret"
                                                     rounded
                                                     hint="Copy this into your authenticator if you are unable to scan the above QR code!"
                                                     persistent-hint=""
@@ -250,14 +256,13 @@
                     </v-card>
                 </template>
             </v-dialog>
-        </template>
-    </v-list-item>
+        </div>
+    </div>
 </template>
 
 <script setup>
 import {
     mdiCheck,
-    mdiClockCheck,
     mdiContentCopy,
     mdiDownload,
     mdiMenuDown,
@@ -424,3 +429,37 @@ watch(totpInput, () => {
     errors[1] = null;
 });
 </script>
+
+<style lang="scss" scoped>
+.enable-mfa {
+    width: 100%;
+    min-width: 0;
+}
+
+.totp-dialog-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.enable-mfa :deep(.v-timeline),
+.enable-mfa :deep(.v-timeline-item__body),
+.enable-mfa :deep(.v-expansion-panel),
+.enable-mfa :deep(.v-expansion-panel-text__wrapper) {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.totp-qrcode {
+    display: block;
+    width: 100% !important;
+    max-width: 16rem !important;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: contain;
+}
+
+.totp-secret {
+    max-width: 100%;
+}
+</style>
