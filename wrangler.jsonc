@@ -41,6 +41,7 @@
         }
     ],
     "vars": {
+        "AUTOFILL_FREE_ALLOWANCE": "5",
         "AUTOFILL_PROXY_ATTEMPTS": "2",
         "AUTOFILL_PROXY_COUNTRY_PREFIX": "-cc-",
         "AUTOFILL_PROXY_HOST": "pr.oxylabs.io:7777",
@@ -52,7 +53,7 @@
         "CLOUDFLARE_R2_BUCKET": "readytogift",
         "CLOUDFLARE_R2_ENDPOINT": "https://storage.readyto.gift",
         "ENABLE_BILLING": "true",
-        "FREE_TIER_ENABLE_AUTOFILL": "true",
+        "FREE_TIER_ENABLE_AUTOFILL": "false",
         "FREE_TIER_ITEMS_PER_LIST": "50",
         "FREE_TIER_PRIVATE_LIST_LIMIT": "10",
         "FREE_TIER_PUBLIC_LIST_LIMIT": "5",

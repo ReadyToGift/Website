@@ -89,11 +89,10 @@
                         class="list-limit-chip"
                         v-if="list.itemCount !== null"
                     >
-                        {{ list.itemCount }}
                         {{
                             ownList && limits.itemsPerList > 0
-                                ? "/" + limits.itemsPerList
-                                : ""
+                                ? `${list.itemCount}/${limits.itemsPerList}`
+                                : `${list.itemCount}`
                         }}
                         items
                         <div class="progress" v-if="ENABLE_BILLING">
@@ -187,7 +186,7 @@
                 :class="['m-4', 'mb-8', $vuetify.display.mobile ? 'mt-4' : '']"
                 color="primary"
             >
-                <a style="color: inherit; font-weight: bold;" to="/dash/login"
+                <a style="color: inherit; font-weight: bold;" href="/dash/login"
                     >Log in</a
                 >
                 to add your own items, to avoid the list creator receiving

@@ -1,6 +1,6 @@
 import { toPng } from "@dicebear/converter";
 import { Avatar, Style } from "@dicebear/core";
-import definition from "@dicebear/styles/initials.json" with { type: "json" };
+import definition from "@dicebear/styles/moods.json" with { type: "json" };
 
 const style = new Style(definition);
 
