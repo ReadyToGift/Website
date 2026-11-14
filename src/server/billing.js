@@ -4,12 +4,9 @@ import {
     FREE_TIER_ITEMS_PER_LIST,
     FREE_TIER_PRIVATE_LIST_LIMIT,
     FREE_TIER_PUBLIC_LIST_LIMIT,
-} from "astro:env/client";
-import {
-    POLAR_ACCESS_TOKEN,
     POLAR_AUTOFILL_METER_ID,
-    POLAR_PRO_PRODUCT_ID,
-} from "astro:env/server";
+} from "astro:env/client";
+import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";
 import { getCache, setCache } from "@/server/cache";
 
@@ -17,17 +14,19 @@ const polar = createPolar({
     accessToken: POLAR_ACCESS_TOKEN,
 });
 
-export const ensurePolarCustomer = async ({ account }) => {
-    const externalId = account.id;
+export const ensurePolarCustomer = async ({ user }) => {
+    const externalId = user.id;
     try {
         return await polar.customers.getExternal(externalId);
     } catch {
-        // console.log("Customer not found, creating new one");
-        // return polar.customers.create({
-        //     email: account.email,
-        //     external_id: externalId,
-        //     name: account.name,
-        // });
+        console.log("Customer not found, creating new one");
+        return polar.customers.create({
+            individual: {
+                email: user.email,
+                external_id: externalId,
+                name: user.name,
+            },
+        });
     }
 };
 
@@ -132,30 +131,6 @@ export const getCustomerSubscriptions = async ({ externalCustomerId }) => {
     return subscriptions;
 };
 
-export const getCustomerSession = async ({ externalCustomerId }) => {
-    let session = await getCache(`polarCustomerSession:${externalCustomerId}`);
-
-    if (!session) {
-        session = await polar.customerSessions
-            .create({
-                external_customer_id: externalCustomerId,
-            })
-            .catch((error) => {
-                console.log(error);
-                throw new Error("Error getting customer session", {
-                    cause: error,
-                });
-            });
-        await setCache(
-            `polarCustomerSession:${externalCustomerId}`,
-            session,
-            55 * 60 * 1000,
-        );
-    }
-
-    return session;
-};
-
 export const getBenefitGrants = async ({ customerId }) => {
     let benefitGrants = await getCache(`polarBenefitGrants:${customerId}`);
 
@@ -186,33 +161,19 @@ export const getBenefitGrants = async ({ customerId }) => {
 };
 
 export const getUserAutofillMeter = async ({ externalCustomerId }) => {
-    let autofillMeter = await getCache(
-        `polarCustomerAutofillMeter:${externalCustomerId}`,
-    );
-
-    if (!autofillMeter) {
-        const metersResp = await polar.customerMeters
-            .list({
-                external_customer_id: externalCustomerId,
-                meter_id: POLAR_AUTOFILL_METER_ID,
-            })
-            .catch((error) => {
-                console.log(error);
-                throw new Error("Error getting autofill meter", {
-                    cause: error,
-                });
+    const metersResp = await polar.customerMeters
+        .list({
+            external_customer_id: externalCustomerId,
+            meter_id: POLAR_AUTOFILL_METER_ID,
+        })
+        .catch((error) => {
+            console.log(error);
+            throw new Error("Error getting autofill meter", {
+                cause: error,
             });
+        });
 
-        autofillMeter = metersResp.items[0];
-
-        await setCache(
-            `polarCustomerAutofillMeter:${externalCustomerId}`,
-            autofillMeter,
-            60 * 1000,
-        );
-    }
-
-    return autofillMeter;
+    return metersResp.items[0];
 };
 
 export const getProProduct = async () => {
@@ -244,7 +205,7 @@ export const getActiveSubscription = async ({ externalCustomerId }) => {
     return subscriptions.find((sub) => sub.status === "active");
 };
 
-export const getUserLimits = async ({ account }) => {
+export const getUserLimits = async ({ user }) => {
     try {
         if (!ENABLE_BILLING) {
             return {
@@ -252,7 +213,7 @@ export const getUserLimits = async ({ account }) => {
             };
         }
 
-        const customer = await ensurePolarCustomer({ account });
+        const customer = await ensurePolarCustomer({ user });
         const customerId = customer.id;
         const limits = await getLimitsForCustomer({ customerId });
         return { limits };

@@ -40,7 +40,7 @@ if (ENABLE_BILLING) {
                             slug: "pro",
                         },
                     ],
-                    successUrl: "/api/billing/pro/checkout/success",
+                    successUrl: "/dash/settings/billing?status=success",
                     authenticatedUsersOnly: true,
                 }),
                 portal(),

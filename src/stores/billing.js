@@ -5,15 +5,16 @@ import {
     FREE_TIER_ITEMS_PER_LIST,
     FREE_TIER_PRIVATE_LIST_LIMIT,
     FREE_TIER_PUBLIC_LIST_LIMIT,
+    POLAR_AUTOFILL_METER_ID,
 } from "astro:env/client";
 import { computed, map } from "nanostores";
 import { handleFetch } from "@/utils/handleFetch";
+import { authClient } from "./auth";
 import { userLists } from "./userLists";
 
 export const billing = map({
     billingLoaded: false,
     subscriptions: [],
-    session: null,
     isPro: false,
     pro: null,
     inactiveSubscription: null,
@@ -68,6 +69,60 @@ const applyLimits = ({ isPro, proLimits }) => {
     }
 };
 
+const getProLimits = (benefits = []) => {
+    const proLimits = getFreeLimits();
+
+    for (const benefit of benefits) {
+        const description = String(benefit).toLowerCase();
+        if (description.includes("autofill")) proLimits.autofill = true;
+
+        for (const [key, expression] of [
+            ["publicLists", /(unlimited|\d+)\s*public lists/],
+            ["privateLists", /(unlimited|\d+)\s*private lists/],
+            ["itemsPerList", /(unlimited|\d+)\s*items per list/],
+        ]) {
+            const match = description.match(expression);
+            if (match) {
+                proLimits[key] =
+                    match[1] === "unlimited"
+                        ? -1
+                        : Math.max(
+                              proLimits[key],
+                              Number.parseInt(match[1], 10),
+                          );
+            }
+        }
+    }
+
+    return proLimits;
+};
+
+const applyPolarState = ({ state, proProduct }) => {
+    const subscriptions = state.active_subscriptions || [];
+    const activeSubscription = subscriptions.find(
+        (subscription) => subscription.status === "active",
+    );
+    const isPro = Boolean(activeSubscription);
+    const product = proProduct
+        ? { name: "Pro", prices: [proProduct.price] }
+        : null;
+
+    billing.setKey("subscriptions", subscriptions);
+    billing.setKey("isPro", isPro);
+    billing.setKey(
+        "pro",
+        activeSubscription ? { ...activeSubscription, product } : null,
+    );
+    billing.setKey("inactiveSubscription", null);
+    setUsedAutofillAllowance(
+        state.active_meters?.find(
+            (meter) => meter.meter_id === POLAR_AUTOFILL_METER_ID,
+        )?.consumed_units ?? 0,
+    );
+    applyLimits({ isPro, proLimits: getProLimits(proProduct?.benefits) });
+    billing.setKey("billingLoaded", true);
+};
+
 export const getBillingDetails = async () => {
     console.log(ENABLE_BILLING);
     console.log(
@@ -84,44 +139,44 @@ export const getBillingDetails = async () => {
     }
 
     try {
-        const [billingResp, billingError] = await handleFetch("/api/billing");
+        const [{ data: state, error: stateError }, proProduct] =
+            await Promise.all([authClient.customer.state(), getProProduct()]);
 
-        if (billingError) {
-            console.error("Failed to fetch billing details:", billingError);
-            billing.setKey("billingLoaded", true);
-            return;
+        if (!stateError && state) {
+            applyPolarState({ state, proProduct });
+            return true;
         }
 
-        const {
-            customerSession,
-            subscriptions,
-            autofillMeter,
-            proLimits,
-            pro: isPro,
-        } = billingResp;
+        // Migrated users may not have a Polar customer yet. This fallback
+        // creates one; subsequent loads use the Better Auth Polar client.
+        const [billingResp, billingError] = await handleFetch("/api/billing");
+        if (billingError) throw billingError;
 
-        billing.setKey("session", customerSession);
+        const subscriptions = billingResp.subscriptions || [];
+        const isPro = Boolean(billingResp.pro);
         billing.setKey("subscriptions", subscriptions);
         billing.setKey("isPro", isPro);
-
-        setUsedAutofillAllowance(autofillMeter?.consumed_units ?? 0);
-
-        applyLimits({ isPro, proLimits });
-
-        const activeSubscription = subscriptions.find(
-            (sub) => sub.status === "active",
+        billing.setKey(
+            "pro",
+            subscriptions.find(
+                (subscription) => subscription.status === "active",
+            ),
         );
-        billing.setKey("pro", activeSubscription);
-
-        const inactiveSubscription = subscriptions.find(
-            (sub) => sub.status === "canceled",
+        billing.setKey(
+            "inactiveSubscription",
+            subscriptions.find(
+                (subscription) => subscription.status === "canceled",
+            ),
         );
-        billing.setKey("inactiveSubscription", inactiveSubscription);
+        setUsedAutofillAllowance(
+            billingResp.autofillMeter?.consumed_units ?? 0,
+        );
+        applyLimits({ isPro, proLimits: billingResp.proLimits });
         billing.setKey("billingLoaded", true);
         return true;
-    } catch {
+    } catch (error) {
+        console.error("Failed to fetch billing details:", error);
         billing.setKey("billingLoaded", true);
-
         return false;
     }
 };
@@ -140,22 +195,6 @@ export const init = async () => {
     }
 };
 
-export const getProCheckout = async () => {
-    const [proCheckout, proCheckoutError] = await handleFetch(
-        "/api/billing/pro/checkout",
-        {
-            method: "POST",
-        },
-    );
-
-    if (proCheckoutError) {
-        console.error("Failed to fetch Pro checkout:", proCheckoutError);
-        return;
-    }
-
-    return proCheckout.url;
-};
-
 export const getProProduct = async () => {
     const [proProduct, proProductError] = await handleFetch("/api/billing/pro");
 
@@ -169,6 +208,11 @@ export const getProProduct = async () => {
     } else {
         throw new Error(proProduct.error || "Failed to fetch Pro pricing");
     }
+};
+
+export const refreshBilling = async () => {
+    billing.setKey("billingLoaded", false);
+    return getBillingDetails();
 };
 
 export const publicListLimitReached = computed(
@@ -199,8 +243,8 @@ export default {
     billing,
     limits,
     init,
-    getProCheckout,
     getProProduct,
+    refreshBilling,
     publicListLimitReached,
     privateListLimitReached,
     autofillUsage,

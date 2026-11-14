@@ -18,36 +18,16 @@ if (REDIS_HOST) {
 
 export const setCache = async (key, value, ttl) => {
     try {
+        const exp = Date.now() + ttl;
+        const serialized = JSON.stringify({ data: value, ttl, exp });
         if (redis) {
-            await redis.set(
-                key,
-                JSON.stringify({
-                    data: value,
-                    ttl,
-                    exp: Date().now + ttl,
-                }),
-                {
-                    EX: ttl / 1000,
-                },
-            );
+            await redis.set(key, serialized, { EX: Math.ceil(ttl / 1000) });
         } else if (cloudflareKV) {
-            await cloudflareKV.put(
-                key,
-                JSON.stringify({
-                    data: value,
-                    ttl,
-                    exp: Date().now + ttl,
-                }),
-            );
+            await cloudflareKV.put(key, serialized, {
+                expirationTtl: Math.ceil(ttl / 1000),
+            });
         } else {
-            fallbackCache.set(
-                key,
-                JSON.stringify({
-                    data: value,
-                    ttl,
-                    exp: Date().now + ttl,
-                }),
-            );
+            fallbackCache.set(key, serialized);
         }
         console.log(`Set ${key} in cache`);
     } catch (err) {
@@ -69,9 +49,10 @@ export const getCache = async (key) => {
         if (value) {
             value = JSON.parse(value);
 
-            if (value.exp < Date().now) {
+            if (value.exp <= Date.now()) {
                 value = null;
                 console.log(`${key} expired`);
+                if (fallbackCache.has(key)) fallbackCache.delete(key);
             } else {
                 console.log(`Got ${key} from cache`);
                 return value.data;

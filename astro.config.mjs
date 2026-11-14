@@ -138,8 +138,8 @@ export default defineConfig({
                 optional: true,
             }),
             POLAR_AUTOFILL_METER_ID: envField.string({
-                context: "server",
-                access: "secret",
+                context: "client",
+                access: "public",
                 optional: true,
             }),
             POLAR_PRO_PRODUCT_ID: envField.string({

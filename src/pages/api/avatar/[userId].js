@@ -1,19 +1,23 @@
 import { eq } from "drizzle-orm";
-import { user } from "@/auth-schema";
+import { user as userTable } from "@/auth-schema";
 import { db } from "@/db";
 import { getAvatar } from "@/utils/avatar";
 
 export const GET = async ({ params }) => {
-    const [account] = await db
-        .select({ image: user.image, name: user.name, email: user.email })
-        .from(user)
-        .where(eq(user.id, params.userId))
+    const [user] = await db
+        .select({
+            image: userTable.image,
+            name: userTable.name,
+            email: userTable.email,
+        })
+        .from(userTable)
+        .where(eq(userTable.id, params.userId))
         .limit(1);
 
-    if (!account) return new Response("Not found", { status: 404 });
+    if (!user) return new Response("Not found", { status: 404 });
 
-    if (account.image?.startsWith("data:")) {
-        const [metadata, encodedData] = account.image.split(",", 2);
+    if (user.image?.startsWith("data:")) {
+        const [metadata, encodedData] = user.image.split(",", 2);
         const contentType =
             metadata.match(/^data:([^;]+)/)?.[1] || "image/jpeg";
         const body = metadata.includes(";base64")
@@ -30,12 +34,12 @@ export const GET = async ({ params }) => {
         });
     }
 
-    if (account.image?.startsWith("http")) {
-        return Response.redirect(account.image, 302);
+    if (user.image?.startsWith("http")) {
+        return Response.redirect(user.image, 302);
     }
 
     const dataUri = getAvatar({
-        name: account.name || account.email,
+        name: user.name || user.email,
         type: "svg",
     });
     const [, encodedSvg] = dataUri.split(",", 2);

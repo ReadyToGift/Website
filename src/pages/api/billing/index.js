@@ -4,7 +4,6 @@ import { ENABLE_BILLING } from "astro:env/client";
 import { requireAuth } from "@/auth";
 import {
     ensurePolarCustomer,
-    getCustomerSession,
     getCustomerSubscriptions,
     getLimits,
     getProProduct,
@@ -37,22 +36,19 @@ export const GET = async (context) => {
             );
         }
 
-        const { unauthorizedResponse, user: account } = requireAuth(context);
+        const { unauthorizedResponse, user } = requireAuth(context);
         if (unauthorizedResponse) return unauthorizedResponse;
-        await ensurePolarCustomer({ account });
+        await ensurePolarCustomer({ user });
 
-        const [customerSession, subscriptions, autofillMeter] =
-            await Promise.all([
-                getCustomerSession({ externalCustomerId: account.id }),
-                getCustomerSubscriptions({ externalCustomerId: account.id }),
-                getUserAutofillMeter({ externalCustomerId: account.id }),
-            ]);
+        const [subscriptions, autofillMeter] = await Promise.all([
+            getCustomerSubscriptions({ externalCustomerId: user.id }),
+            getUserAutofillMeter({ externalCustomerId: user.id }),
+        ]);
 
         const hasPro = subscriptions.some((sub) => sub.status === "active");
 
         return new Response(
             JSON.stringify({
-                customerSession,
                 subscriptions,
                 autofillMeter,
                 proLimits: await getProLimits(),

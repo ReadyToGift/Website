@@ -177,7 +177,7 @@ const getPreview = async ({
                 );
             }
 
-            if (data.images && data.images.length) {
+            if (data?.images?.length) {
                 await updateStatus({
                     attemptStatus: "finding-best-image",
                 });
@@ -186,8 +186,6 @@ const getPreview = async ({
                     site,
                     fetchOptions,
                 });
-
-                totalBandwidth += bestImageResult.fetchedSize || 0;
 
                 totalBandwidth += bestImageResult.fetchedSize || 0;
 
@@ -270,8 +268,6 @@ export const POST = async (context) => {
             const { url, currency, itemID } = await context.request.json();
 
             const userID = user.id;
-            const account = { $id: user.id };
-
             if (!url) {
                 return new Response(
                     JSON.stringify({
@@ -300,7 +296,7 @@ export const POST = async (context) => {
                 );
             }
 
-            const { limits } = await getUserLimits({ account });
+            const { limits } = await getUserLimits({ user });
 
             let autofillEnabled = false;
             let usingFreeAllowance = false;
@@ -312,9 +308,9 @@ export const POST = async (context) => {
 
             if (ENABLE_BILLING && !autofillEnabled) {
                 const autofillMeter = await getUserAutofillMeter({
-                    externalCustomerId: account.$id,
+                    externalCustomerId: user.id,
                 });
-                consumedUnits = autofillMeter.consumed_units;
+                consumedUnits = autofillMeter?.consumed_units ?? 0;
 
                 if (
                     consumedUnits < AUTOFILL_FREE_ALLOWANCE &&

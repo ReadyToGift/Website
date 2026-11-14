@@ -129,12 +129,7 @@
                             </v-btn>
                             <v-btn
                                 :loading="!billing.billingLoaded"
-                                :href="
-                                    billing.session
-                                        ? billing.session.customer_portal_url
-                                        : ''
-                                "
-                                target="_blank"
+                                @click="openPortal"
                                 v-else
                             >
                                 Downgrade
@@ -143,7 +138,7 @@
                         <td>
                             <v-btn
                                 :loading="proCheckoutLoading"
-                                :href="proCheckoutURL || undefined"
+                                @click="checkoutPro"
                                 v-if="!billing.isPro"
                             >
                                 Upgrade to Pro
@@ -240,12 +235,14 @@
                 </v-skeleton-loader>
             </v-card-subtitle>
             <v-card-text>
-                <v-skeleton-loader type="button"> </v-skeleton-loader>
+                <v-skeleton-loader
+                    type="button"
+                    :loading="!billing.billingLoaded"
+                >
+                    <v-btn @click="openPortal"> Open billing portal </v-btn>
+                </v-skeleton-loader>
             </v-card-text>
         </v-card>
-        <v-btn @click="authClient.customer.portal()">
-            Open billing portal
-        </v-btn>
         <v-alert
             v-if="billingDetailsFailure"
             type="error"
@@ -271,23 +268,11 @@ import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import { onMounted, shallowRef } from "vue";
-import {
-    VAlert,
-    VBtn,
-    VCard,
-    VCardSubtitle,
-    VCardText,
-    VCardTitle,
-    VChip,
-    VProgressCircular,
-    VSkeletonLoader,
-} from "vuetify/components";
 import { authClient } from "@/stores/auth";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
     getBillingDetails,
-    getProCheckout,
     getProProduct,
     init as initBilling,
 } from "@/stores/billing";
@@ -297,7 +282,6 @@ const billing = useStore(billingStore);
 const allLimits = useStore(allLimitsStore);
 
 const proCheckoutLoading = shallowRef(false);
-const proCheckoutURL = shallowRef("");
 
 const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
@@ -329,7 +313,7 @@ const loadProPrice = async () => {
         );
 
         proLoading.value = false;
-        proPrice.value = formattedPrice + "/" + price.recurring_interval;
+        proPrice.value = `${formattedPrice}/${price.recurring_interval}`;
 
         return proPrice.value;
     } catch (error) {
@@ -337,6 +321,19 @@ const loadProPrice = async () => {
         proLoading.value = false;
         return "Error fetching pricing";
     }
+};
+
+const checkoutPro = async () => {
+    proCheckoutLoading.value = true;
+    try {
+        await authClient.checkout({ slug: "pro" });
+    } finally {
+        proCheckoutLoading.value = false;
+    }
+};
+
+const openPortal = async () => {
+    await authClient.customer.portal();
 };
 
 const formatDate = (timestamp) => {
@@ -348,32 +345,8 @@ const formatDate = (timestamp) => {
     });
 };
 
-const getProCheckoutURL = async () => {
-    proCheckoutLoading.value = true;
-    try {
-        proCheckoutURL.value = await getProCheckout();
-        proCheckoutLoading.value = false;
-    } catch (error) {
-        proCheckoutLoading.value = false;
-        console.error(error);
-
-        createDialog({
-            title: "Error getting checkout",
-            text: "Please try again later",
-            actions: [
-                {
-                    action: "close",
-                    color: "primary",
-                    text: "OK",
-                },
-            ],
-        });
-    }
-};
-
 onMounted(async () => {
     loadProPrice();
-    getProCheckoutURL();
     const billingDetailsResp = await getBillingDetails();
     if (billingDetailsResp === false) billingDetailsFailure.value = true;
 

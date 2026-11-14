@@ -11,7 +11,7 @@ export const prerender = false;
 const getListUsage = async ({ user }) => {
     const userID = user.id;
     const { limits } = await getUserLimits({
-        account: user,
+        user,
     });
 
     const userLists = await db

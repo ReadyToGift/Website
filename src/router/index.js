@@ -51,10 +51,6 @@ if (!import.meta.env.SSR) {
                     import("@/pages/dash/_views/recovery/CompleteRecovery.vue"),
             },
             {
-                path: "/dash/verify",
-                component: () => import("@/pages/dash/_views/VerifyPage.vue"),
-            },
-            {
                 path: "/:pathMatch(.*)",
                 component: () => import("@/pages/404/_NotFound.vue"),
             },
