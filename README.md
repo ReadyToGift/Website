@@ -13,11 +13,10 @@ This is a simple Wishlist app, to keep track of things you'd like. If anyone buy
 
 ## Stack
 
-- Frontend: Vue (w/ Vite) + Pinia + Vuetify
+- Frontend: Astro + Vue + NanoStores + Vuetify
   - Familiar, nicely reactive and wanted to try out something like Vuetify - also means I didn't need to design this beforehand.
   - This isn't the most performant app. I could've gone with a more efficient setup, maybe making use of SSR, but this is a simple app that I'll only use a few times a year.
-- Backend: Appwrite
-  - It's a decent backend that I've wanted to use properly for a while and I didn't want to spend an eternity setting one up myself for this project.
+- Backend: Astro + Cloudflare D1, R2, KV, and Better Auth
 
 ## Features
 
@@ -25,82 +24,88 @@ This is a simple Wishlist app, to keep track of things you'd like. If anyone buy
 - Multiple lists
 - Items can be marked as purchased
 - Author can choose to see what has been purchased or not
-- Multiple currency support (whatever Appwrite supports), can be set per list
+- Multiple currency support, configurable per list
 
-# Setup
+## Setup
 
-## Installation
+### Requirements
 
-Get Appwrite running. You can do this by following the instructions on the [Appwrite website](https://appwrite.io/docs/installation).
+The project requires Node.js 22 and pnpm.
 
-## Project initialisation
-
-Install dependencies for this project:
+Install the dependencies with:
 
 ```sh
 pnpm install
 ```
 
-Push `appwrite.json\ ` to your Appwrite instance
+### Environment
 
-You then need to set up the authentication settings depending on your preferences.
+Runtime configuration is provided through environment variables. The main groups are:
 
-Then, move the created `output.env` file to `.env`.
+- `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL` for authentication
+- `CLOUDFLARE_*` variables for D1 and R2
+- `PLUNK_*` variables for transactional email
+- `POLAR_*` variables and `ENABLE_BILLING` for billing
+- `FREE_TIER_*` variables for usage limits
+- `UMAMI_*` variables for optional analytics
 
-You can also set the below options in the `.env` file:
-
-- `VITE_LOGIN_METHODS`: github,password
-  - Currently only supports the above options. Both need to be set up within Appwrite.
-- `VITE_UMAMI_URL`: https://analytics.example.com/script.js
-- `VITE_UMAMI_ID`: f79676da-d2c5-49dd-a35b-f829764b44c5
-- `VITE_UMAMI_DOMAINS`: example.com
-
-## Appwrite App config
-
-Then, create a "Web" app within Appwrite, to your liking.
-
-It should then all be set up and ready to go.
-
-Just build it and deploy it to wherever you want. It doesn't need any backup setup (other than Appwrite), but you will need SPA support for vue-router.
-
-## Project Setup
+For local development, create a `.env` file with the required values. This repository also includes an `op` wrapper for loading secrets from 1Password:
 
 ```sh
-pnpm install
+pnpm op dev
 ```
 
-### Migrating from Appwrite to D1
+The `op` command expects the relevant secret references in `1password.env`.
 
-The migration script copies Appwrite users, lists, items, fulfillments, and autofill records into the current D1 schema using Drizzle ORM. It preserves Appwrite IDs and timestamps and is a dry run by default:
+### Database and deployment
+
+Generate a Drizzle migration after schema changes with:
+
+```sh
+pnpm db:generate
+```
+
+Apply D1 migrations remotely with:
+
+```sh
+pnpm db:migrate:prod
+```
+
+Build and run the production preview with:
+
+```sh
+pnpm build
+pnpm preview
+```
+
+The application is designed for deployment on Cloudflare using the Astro Cloudflare adapter.
+
+### Migrating legacy data
+
+The one-time migration script copies users, lists, items, fulfillments, autofill records, and images from the legacy Appwrite instance into the current D1/R2 schema. It preserves legacy IDs and timestamps and is a dry run by default:
 
 ```sh
 pnpm op db:migrate:appwrite
 pnpm op db:migrate:appwrite -- --apply
 ```
 
-The command needs the existing `APPWRITE_*` and Cloudflare credentials from `1password.env`. Appwrite does not expose password hashes, so migrated users must set new passwords through the new authentication system.
+The migration requires the legacy `APPWRITE_*` credentials and the Cloudflare credentials from `1password.env`. Legacy password hashes cannot be transferred, so migrated users must set new passwords through Better Auth.
 
-### Compile and Hot-Reload for Development
+### Development
 
 ```sh
 pnpm dev
 ```
 
-### Compile and Minify for Production
+Run the formatter and linter with:
 
 ```sh
-pnpm build
+pnpm exec biome check .
 ```
 
-### Format with [Prettier](https://prettier.io/) and lint with [ESLint](https://eslint.org/)
+## Billing
 
-```sh
-pnpm format && pnpm lint
-```
-
-# Billing
-
-This project features a billing system which is disabled.
+Billing is controlled by `ENABLE_BILLING`. When enabled, checkout and subscription management use Polar through Better Auth.
 
 You can change the limits using the following:
 
@@ -114,7 +119,7 @@ You can change the limits using the following:
   How many items can be in a list.
   Set to `-1` for unlimited.
 - `FREE_TIER_ENABLE_AUTOFILL`
-  Wether to allow autofill. Set to `true` to allow it, `false` to disable it. Autofill is where the app will try to fill in item details (like name and image) based on a URL.
+  Whether to allow autofill. Set to `true` to allow it, `false` to disable it. Autofill tries to fill in item details such as the name and image from a URL.
 
 # License
 

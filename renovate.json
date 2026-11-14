@@ -17,8 +17,8 @@
             "minimumReleaseAge": "7 days"
         },
         {
-            "matchPackageNames": ["appwrite", "node-appwrite"],
-            "groupName": "Appwrite"
+            "matchPackageNames": ["node-appwrite"],
+            "groupName": "Migration tooling"
         },
         {
             "matchPackageNames": ["astro", "/^@astrojs\\//"],

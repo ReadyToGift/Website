@@ -37,7 +37,6 @@
         "@sentry/vue": "^10.78.0",
         "@splidejs/vue-splide": "^0.6.12",
         "abort-controller": "^3.0.0",
-        "appwrite": "^21.5.0",
         "astro": "^7.4.7",
         "better-auth": "^1.7.18",
         "cheerio": "^1.2.0",

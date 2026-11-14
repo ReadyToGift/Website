@@ -57,7 +57,6 @@
 
 <script>
 import { mdiAlert, mdiDelete } from "@mdi/js";
-import { AppwriteException } from "appwrite";
 import {
     VAlert,
     VBtn,
@@ -144,17 +143,10 @@ export default {
                 this.loading = false;
             } catch (e) {
                 console.log(e);
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error",
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error",
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error",
+                };
                 this.loading = false;
                 return;
             }

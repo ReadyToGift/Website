@@ -675,11 +675,6 @@ export default {
 
                 let fileExt = mime.extension(imageBlob.type) || "png";
 
-                if (fileExt === "webp") {
-                    // Leave webp as is, due to https://github.com/appwrite/appwrite/issues/10699
-                    return;
-                }
-
                 const imageFile = new File([imageBlob], `image.${fileExt}`, {
                     type: imageBlob.type,
                 });

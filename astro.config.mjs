@@ -102,36 +102,6 @@ export default defineConfig({
                 default: false,
             }),
 
-            // Legacy Appwrite values still used by the transitional routes/UI.
-            APPWRITE_ENDPOINT: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_PROJECT: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_DB: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_LIST_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_ITEM_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_FULFILLMENT_COLLECTION: envField.string({
-                context: "client",
-                access: "public",
-            }),
-            APPWRITE_IMAGE_BUCKET: envField.string({
-                context: "client",
-                access: "public",
-            }),
-
             POLAR_ACCESS_TOKEN: envField.string({
                 context: "server",
                 access: "secret",
@@ -215,16 +185,6 @@ export default defineConfig({
             CLOUDFLARE_R2_ENDPOINT: envField.string({
                 context: "client",
                 access: "public",
-            }),
-
-            APPWRITE_KEY: envField.string({
-                context: "server",
-                access: "secret",
-            }),
-            APPWRITE_DEV_KEY: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
             }),
 
             PLUNK_SECRET_KEY: envField.string({
