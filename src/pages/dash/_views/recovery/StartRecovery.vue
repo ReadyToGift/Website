@@ -1,9 +1,7 @@
 <template>
     <div class="page-content">
         <h1>Start Recovery</h1>
-        <div
-            class="recovery"
-        >
+        <div class="recovery">
             <v-form @submit.prevent="startRecovery">
                 <v-text-field
                     v-model="recoveryDetails.email"
@@ -11,11 +9,9 @@
                     type="email"
                     autofocus
                 />
-                <v-btn
-                    type="submit"
-                    color="primary"
-                    :loading="loadingRecovery"
-                >Start</v-btn>
+                <v-btn type="submit" color="primary" :loading="loadingRecovery"
+                    >Start</v-btn
+                >
             </v-form>
             <v-alert
                 :type="alert.type || 'error'"
@@ -29,7 +25,9 @@
             />
             <p>
                 Remember your login?
-                <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
+                <router-link :to="{ path: '/dash/login', query: { redirect } }"
+                    >Login here</router-link
+                >
             </p>
         </div>
     </div>
@@ -38,15 +36,14 @@
 <script>
 import { mdiAlert, mdiGithub } from "@mdi/js";
 import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
-import { account } from "@/appwrite";
-import { LOGIN_METHODS } from "astro:env/client";
+import { authClient } from "@/stores/auth";
 
 export default {
     components: {
         VForm,
         VTextField,
         VBtn,
-        VAlert
+        VAlert,
     },
     data() {
         return {
@@ -54,43 +51,51 @@ export default {
             loadingRecovery: false,
             mdiAlert,
             mdiGithub,
-            methods: LOGIN_METHODS
-                ? LOGIN_METHODS.split(",")
-                : [],
             recoveryDetails: {
-                email: ""
-            }
+                email: "",
+            },
         };
+    },
+    mounted() {
+        const email =
+            new URLSearchParams(window.location.search).get("email") ||
+            this.$route?.query?.email;
+        if (typeof email === "string") {
+            this.recoveryDetails.email = email.trim();
+        }
     },
     props: {
         redirect: {
             type: String,
-            default: "/dash/lists"
-        }
+            default: "/dash/lists",
+        },
     },
     methods: {
         async startRecovery() {
             this.alert = false;
             this.loadingRecovery = true;
-            try {
-                await account.createRecovery(
-                    this.recoveryDetails.email,
-                    "https://readyto.gift/dash/recovery/complete"
-                );
+            const { error } = await authClient.requestPasswordReset({
+                email: this.recoveryDetails.email,
+                redirectTo: `/dash/recovery/complete`,
+            });
+
+            this.loadingRecovery = false;
+
+            if (error) {
+                this.alert = {
+                    title: "Login Failed",
+                    text: error.message || "Login failed.",
+                    type: "error",
+                };
+            } else {
                 this.alert = {
                     text: "Recovery email sent",
                     title: "Success",
-                    type: "success"
-                };
-            } catch (error) {
-                this.alert = {
-                    text: error.message,
-                    title: "Error"
+                    type: "success",
                 };
             }
-            this.loadingRecovery = false;
-        }
-    }
+        },
+    },
 };
 </script>
 

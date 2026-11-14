@@ -1,11 +1,11 @@
 // Modifed from https://github.com/OP-Engineering/link-preview-js
-import * as cheerio from "cheerio";
+
 import AbortController from "abort-controller";
+import * as cheerio from "cheerio";
 import fetch from "cross-fetch";
+import urlObj from "url";
 import { CONSTANTS } from "./constants.js";
 import getSite from "./get-site.js";
-import urlObj from "url";
-
 
 function throwOnLoopback(address) {
     if (CONSTANTS.REGEX_LOOPBACK.test(address)) {
@@ -84,7 +84,7 @@ function getImages(doc, rootUrl, imagesPropertyType) {
                     src = urlObj.resolve(rootUrl, src);
                     images.push({
                         src,
-                        location: "meta"
+                        location: "meta",
                     });
                 }
             }
@@ -96,10 +96,12 @@ function getImages(doc, rootUrl, imagesPropertyType) {
         src = doc("link[rel=image_src]").attr("href");
         if (src) {
             src = urlObj.resolve(rootUrl, src);
-            images = [{
-                src,
-                location: "link"
-            }];
+            images = [
+                {
+                    src,
+                    location: "link",
+                },
+            ];
         } else {
             nodes = [];
             if (site === "amazon") {
@@ -122,7 +124,7 @@ function getImages(doc, rootUrl, imagesPropertyType) {
                         dic[src] = true;
                         images.push({
                             src: urlObj.resolve(rootUrl, src),
-                            location: "img"
+                            location: "img",
                         });
                     }
                 });
@@ -136,13 +138,23 @@ function getImages(doc, rootUrl, imagesPropertyType) {
 function getPrice(doc, url) {
     const site = getSite(url);
 
-    const metaTagPrice = metaTagContent(doc, "og:price:amount", "property") || metaTagContent(doc, "product:price:amount", "property");
+    const metaTagPrice =
+        metaTagContent(doc, "og:price:amount", "property") ||
+        metaTagContent(doc, "product:price:amount", "property");
     if (metaTagPrice) return { price: parseFloat(metaTagPrice) };
 
     if (site === "amazon") {
         const currency = doc("span.a-price-symbol").first().text();
-        const wholePriceText = doc("span.a-price-whole").first().contents().first().text();
-        const fractionPriceText = doc("span.a-price-fraction").first().contents().first().text();
+        const wholePriceText = doc("span.a-price-whole")
+            .first()
+            .contents()
+            .first()
+            .text();
+        const fractionPriceText = doc("span.a-price-fraction")
+            .first()
+            .contents()
+            .first()
+            .text();
 
         const wholePrice = parseInt(wholePriceText, 10);
         const fractionPrice = parseFloat(`0.${fractionPriceText}`);
@@ -157,9 +169,9 @@ function getPrice(doc, url) {
             ".pd__cost__retail-price",
             ".price",
             ".price-tag",
-            "[class*=\"price\"]",
-            "[id*=\"price\"]",
-            "[class*=\"amount\"]"
+            '[class*="price"]',
+            '[id*="price"]',
+            '[class*="amount"]',
         ];
 
         pricePatterns.forEach((pattern) => {
@@ -172,14 +184,15 @@ function getPrice(doc, url) {
                 element = doc(element);
                 if (element && element.length) {
                     const text = element.text();
-                    if (!text.includes(" / month")) { // Mostly for steam, but should be useful for others anyway
+                    if (!text.includes(" / month")) {
+                        // Mostly for steam, but should be useful for others anyway
                         const priceMatch = text.match(
-                            /(\d{1,3}(,\d{3})*(\.\d{2})?)/
+                            /(\d{1,3}(,\d{3})*(\.\d{2})?)/,
                         );
                         if (priceMatch) {
                             const extractedPrice = priceMatch[0].replace(
                                 /,/g,
-                                ""
+                                "",
                             );
                             price = parseFloat(extractedPrice);
                             const currencyMatch = text.match(/[^\d.,\s]+/);
@@ -250,7 +263,7 @@ function getVideos(doc) {
                 secureUrl: videoSecureUrl,
                 type: videoType,
                 width,
-                height
+                height,
             };
             if (videoType && videoType.indexOf("video/") === 0) {
                 videos.splice(0, 0, videoObj);
@@ -276,8 +289,8 @@ function getFavicons(doc, rootUrl) {
 
     const relSelectors = [
         "rel=icon",
-        "rel=\"shortcut icon\"",
-        "rel=apple-touch-icon"
+        'rel="shortcut icon"',
+        "rel=apple-touch-icon",
     ];
 
     relSelectors.forEach((relSelector) => {
@@ -309,7 +322,7 @@ function parseImageResponse(url, contentType) {
         url,
         mediaType: "image",
         contentType,
-        favicons: [getDefaultFavicon(url)]
+        favicons: [getDefaultFavicon(url)],
     };
 }
 
@@ -318,7 +331,7 @@ function parseAudioResponse(url, contentType) {
         url,
         mediaType: "audio",
         contentType,
-        favicons: [getDefaultFavicon(url)]
+        favicons: [getDefaultFavicon(url)],
     };
 }
 
@@ -327,7 +340,7 @@ function parseVideoResponse(url, contentType) {
         url,
         mediaType: "video",
         contentType,
-        favicons: [getDefaultFavicon(url)]
+        favicons: [getDefaultFavicon(url)],
     };
 }
 
@@ -336,7 +349,7 @@ function parseApplicationResponse(url, contentType) {
         url,
         mediaType: "application",
         contentType,
-        favicons: [getDefaultFavicon(url)]
+        favicons: [getDefaultFavicon(url)],
     };
 }
 
@@ -353,7 +366,7 @@ function parseTextResponse(body, url, options = {}, contentType) {
         images: getImages(doc, url, options.imagesPropertyType),
         videos: getVideos(doc),
         favicons: getFavicons(doc, url),
-        price: getPrice(doc, url)
+        price: getPrice(doc, url),
     };
 }
 
@@ -376,7 +389,7 @@ function parseResponse(response, options) {
             contentTypeTokens = contentType.split(";");
             contentType = contentTypeTokens[0];
 
-            for (let token of contentTypeTokens) {
+            for (const token of contentTypeTokens) {
                 if (token.indexOf("charset=") !== -1) {
                     charset = token.split("=")[1];
                 }
@@ -387,21 +400,21 @@ function parseResponse(response, options) {
         if (CONSTANTS.REGEX_CONTENT_TYPE_IMAGE.test(contentType)) {
             return {
                 ...parseImageResponse(response.url, contentType),
-                charset
+                charset,
             };
         }
 
         if (CONSTANTS.REGEX_CONTENT_TYPE_AUDIO.test(contentType)) {
             return {
                 ...parseAudioResponse(response.url, contentType),
-                charset
+                charset,
             };
         }
 
         if (CONSTANTS.REGEX_CONTENT_TYPE_VIDEO.test(contentType)) {
             return {
                 ...parseVideoResponse(response.url, contentType),
-                charset
+                charset,
             };
         }
 
@@ -412,16 +425,16 @@ function parseResponse(response, options) {
                     htmlString,
                     response.url,
                     options,
-                    contentType
+                    contentType,
                 ),
-                charset
+                charset,
             };
         }
 
         if (CONSTANTS.REGEX_CONTENT_TYPE_APPLICATION.test(contentType)) {
             return {
                 ...parseApplicationResponse(response.url, contentType),
-                charset
+                charset,
             };
         }
 
@@ -429,11 +442,11 @@ function parseResponse(response, options) {
 
         return {
             ...parseUnknownResponse(htmlString, response.url, options),
-            charset
+            charset,
         };
     } catch (e) {
         throw new Error(
-            `link-preview-js could not fetch link information ${e.toString()}`
+            `link-preview-js could not fetch link information ${e.toString()}`,
         );
     }
 }
@@ -456,14 +469,15 @@ export async function getLinkPreview({ url }, fetchOptions) {
         .find((token) => CONSTANTS.REGEX_VALID_URL.test(token));
 
     if (!detectedUrl) {
-        throw new Error(
-            "Invalid URL"
-        );
+        throw new Error("Invalid URL");
     }
 
-    if (fetchOptions?.followRedirects === "manual" && !fetchOptions?.handleRedirects) {
+    if (
+        fetchOptions?.followRedirects === "manual" &&
+        !fetchOptions?.handleRedirects
+    ) {
         throw new Error(
-            "link-preview-js followRedirects is set to manual, but no handleRedirects function was provided"
+            "link-preview-js followRedirects is set to manual, but no handleRedirects function was provided",
         );
     }
 
@@ -517,7 +531,7 @@ export async function getLinkPreview({ url }, fetchOptions) {
 
     if (response.status >= 400) {
         throw new Error(
-            `Failed to retrieve website content, status code: ${response.status}`
+            `Failed to retrieve website content, status code: ${response.status}`,
         );
     }
 
@@ -531,18 +545,22 @@ export async function getLinkPreview({ url }, fetchOptions) {
             ? response.url.replace(fetchOptions.proxyUrl, "")
             : response.url,
         headers,
-        data: await response.text()
+        data: await response.text(),
     };
 
     const parsedResponse = parseResponse(normalizedResponse, fetchOptions);
 
-    if (!parsedResponse || parsedResponse.title === "" || (parsedResponse.images && parsedResponse.images.length === 0)) {
+    if (
+        !parsedResponse ||
+        parsedResponse.title === "" ||
+        (parsedResponse.images && parsedResponse.images.length === 0)
+    ) {
         throw new Error("Could not extract link preview data");
     }
 
     return {
         ...parsedResponse,
-        size: response.headers.get("content-length")
+        size: response.headers.get("content-length"),
     };
 }
 
@@ -555,15 +573,11 @@ export async function getLinkPreview({ url }, fetchOptions) {
  */
 export async function getPreviewFromContent(response, options) {
     if (!response || typeof response !== "object") {
-        throw new Error(
-            "Did not receive a valid response object"
-        );
+        throw new Error("Did not receive a valid response object");
     }
 
     if (!response.url) {
-        throw new Error(
-            "Invalid URL"
-        );
+        throw new Error("Invalid URL");
     }
 
     return parseResponse(response, options);

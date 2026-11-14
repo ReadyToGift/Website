@@ -28,7 +28,8 @@
                     type="submit"
                     color="primary"
                     :loading="loadingRegistration"
-                >Register</v-btn>
+                    >Register</v-btn
+                >
             </v-form>
             <v-alert
                 :type="alert.type || 'error'"
@@ -43,114 +44,81 @@
         </div>
         <p>
             Already have an account?
-            <router-link :to="{ path: '/dash/login', query: { redirect } }">Login here</router-link>
+            <router-link :to="{ path: '/dash/login', query: { redirect } }"
+                >Login here</router-link
+            >
         </p>
     </div>
 </template>
 
-<script>
+<script setup>
 import { mdiAlert, mdiInformation } from "@mdi/js";
-import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
-import { account } from "@/appwrite";
-import { ID } from "appwrite";
+import { reactive, shallowRef } from "vue";
+import { authClient } from "@/stores/auth";
 
-export default {
-    components: {
-        VForm,
-        VTextField,
-        VBtn,
-        VAlert
+const props = defineProps({
+    redirect: {
+        type: String,
+        default: "/dash/lists",
     },
-    data() {
-        const successRedirect = window.location.origin + this.redirect;
-        return {
-            alert: false,
-            loadingRegistration: false,
-            mdiAlert,
-            registrationDetails: {
-                email: "",
-                password: ""
-            },
-            successRedirect
-        };
-    },
-    props: {
-        redirect: {
-            type: String,
-            default: "/dash/lists"
-        }
-    },
-    methods: {
-        async register() {
-            this.alert = false;
-            if (!this.registrationDetails.name) {
-                this.alert = {
-                    text: "Please enter a name.",
-                    title: "Error"
-                };
-                return;
-            }
+});
 
-            if (!this.registrationDetails.email) {
-                this.alert = {
-                    text: "Please enter an email address.",
-                    title: "Error"
-                };
-                return;
-            }
+const alert = shallowRef(null);
+const loadingRegistration = shallowRef(false);
+const registrationDetails = reactive({
+    email: "",
+    name: "",
+    password: "",
+    passwordConfirmation: "",
+});
 
-            if (!this.registrationDetails.password) {
-                this.alert = {
-                    text: "Please enter a password.",
-                    title: "Error"
-                };
-                return;
-            }
+const register = async () => {
+    alert.value = null;
+    const details = registrationDetails;
 
-            if (
-                this.registrationDetails.password !== this.registrationDetails.passwordConfirmation
-            ) {
-                this.alert = {
-                    text: "Passwords do not match.",
-                    title: "Error"
-                };
-                return;
-            }
-
-            this.loadingRegistration = true;
-            try {
-                const accResp = await account.create(
-                    ID.unique(),
-                    this.registrationDetails.email.trim(),
-                    this.registrationDetails.password.trim(),
-                    this.registrationDetails.name.trim()
-                );
-
-                if (accResp.status === true) {
-                    this.alert = {
-                        icon: mdiInformation,
-                        text: "Account created successfully, redirecting you to the login page.",
-                        title: "Success",
-                        type: "success"
-                    };
-
-                    this.loadingRegistration = false;
-
-                    setTimeout(() => {
-                        this.$router.push({ path: "/dash/login", query: { redirect: this.redirect } });
-                    }, 2000);
-                }
-            } catch (error) {
-                this.alert = {
-                    text: error.message,
-                    title: "Error"
-                };
-
-                this.loadingRegistration = false;
-                return;
-            }
-        }
+    if (!details.name) {
+        alert.value = { text: "Please enter a name.", title: "Error" };
+        return;
     }
+    if (!details.email) {
+        alert.value = {
+            text: "Please enter an email address.",
+            title: "Error",
+        };
+        return;
+    }
+    if (!details.password) {
+        alert.value = { text: "Please enter a password.", title: "Error" };
+        return;
+    }
+    if (details.password !== details.passwordConfirmation) {
+        alert.value = { text: "Passwords do not match.", title: "Error" };
+        return;
+    }
+
+    loadingRegistration.value = true;
+    const { error } = await authClient.signUp.email({
+        callbackURL: props.redirect,
+        email: details.email.trim(),
+        name: details.name.trim(),
+        password: details.password.trim(),
+    });
+    loadingRegistration.value = false;
+
+    if (error) {
+        alert.value = {
+            text: error.message || "Unable to create your account.",
+            title: "Error",
+        };
+        return;
+    }
+
+    alert.value = {
+        icon: mdiInformation,
+        text: "Account created. Check your email to verify your address. You’ll be signed in automatically when you follow the verification link.",
+        title: "Success",
+        type: "success",
+    };
 };
 </script>
 

@@ -36,10 +36,7 @@
                     />
                 </v-card-text>
                 <v-card-actions>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="error"
                         text="Delete"
@@ -56,9 +53,14 @@
 
 <script>
 import { mdiAlert, mdiDelete } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog } from "vuetify/components";
-import { AppwriteException } from "appwrite";
-import { getJwt } from "@/stores/auth";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+} from "vuetify/components";
 import { handleFetch } from "@/utils/handleFetch";
 export default {
     title: "ListDialog",
@@ -68,17 +70,17 @@ export default {
         VCard,
         VCardText,
         VCardActions,
-        VAlert
+        VAlert,
     },
     props: {
         item: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -87,7 +89,7 @@ export default {
             listId: null,
             loading: false,
             mdiAlert,
-            mdiDelete
+            mdiDelete,
         };
     },
     methods: {
@@ -95,59 +97,46 @@ export default {
             this.loading = true;
             this.alert = false;
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
-                    this.alert = {
-                        text: "You must be logged in to delete an item.",
-                        title: "Error"
-                    };
-                    this.loading = false;
-                    return;
-                }
-
-                const [, deleteItemError] = await handleFetch("/api/content/item", {
-                    method: "DELETE",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [, deleteItemError] = await handleFetch(
+                    "/api/content/item",
+                    {
+                        method: "DELETE",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            itemId: this.item.id,
+                        }),
                     },
-                    body: JSON.stringify({
-                        itemId: this.item.$id
-                    })
-                });
+                );
 
                 if (deleteItemError) {
                     this.alert = {
-                        text: deleteItemError.message || "An error occurred while deleting the item.",
-                        title: "Error"
+                        text:
+                            deleteItemError.message ||
+                            "An error occurred while deleting the item.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
                 }
             } catch (e) {
                 console.log(e);
-                if (e instanceof AppwriteException) {
-                    this.alert = {
-                        text: e.message,
-                        title: "Error"
-                    };
-                } else {
-                    this.alert = {
-                        text: "An unknown error occurred.",
-                        title: "Error"
-                    };
-                }
+                this.alert = {
+                    text: e.message || "An unknown error occurred.",
+                    title: "Error",
+                };
                 this.loading = false;
                 return;
             }
 
             this.$emit("removeItem", {
-                item: this.item.$id
+                item: this.item.id,
             });
 
             this.dialogOpen = false;
             this.loading = false;
-        }
-    }
+        },
+    },
 };
 </script>

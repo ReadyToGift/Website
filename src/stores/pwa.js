@@ -1,5 +1,5 @@
-import { atom } from "nanostores";
 import { persistentBoolean } from "@nanostores/persistent";
+import { atom } from "nanostores";
 
 export const deferredPrompt = atom(null);
 export const appInstalled = atom(null);

@@ -1,14 +1,49 @@
 <template>
-    <v-card
-        variant="tonal"
-    >
-        <v-card-title>
-            Personal Information
-        </v-card-title>
+    <v-card variant="tonal">
+        <v-card-title> Profile Picture </v-card-title>
+        <v-card-text class="profile-picture-settings">
+            <v-avatar size="96" class="profile-picture-preview">
+                <v-img :src="profilePicture" alt="Profile picture" />
+            </v-avatar>
+            <div class="profile-picture-controls">
+                <div class="profile-picture-description">
+                    <div class="text-body-1 font-weight-medium">
+                        Choose a picture for your account
+                    </div>
+                    <div class="text-body-2 text-medium-emphasis">
+                        JPG, PNG, or GIF up to 256 pixels.
+                    </div>
+                </div>
+                <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    @change="selectProfilePicture"
+                >
+                <div class="profile-picture-actions">
+                    <v-btn
+                        color="primary"
+                        variant="tonal"
+                        @click="openFilePicker"
+                    >
+                        Upload picture
+                    </v-btn>
+                    <v-btn
+                        v-if="user?.image"
+                        variant="text"
+                        @click="resetProfilePicture"
+                    >
+                        Remove picture
+                    </v-btn>
+                </div>
+            </div>
+        </v-card-text>
+    </v-card>
+    <v-card class="mt-4" variant="tonal">
+        <v-card-title> Personal Information </v-card-title>
 
-        <v-list
-            class="mt-0"
-        >
+        <v-list class="mt-0">
             <UpdateAccountField
                 name="Full Name"
                 :icon="mdiAccount"
@@ -23,18 +58,18 @@
                 v-model="personalInfo.email"
                 :save="saveEmail"
                 autocomplete="email"
+                :requires-password="false"
+                :update-on-save="false"
             />
         </v-list>
     </v-card>
-    <v-card
-        class="mt-4"
-        variant="tonal"
-    >
-        <v-card-title>
-            Security Settings
-        </v-card-title>
+    <v-card class="mt-4" variant="tonal">
+        <v-card-title> Security Settings </v-card-title>
         <v-card-text>
-            <p>Manage your security settings here, including changing your password.</p>
+            <p>
+                Manage your security settings here, including changing your
+                password.
+            </p>
         </v-card-text>
         <v-list>
             <UpdateAccountField
@@ -47,38 +82,149 @@
             <MFA />
         </v-list>
     </v-card>
+    <v-dialog v-model="cropDialog" max-width="600">
+        <v-card>
+            <v-card-title> Crop Profile Picture </v-card-title>
+            <v-card-text>
+                <Cropper
+                    ref="cropper"
+                    class="profile-picture-cropper"
+                    :src="profilePictureSource"
+                    :stencil-props="{ aspectRatio: 1 }"
+                />
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer />
+                <v-btn @click="cancelCrop">Cancel</v-btn>
+                <v-btn
+                    color="primary"
+                    :loading="savingProfilePicture"
+                    @click="saveProfilePicture"
+                >
+                    Save picture
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup>
-import { VCard, VCardText, VCardTitle, VList } from "vuetify/components";
-import { reactive } from "vue";
-
 import { mdiAccount, mdiEmail, mdiFormTextboxPassword } from "@mdi/js";
-import { AppwriteException } from "appwrite";
-
-import { setUser, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
 import { useStore } from "@nanostores/vue";
-
-import { account } from "@/appwrite";
-
+import { computed, onMounted, reactive, ref } from "vue";
+import { Cropper } from "vue-advanced-cropper";
+import "vue-advanced-cropper/dist/style.css";
 import MFA from "@/components/account/mfa/MFA.vue";
 import UpdateAccountField from "@/components/account/UpdateAccountField.vue";
+import { authClient, refreshSession, user as userStore } from "@/stores/auth";
+import { create as createDialog } from "@/stores/dialogs";
 
 const user = useStore(userStore);
+const fileInput = ref(null);
+const cropper = ref(null);
+const cropDialog = ref(false);
+const profilePictureSource = ref("");
+const savingProfilePicture = ref(false);
+
+const profilePicture = computed(() => {
+    if (!user.value) return "";
+    return `/api/avatar/${user.value.id}?v=${encodeURIComponent(user.value.updatedAt || "")}`;
+});
+
+const openFilePicker = () => fileInput.value?.click();
+
+const closeCrop = () => {
+    if (profilePictureSource.value.startsWith("blob:")) {
+        URL.revokeObjectURL(profilePictureSource.value);
+    }
+    profilePictureSource.value = "";
+    cropDialog.value = false;
+};
+
+const cancelCrop = () => closeCrop();
+
+const selectProfilePicture = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file?.type.startsWith("image/")) return;
+
+    closeCrop();
+    profilePictureSource.value = URL.createObjectURL(file);
+    cropDialog.value = true;
+};
+
+const saveProfilePicture = async () => {
+    const canvas = cropper.value?.getResult()?.canvas;
+    if (!canvas) return;
+
+    savingProfilePicture.value = true;
+    try {
+        const maxSize = 256;
+        const scale = Math.min(
+            1,
+            maxSize / Math.max(canvas.width, canvas.height),
+        );
+        const outputCanvas = document.createElement("canvas");
+        outputCanvas.width = Math.max(1, Math.round(canvas.width * scale));
+        outputCanvas.height = Math.max(1, Math.round(canvas.height * scale));
+
+        const context = outputCanvas.getContext("2d");
+        if (!context) throw new Error("Unable to process profile picture.");
+
+        context.drawImage(
+            canvas,
+            0,
+            0,
+            outputCanvas.width,
+            outputCanvas.height,
+        );
+
+        const image = outputCanvas.toDataURL("image/jpeg", 0.85);
+        const { error } = await authClient.updateUser({ image });
+        if (error) throw new Error(error.message);
+
+        await refreshSession();
+        closeCrop();
+    } catch (error) {
+        createDialog({
+            text: error.message || "Unable to save your profile picture.",
+            title: "Error Updating Profile Picture",
+            type: "error",
+        });
+    } finally {
+        savingProfilePicture.value = false;
+    }
+};
+
+const resetProfilePicture = async () => {
+    savingProfilePicture.value = true;
+    try {
+        const { error } = await authClient.updateUser({ image: null });
+        if (error) throw new Error(error.message);
+        await refreshSession();
+    } catch (error) {
+        createDialog({
+            text: error.message || "Unable to reset your profile picture.",
+            title: "Error Resetting Profile Picture",
+            type: "error",
+        });
+    } finally {
+        savingProfilePicture.value = false;
+    }
+};
 
 const personalInfo = reactive({
     email: {
         passwordConfirmation: "",
-        value: user.value?.email || ""
+        value: user.value?.email || "",
     },
     fullName: {
-        value: user.value?.name || ""
+        value: user.value?.name || "",
     },
     password: {
         passwordConfirmation: "",
-        value: ""
-    }
+        value: "",
+    },
 });
 
 userStore.subscribe((mutation) => {
@@ -91,136 +237,130 @@ userStore.subscribe((mutation) => {
     }
 });
 
-const saveName = async () => {
-    const result = await account.updateName(personalInfo.fullName.value);
-    if (result.$id) {
-        setUser({ user: result });
+const saveName = async (newValue) => {
+    const { error } = await authClient.updateUser({
+        name: newValue.value,
+    });
+    if (!error) {
+        await refreshSession();
         personalInfo.fullName.passwordConfirmation = "";
         return true;
-    } else {
-        createDialog({
-            text: `There was an error updating your name: ${result.message}`,
-            title: "Error Updating Name",
-            type: "error"
-        });
-        return false;
     }
+    createDialog({
+        text: `There was an error updating your name: ${error.message}`,
+        title: "Error Updating Name",
+        type: "error",
+    });
+    return false;
 };
 
 const saveEmail = async (newValue) => {
     try {
-        const result = await account.updateEmail(newValue.value, newValue.passwordConfirmation);
-        console.log({ result });
-        if (result.$id) {
-            setUser({ user: result });
-            await account.createEmailVerification({ url: "https://readyto.gift/dash/verify" });
+        const { error } = await authClient.changeEmail({
+            newEmail: newValue.value,
+            callbackURL: `/dash/settings/account?emailChange=pending&email=${encodeURIComponent(newValue.value)}`,
+        });
+        if (!error) {
             createDialog({
                 actions: [
                     {
                         action: "close",
                         color: "primary",
-                        text: "OK"
-                    }
+                        text: "OK",
+                    },
                 ],
                 text: "A verification email has been sent to your new email address.",
                 title: "Verification Email Sent",
-                type: "info"
+                type: "info",
             });
             return true;
-        } else {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK"
-                    }
-                ],
-                text: `There was an error updating your email: ${result.message}`,
-                title: "Error Updating Email",
-                type: "error"
-            });
-            return false;
         }
-
+        throw new Error(error.message);
     } catch (error) {
-        if (error instanceof AppwriteException) {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK"
-                    }
-                ],
-                text: error.message,
-                title: "Error Updating Email",
-                type: "error"
-            });
-            return false;
-        }
         createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: error.message,
             title: "Error Updating Email",
-            type: "error"
+            type: "error",
         });
         return false;
     }
 };
 
-const savePassword = async (newValue) => {
-    try {
-        await account.updatePassword({
-            oldPassword: newValue.passwordConfirmation,
-            password: newValue.value
-        });
+onMounted(() => {
+    const handleEmailChangeStatus = async () => {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("emailChange") !== "pending") return;
+
+        await refreshSession();
+        const requestedEmail = url.searchParams.get("email");
+        const isConfirmed =
+            requestedEmail?.toLowerCase() === user.value?.email?.toLowerCase();
+
         createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
+            ],
+            text: isConfirmed
+                ? "Your new email address has been confirmed."
+                : "The request was approved. Check your new email inbox for the verification link.",
+            title: isConfirmed
+                ? "Email Address Updated"
+                : "Email Change Approved",
+            type: "info",
+        });
+
+        url.searchParams.delete("emailChange");
+        url.searchParams.delete("email");
+        window.history.replaceState({}, "", url);
+    };
+
+    handleEmailChangeStatus();
+});
+
+const savePassword = async (newValue) => {
+    try {
+        const { error } = await authClient.changePassword({
+            currentPassword: newValue.passwordConfirmation,
+            newPassword: newValue.value,
+            revokeOtherSessions: false,
+        });
+        if (error) throw new Error(error.message);
+        createDialog({
+            actions: [
+                {
+                    action: "close",
+                    color: "primary",
+                    text: "OK",
+                },
             ],
             text: "Your password has been successfully updated.",
             title: "Password Updated",
-            type: "success"
+            type: "success",
         });
         return true;
     } catch (error) {
-        if (error instanceof AppwriteException) {
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK"
-                    }
-                ],
-                text: error.message,
-                title: "Error Updating Password",
-                type: "error"
-            });
-            return false;
-        }
         createDialog({
             actions: [
                 {
                     action: "close",
                     color: "primary",
-                    text: "OK"
-                }
+                    text: "OK",
+                },
             ],
             text: error.message,
             title: "Error Updating Password",
-            type: "error"
+            type: "error",
         });
         return false;
     }
@@ -228,11 +368,51 @@ const savePassword = async (newValue) => {
 </script>
 
 <style lang="scss" scoped>
+.profile-picture-settings {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-picture-controls {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.profile-picture-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.profile-picture-cropper {
+    height: min(70vw, 480px);
+    max-height: 480px;
+    background: #222;
+}
+
 main {
     .page-content {
         width: var(--section-width);
         margin: 0 auto;
         padding: 2rem 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-picture-settings {
+        align-items: flex-start;
+    }
+
+    .profile-picture-controls,
+    .profile-picture-actions {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 </style>

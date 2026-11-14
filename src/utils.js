@@ -3,20 +3,20 @@ import { mdiEmoticon, mdiEmoticonConfused, mdiHeart } from "@mdi/js";
 export const priorityMap = {
     none: {
         text: "None",
-        icon: false
+        icon: false,
     },
     low: {
         text: "Unsure",
-        icon: mdiEmoticonConfused
+        icon: mdiEmoticonConfused,
     },
     medium: {
         text: "Nice to have",
-        icon: mdiEmoticon
+        icon: mdiEmoticon,
     },
     high: {
         text: "Would love it",
-        icon: mdiHeart
-    }
+        icon: mdiHeart,
+    },
 };
 
 export const convertPriority = (priority) => {

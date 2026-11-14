@@ -1,5 +1,5 @@
-import * as Sentry from "@sentry/astro";
 import { SENTRY_DSN } from "astro:env/client";
+import * as Sentry from "@sentry/astro";
 
 Sentry.init({
     dsn: SENTRY_DSN,
@@ -9,7 +9,7 @@ Sentry.init({
     integrations: [
         Sentry.replayIntegration({
             maskAllText: false, // Only sensitive is password, which is masked by default
-            blockAllMedia: false
-        })
-    ]
+            blockAllMedia: false,
+        }),
+    ],
 });

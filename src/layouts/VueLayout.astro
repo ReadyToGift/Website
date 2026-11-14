@@ -1,6 +1,6 @@
 ---
-import Layout from "./Layout.astro";
 import App from "./App.vue";
+import Layout from "./Layout.astro";
 
 const { user } = Astro.props;
 
@@ -15,12 +15,11 @@ if (user?.prefs?.darkMode !== undefined) {
         <noscript>
             <h1>JavaScript is disabled</h1>
             <p>
-                This application requires JavaScript to run. Please enable JavaScript to
-                continue.
+                This application requires JavaScript to run. Please enable
+                JavaScript to continue.
             </p>
         </noscript>
         <style>
-            
         </style>
         <App client:only="vue">
             <slot />
@@ -28,32 +27,13 @@ if (user?.prefs?.darkMode !== undefined) {
     </div>
 </Layout>
 
-{
-    darkMode === true ? (
-        <style>
-            body {
-                background-color: #111318;
-                color: #F9F9FF;
-            }
-        </style>
-    ) : darkMode === false ? (
-        <style>
-            body {
-                background-color: #F9F9FF;
-                color: #111318;
-            }
-        </style>
-    ) : (
-        <style>
-            body {
-                background-color: white;
-            }
-            @media (prefers-color-scheme: dark) {
-                body {
-                    background-color: #111318;
-                    color: #F9F9FF;
-                }
-            }
-        </style>
-    )
-}
+{darkMode === true ? (
+    <style>body { background-color: #111318; color: #F9F9FF; }</style>
+) : darkMode === false ? (
+    <style>body { background-color: #F9F9FF; color: #111318; }</style>
+) : (
+    <style>
+        body { background-color: white; } @media (prefers-color-scheme: dark) {
+        body { background-color: #111318; color: #F9F9FF; } }
+    </style>
+)}

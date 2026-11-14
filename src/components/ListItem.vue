@@ -2,28 +2,30 @@
     <v-card
         class="item"
         :data-fulfilled="
-            !item.communityList && !!item.fulfillment && (!wishlistOwner || spoilSurprises)
+            !item.communityList &&
+            !!item.fulfillment &&
+            (!wishlistOwner || list.spoilSurprises)
         "
         variant="tonal"
-        :data-item-id="item.$id"
+        :data-item-id="item.id"
     >
         <div class="item-header">
             <h2>{{ item.title }}</h2>
-            <v-btn-group
-                base-color="primary"
-                divided
-                rounded="pill"
-            >
+            <v-btn-group base-color="primary" divided rounded="pill">
                 <FulfillItem
-                    v-if="!item.communityList &&!wishlistOwner || (wishlistOwner && spoilSurprises && !item.communityList)"
+                    v-if="
+                        !item.communityList &&
+                        (!wishlistOwner ||
+                            (list.spoilSurprises && !!item.fulfillment))
+                    "
                     :item="item"
                     @fulfillItem="$emit('fulfillItem', $event)"
-                    @unfulfillItem="$emit('unfulfillItem', item.$id)"
+                    @unfulfillItem="$emit('unfulfillItem', item.id)"
                 />
-                <template v-if="item.url">
+                <template v-if="websiteUrl">
                     <v-btn
                         :append-icon="mdiOpenInNew"
-                        :href="item.url"
+                        :href="websiteUrl"
                         target="_blank"
                         v-if="!$vuetify.display.mobile || !wishlistOwner"
                         variant="outlined"
@@ -33,7 +35,7 @@
                     </v-btn>
                     <v-btn
                         :icon="mdiOpenInNew"
-                        :href="item.url"
+                        :href="websiteUrl"
                         target="_blank"
                         v-else
                         variant="outlined"
@@ -47,7 +49,10 @@
                     :currency="currency"
                     @editItem="$emit('editItem', $event)"
                     :wishlistOwner="wishlistOwner"
-                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
+                    v-if="
+                        (wishlistOwner && !item.communityList) ||
+                        (user && item.contributorId === user.id)
+                    "
                 />
                 <MoveItem
                     variant="outlined"
@@ -61,7 +66,10 @@
                     variant="outlined"
                     :item="item"
                     @removeItem="$emit('removeItem', $event)"
-                    v-if="(wishlistOwner && !item.communityList) || (user && item.contributorId === user.$id)"
+                    v-if="
+                        (wishlistOwner && !item.communityList) ||
+                        (user && item.contributorId === user.id)
+                    "
                 />
             </v-btn-group>
         </div>
@@ -71,10 +79,7 @@
                 :source="item.description"
                 class="item-description"
             />
-            <div
-                class="item-image"
-                v-if="imageURL"
-            >
+            <div class="item-image" v-if="imageURL">
                 <v-img
                     :src="imageURL"
                     alt=""
@@ -91,18 +96,27 @@
                     height="200"
                     loading="lazy"
                     v-else
-                />
+                >
             </div>
         </div>
         <template
             v-slot:actions
-            v-if="item.fulfilledBy || item.price || item.priority !== 'none' || item.url || item.communityList"
+            v-if="
+                item.fulfilledBy ||
+                item.price ||
+                item.priority !== 'none' ||
+                websiteUrl ||
+                item.communityList
+            "
         >
             <div class="item-footer">
                 <div class="chips">
                     <v-chip
                         :prepend-icon="mdiGift"
-                        v-if="item.fulfilledBy"
+                        v-if="
+                            item.fulfilledBy &&
+                            (!wishlistOwner || list.spoilSurprises)
+                        "
                         color="primary"
                         variant="elevated"
                         rounded
@@ -115,7 +129,9 @@
                         variant="elevated"
                         rounded
                     >
-                        <span>{{ currencyFormatter(this.currency).format(item.price) }}</span>
+                        <span>{{
+                            currencyFormatter(this.currency).format(item.price)
+                        }}</span>
                     </v-chip>
                     <v-chip
                         v-if="item.priority !== 'none' && item.priority"
@@ -128,22 +144,22 @@
                     </v-chip>
                     <v-chip
                         :prepend-icon="mdiWeb"
-                        v-if="item.url && validation.urlRegex.test(item.url)"
-                        :href="item.url"
+                        v-if="websiteUrl"
+                        :href="websiteUrl"
                         target="_blank"
                         rounded
                     >
-                        {{ getWebsiteHostname(item.url) }}
+                        {{ websiteHostname }}
                     </v-chip>
                 </div>
                 <v-chip
-                    :prepend-avatar="userAvatar(item.contributorName)"
+                    :prepend-avatar="`/api/avatar/${item.contributorId}`"
                     variant="tonal"
                     color="primary"
                     rounded
                     v-if="item.communityList"
                 >
-                    <template v-if="user && item.contributorId === user.$id">
+                    <template v-if="user && item.contributorId === user.id">
                         You contributed this item
                     </template>
                     <template v-else>
@@ -156,41 +172,39 @@
 </template>
 
 <script>
-import { APPWRITE_ENDPOINT, APPWRITE_IMAGE_BUCKET, APPWRITE_PROJECT } from "astro:env/client";
+import { CLOUDFLARE_R2_ENDPOINT } from "astro:env/client";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import VueMarkdown from "vue-markdown-render";
 import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
-import { avatars } from "@/appwrite";
-import { convertPriority } from "@/utils";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
-import ModifyItem from "./dialogs/ModifyItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
-import validation from "@/utils/validation";
-import VueMarkdown from "vue-markdown-render";
-
-import { $prefs } from "@/stores/prefs";
-import { formatter as currencyFormatter } from "@/stores/currency";
 import { user as userStore } from "@/stores/auth";
-import { useStore } from "@nanostores/vue";
+import { formatter as currencyFormatter } from "@/stores/currency";
+import { $prefs } from "@/stores/prefs";
+import { convertPriority } from "@/utils";
+import validation from "@/utils/validation";
+import ModifyItem from "./dialogs/ModifyItem.vue";
 
 export default {
     props: {
         currency: {
             type: String,
-            required: true
+            required: true,
         },
         item: {
             type: Object,
-            required: true
+            required: true,
         },
         list: {
             type: Object,
-            required: true
+            required: true,
         },
         wishlistOwner: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     components: {
         DeleteItem,
@@ -202,7 +216,7 @@ export default {
         VCard,
         VBtnGroup,
         VChip,
-        VImg
+        VImg,
     },
     data() {
         return {
@@ -211,51 +225,45 @@ export default {
             mdiGift,
             mdiOpenInNew,
             mdiWeb,
-            validation,
             user: useStore(userStore),
-            prefs: useStore($prefs)
+            prefs: useStore($prefs),
         };
     },
     computed: {
         imageURL() {
             if (this.item.imageID) {
-                try {
-                    const params = new URLSearchParams({
-                        project: APPWRITE_PROJECT,
-                        output: "png",
-                        height: "400"
-                    });
-
-                    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_IMAGE_BUCKET}/files/${this.item.imageID}/preview?${params.toString()}`;
-                } catch (error) {
-                    console.error(error);
-                    return null;
-                }
+                return `${CLOUDFLARE_R2_ENDPOINT}/${this.item.imageID}`;
             } else if (this.item.image) {
                 return this.item.image;
             } else {
                 return null;
             }
         },
-        spoilSurprises() {
-            return this.prefs.spoilSurprises;
-        }
-    },
-    methods: {
-        getWebsiteHostname(url) {
-            const { hostname } = new URL(url);
+        websiteUrl() {
+            if (typeof this.item.url !== "string") return null;
+            const candidate = this.item.url.match(validation.urlRegex)?.[0];
+            if (!candidate) return null;
 
-            return hostname.replace(/^www\./, "").toLowerCase();
-        },
-        userAvatar(name) {
             try {
-                return avatars.getInitials(name, 32, 32);
-            } catch (error) {
-                console.error(error);
+                const url = new URL(
+                    candidate.startsWith("www.")
+                        ? `https://${candidate}`
+                        : candidate,
+                );
+                return ["http:", "https:"].includes(url.protocol)
+                    ? url.href
+                    : null;
+            } catch {
                 return null;
             }
-        }
-    }
+        },
+        websiteHostname() {
+            if (!this.websiteUrl) return "";
+            return new URL(this.websiteUrl).hostname
+                .replace(/^www\./, "")
+                .toLowerCase();
+        },
+    },
 };
 </script>
 
@@ -293,6 +301,11 @@ export default {
         grid-template-columns: 1fr max-content;
         gap: 1rem;
         justify-content: space-between;
+        .item-description {
+            :deep(ul) {
+                padding-left: 1.5rem;
+            }
+        }
         .item-image {
             .v-img {
                 margin-left: auto;

@@ -1,0 +1,469 @@
+#!/usr/bin/env node
+
+import process from "node:process";
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/sqlite-proxy";
+import { Client, Query, Storage, TablesDB, Users } from "node-appwrite";
+import {
+    account,
+    session,
+    twoFactor,
+    user,
+    verification,
+} from "../src/auth-schema.js";
+import { autofills, fulfillments, items, lists } from "../src/schema.js";
+
+const PAGE_SIZE = 100;
+const R2_PAGE_SIZE = 1000;
+const R2_CONCURRENCY = 10;
+const TABLES = {
+    lists: process.env.APPWRITE_LIST_COLLECTION || "6679a593003489f76668",
+    items: process.env.APPWRITE_ITEM_COLLECTION || "6679a9ff000f53308164",
+    fulfillments:
+        process.env.APPWRITE_FULFILLMENT_COLLECTION || "667d90cd000d6f0f6d0a",
+    autofills: "autofills",
+};
+
+const required = (name) => {
+    const value = process.env[name];
+    if (!value) throw new Error(`Missing ${name}`);
+    return value;
+};
+
+const date = (value) => {
+    if (!value) return null;
+    const timestamp = Date.parse(value);
+    return Number.isNaN(timestamp) ? null : new Date(timestamp);
+};
+
+const idOf = (value) => {
+    if (!value) return null;
+    return typeof value === "object" ? value.$id || value.id || null : value;
+};
+
+const jsonText = (value) => {
+    if (value == null) return null;
+    return typeof value === "string" ? value : JSON.stringify(value);
+};
+
+async function listImages(storage, bucketId) {
+    const files = [];
+
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+        let page;
+        try {
+            page = await storage.listFiles({
+                bucketId,
+                queries: [Query.limit(PAGE_SIZE), Query.offset(offset)],
+            });
+        } catch (error) {
+            throw new Error(
+                `Appwrite files read failed (${bucketId}, offset ${offset})`,
+                { cause: error },
+            );
+        }
+        files.push(...page.files);
+        if (page.files.length < PAGE_SIZE) break;
+    }
+
+    return files.map((file) => ({
+        id: file.$id,
+        name: file.name,
+        mimeType: file.mimeType,
+    }));
+}
+
+async function listRows(tablesDB, databaseId, tableId) {
+    const rows = [];
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+        let page;
+        try {
+            page = await tablesDB.listRows({
+                databaseId,
+                tableId,
+                queries: [Query.limit(PAGE_SIZE), Query.offset(offset)],
+            });
+        } catch (error) {
+            throw new Error(
+                `Appwrite table read failed (${tableId}, offset ${offset})`,
+                { cause: error },
+            );
+        }
+        rows.push(...page.rows);
+        if (page.rows.length < PAGE_SIZE) return rows;
+    }
+}
+
+async function listUsers(users) {
+    const result = [];
+    for (let offset = 0; ; offset += PAGE_SIZE) {
+        let page;
+        try {
+            page = await users.list({
+                queries: [Query.limit(PAGE_SIZE), Query.offset(offset)],
+            });
+        } catch (error) {
+            throw new Error(`Appwrite user read failed (offset ${offset})`, {
+                cause: error,
+            });
+        }
+        result.push(...page.users);
+        if (page.users.length < PAGE_SIZE) return result;
+    }
+}
+
+function createD1Database() {
+    const accountId = required("CLOUDFLARE_ACCOUNT_ID");
+    const databaseId = required("CLOUDFLARE_DATABASE_ID");
+    const token = required("CLOUDFLARE_D1_TOKEN");
+    const endpoint = `https://api.cloudflare.com/client/v4/accounts/${accountId}/d1/database/${databaseId}/query`;
+
+    return drizzle(async (query, params) => {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ sql: query, params }),
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.success) {
+            throw new Error(
+                `D1 query failed: ${JSON.stringify(payload.errors || payload)}`,
+            );
+        }
+        return { rows: payload.result?.[0]?.results || [] };
+    });
+}
+
+function createR2Client() {
+    const accountId = required("CLOUDFLARE_ACCOUNT_ID");
+    const bucketName = process.env.CLOUDFLARE_R2_BUCKET || "readytogift";
+    const token = required("CLOUDFLARE_R2_TOKEN");
+    const baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/r2/buckets/${bucketName}/objects`;
+
+    return {
+        async list() {
+            const objects = [];
+            let cursor;
+
+            do {
+                const params = new URLSearchParams({
+                    per_page: String(R2_PAGE_SIZE),
+                });
+                if (cursor) params.set("cursor", cursor);
+
+                const response = await fetch(`${baseUrl}?${params}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                const payload = await response.json();
+
+                if (!response.ok || !payload.success) {
+                    throw new Error(
+                        `R2 object listing failed: ${JSON.stringify(payload.errors || payload)}`,
+                    );
+                }
+
+                objects.push(...(payload.result?.objects || []));
+                cursor = payload.result?.truncated
+                    ? payload.result.cursor
+                    : null;
+            } while (cursor);
+
+            return objects;
+        },
+        async remove(id) {
+            const response = await fetch(
+                `${baseUrl}/${encodeURIComponent(id)}`,
+                {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `R2 delete failed for ${id}: ${response.status} ${await response.text()}`,
+                );
+            }
+        },
+        async upload(file) {
+            const response = await fetch(
+                `${baseUrl}/${encodeURIComponent(file.id)}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type":
+                            file.mimeType || "application/octet-stream",
+                        "Content-Length": String(file.data.byteLength),
+                    },
+                    body: file.data,
+                },
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `R2 upload failed for ${file.id}: ${response.status} ${await response.text()}`,
+                );
+            }
+        },
+    };
+}
+
+async function inBatches(values, callback) {
+    for (let offset = 0; offset < values.length; offset += R2_CONCURRENCY) {
+        const batch = values.slice(offset, offset + R2_CONCURRENCY);
+        await Promise.all(batch.map(callback));
+    }
+}
+
+async function clearDatabase(db) {
+    console.log("Clearing existing D1 data...");
+
+    // Delete children before parents because production D1 has foreign keys enabled.
+    for (const table of [
+        session,
+        account,
+        verification,
+        twoFactor,
+        fulfillments,
+        items,
+        lists,
+        autofills,
+        user,
+    ]) {
+        await db.delete(table).run();
+    }
+}
+
+async function migrateUsers(db, users) {
+    for (const source of users) {
+        const createdAt = date(source.$createdAt) || date(source.registration);
+        const updatedAt = date(source.$updatedAt) || createdAt;
+
+        await db
+            .insert(user)
+            .values({
+                id: source.$id,
+                name: source.name || source.email,
+                email: source.email,
+                emailVerified: Boolean(source.emailVerification),
+                image: null,
+                darkMode: Boolean(source.prefs.darkMode),
+                showTotalPrice: Boolean(source.prefs.showTotalPrice),
+                savedLists: Array.isArray(source.prefs.savedLists)
+                    ? source.prefs.savedLists
+                    : [],
+                listSorting: source.prefs.listSorting || {
+                    type: { name: "Last updated", value: "updatedAt" },
+                    order: "asc",
+                },
+                history: Array.isArray(source.prefs.history)
+                    ? source.prefs.history
+                    : [],
+                hidePWAInstallPrompt: Boolean(
+                    source.prefs.hidePWAInstallPrompt,
+                ),
+                createdAt,
+                updatedAt,
+            })
+            .onConflictDoNothing()
+            .run();
+
+        // Appwrite does not expose password hashes. Keep the credential account so
+        // a password-reset flow can attach to it, but users must set new passwords.
+        await db
+            .insert(account)
+            .values({
+                id: `${source.$id}-credential`,
+                accountId: source.$id,
+                providerId: "credential",
+                userId: source.$id,
+                password: null,
+                createdAt,
+                updatedAt,
+            })
+            .onConflictDoNothing()
+            .run();
+    }
+}
+
+async function migrateContent(db, source) {
+    for (const row of source.lists) {
+        await db
+            .insert(lists)
+            .values({
+                id: row.$id,
+                author: row.author,
+                title: row.title,
+                description: row.description,
+                currency: row.currency || "USD",
+                shortUrl: row.shortUrl,
+                private: row.private,
+                spoilSurprises: false,
+                createdAt: date(row.$createdAt),
+                updatedAt: date(row.$updatedAt),
+            })
+            .onConflictDoNothing()
+            .run();
+    }
+
+    for (const row of source.items) {
+        await db
+            .insert(items)
+            .values({
+                id: row.$id,
+                title: row.title,
+                description: row.description,
+                price: row.price,
+                url: row.url || row.itemUrl,
+                image: row.image,
+                imageID: row.imageID,
+                priority: row.priority,
+                displayPrice: row.displayPrice ?? true,
+                list: idOf(row.list),
+                communityList: idOf(row.communityList),
+                contributor: row.contributor || row.contributorId || null,
+                createdAt: date(row.$createdAt),
+                updatedAt: date(row.$updatedAt),
+            })
+            .onConflictDoNothing()
+            .run();
+    }
+
+    for (const row of source.fulfillments) {
+        await db
+            .insert(fulfillments)
+            .values({
+                id: row.$id,
+                createdAt: date(row.$createdAt),
+                updatedAt: date(row.$updatedAt),
+                item: idOf(row.item),
+                name: row.name,
+            })
+            .onConflictDoNothing()
+            .run();
+    }
+
+    for (const row of source.autofills) {
+        await db
+            .insert(autofills)
+            .values({
+                id: row.$id,
+                attempt: row.attempt ?? 0,
+                attemptStatus: row.attemptStatus,
+                status: row.status || "processing",
+                autofillURL: row.autofillURL,
+                executionTime: row.executionTime,
+                outputData: jsonText(row.outputData),
+                totalAttempts: row.totalAttempts,
+                createdAt: date(row.$createdAt),
+                updatedAt: date(row.$updatedAt),
+            })
+            .onConflictDoNothing()
+            .run();
+    }
+}
+
+async function migrateImages(r2, storage, bucketId, images) {
+    const sourceIds = new Set(images.map((image) => image.id));
+    const existingObjects = await r2.list();
+    const existingIds = new Set(existingObjects.map((object) => object.key));
+    const staleIds = existingObjects
+        .map((object) => object.key)
+        .filter((id) => !sourceIds.has(id));
+    const missingImages = images.filter((image) => !existingIds.has(image.id));
+
+    console.log(
+        `R2 sync: ${missingImages.length} upload(s), ${staleIds.length} deletion(s), ${images.length - missingImages.length} unchanged`,
+    );
+
+    await inBatches(staleIds, async (id) => {
+        await r2.remove(id);
+        console.log(`Removed stale image ${id}`);
+    });
+
+    await inBatches(missingImages, async (image) => {
+        const fileData = await storage.getFileDownload({
+            bucketId,
+            fileId: image.id,
+        });
+        await r2.upload({
+            ...image,
+            data: Buffer.from(fileData),
+        });
+        console.log(`Uploaded image ${image.id}`);
+    });
+}
+
+async function main() {
+    const endpoint = required("APPWRITE_ENDPOINT");
+    const project = required("APPWRITE_PROJECT");
+    const key = required("APPWRITE_KEY");
+    const databaseId = process.env.APPWRITE_DB || "wishlist";
+    const client = new Client()
+        .setEndpoint(endpoint)
+        .setProject(project)
+        .setKey(key);
+    const tablesDB = new TablesDB(client);
+    const usersApi = new Users(client);
+    const storage = new Storage(client);
+    const imageBucket = process.env.APPWRITE_IMAGE_BUCKET || "default";
+    console.log("Reading Appwrite data...");
+    const [users, source] = await Promise.all([
+        listUsers(usersApi),
+        Promise.all([
+            listRows(tablesDB, databaseId, TABLES.lists),
+            listRows(tablesDB, databaseId, TABLES.items),
+            listRows(tablesDB, databaseId, TABLES.fulfillments),
+            listRows(tablesDB, databaseId, TABLES.autofills),
+            listImages(storage, imageBucket),
+        ]).then(([lists, items, fulfillments, autofills, images]) => ({
+            lists,
+            items,
+            fulfillments,
+            autofills,
+            images,
+        })),
+    ]);
+
+    console.log(
+        `Users: ${users.length}; lists: ${source.lists.length}; items: ${source.items.length}; fulfillments: ${source.fulfillments.length}; autofills: ${source.autofills.length}; images: ${source.images.length}`,
+    );
+
+    const apply = process.argv.includes("--apply");
+    const reset = process.argv.includes("--reset");
+
+    if (!apply) {
+        console.log(
+            "Dry run only. Apply with --apply --reset to clear D1 and migrate.",
+        );
+        return;
+    }
+
+    if (!reset) {
+        throw new Error(
+            "Refusing to write: --reset is required because this migration clears existing D1 data.",
+        );
+    }
+
+    const db = createD1Database();
+    const r2 = createR2Client();
+    await clearDatabase(db);
+    await migrateUsers(db, users);
+    await migrateContent(db, source);
+    await migrateImages(r2, storage, imageBucket, source.images);
+    console.log(
+        "Migration applied. Appwrite passwords were not transferable; users need to set new passwords. Image files were copied to R2.",
+    );
+}
+
+main().catch((error) => {
+    console.error(error.stack || error);
+    if (error.cause) {
+        console.error("Cause:", error.cause.cause || error.cause);
+    }
+    process.exitCode = 1;
+});

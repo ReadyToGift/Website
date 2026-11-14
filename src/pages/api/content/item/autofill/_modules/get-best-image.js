@@ -7,7 +7,7 @@ const maxSize = 20 * 1024 * 1024; // 20MB
 const maxFetchedSize = 40 * 1024 * 1024; // 40MB
 const maxFetchedImages = 20; // Limit number of images to fetch
 
-const isInvalidImage = url => {
+const isInvalidImage = (url) => {
     const lower = url.toLowerCase();
     return (
         lower.includes("transparent-pixel") ||
@@ -24,9 +24,10 @@ const getHighRes = (image) => {
         {
             name: "amazon",
             transform: (input) => {
-                const re = /^(https?:\/\/[^/]+)(\/images\/I\/)([^/.]+)\.[^/]*?(\.jpe?g)$/i;
+                const re =
+                    /^(https?:\/\/[^/]+)(\/images\/I\/)([^/.]+)\.[^/]*?(\.jpe?g)$/i;
 
-                const transform = url => {
+                const transform = (url) => {
                     const m = url.match(re);
                     if (!m) return url;
                     const [, protoDom, path, base, ext] = m;
@@ -34,8 +35,8 @@ const getHighRes = (image) => {
                 };
 
                 return transform(input);
-            }
-        }
+            },
+        },
     ];
 
     for (const { name, transform } of highResTransforms) {
@@ -44,7 +45,7 @@ const getHighRes = (image) => {
             return {
                 ...image,
                 src: transformed,
-                highResSource: name
+                highResSource: name,
             };
         }
     }
@@ -57,11 +58,16 @@ export default async ({ images, fetchOptions }) => {
     let fetchedSize = 0;
     let bestImage = null;
     console.log(`Evaluating ${images.length} images for best fit...`);
-    
+
     for (const image of images) {
         if (bestImage) continue;
-        if (fetchedImages >= maxFetchedImages || fetchedSize >= maxFetchedSize) {
-            console.log("Image fetch limits reached, stopping further evaluations.");
+        if (
+            fetchedImages >= maxFetchedImages ||
+            fetchedSize >= maxFetchedSize
+        ) {
+            console.log(
+                "Image fetch limits reached, stopping further evaluations.",
+            );
             break;
         }
 
@@ -77,7 +83,7 @@ export default async ({ images, fetchOptions }) => {
         try {
             const response = await fetch(image.src, {
                 method: "HEAD",
-                ...fetchOptions
+                ...fetchOptions,
             });
 
             if (!response.ok) continue;
@@ -91,7 +97,7 @@ export default async ({ images, fetchOptions }) => {
                 console.log(`Skipping image (too small): ${image.src}`);
                 continue; // Skip images smaller than 1KB
             }
-            if (contentLength && parseInt(contentLength, 10) > maxSize){
+            if (contentLength && parseInt(contentLength, 10) > maxSize) {
                 console.log(`Skipping image (too large): ${image.src}`);
                 continue; // Skip images larger than maxSize
             }
@@ -110,7 +116,8 @@ export default async ({ images, fetchOptions }) => {
             const dimensions = imageSize(Buffer.from(buffer));
 
             if (
-                dimensions.width >= minimumImageSize && dimensions.height >= minimumImageSize
+                dimensions.width >= minimumImageSize &&
+                dimensions.height >= minimumImageSize
             ) {
                 image.width = dimensions.width;
                 image.height = dimensions.height;
@@ -122,22 +129,26 @@ export default async ({ images, fetchOptions }) => {
                     size: buffer.byteLength,
                     contentType,
                     data: buffer,
-                    fetchedSize
+                    fetchedSize,
                 };
-                continue;
             }
         } catch (error) {
-            console.log(`Error fetching image: ${image.src} - ${error.message}`);
-            continue; // Skip images that cause fetch errors
+            console.log(
+                `Error fetching image: ${image.src} - ${error.message}`,
+            );
         }
     }
 
     console.log("Image evaluation complete.");
-    console.log(`Best image: ${bestImage ? JSON.stringify(bestImage.image) : "None found"}`);
-    console.log(`Total fetched images: ${fetchedImages}/${maxFetchedImages}, Total fetched size: ${fetchedSize}/${maxFetchedSize} bytes`);
+    console.log(
+        `Best image: ${bestImage ? JSON.stringify(bestImage.image) : "None found"}`,
+    );
+    console.log(
+        `Total fetched images: ${fetchedImages}/${maxFetchedImages}, Total fetched size: ${fetchedSize}/${maxFetchedSize} bytes`,
+    );
 
     return {
         image: bestImage,
-        fetchedSize
+        fetchedSize,
     };
 };

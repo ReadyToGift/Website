@@ -9,8 +9,16 @@
                 label="Authentication Code"
                 autocomplete="one-time-code"
                 autofocus
-                @finish="submit"
+                @finish="!requiresPassword && submit()"
                 :error="!!errorMessage"
+            />
+            <v-text-field
+                v-if="requiresPassword"
+                v-model="password"
+                class="mt-4"
+                label="Current password"
+                type="password"
+                autocomplete="current-password"
             />
             <a
                 class="text-blue font-weight-bold cursor-pointer"
@@ -20,7 +28,8 @@
             </a>
         </template>
         <template v-else>
-            Please enter one of your recovery codes. If you don't have any recovery codes left, please contact support.
+            Please enter one of your recovery codes. If you don't have any
+            recovery codes left, please contact support.
             <v-otp-input
                 v-model="recoveryCode"
                 length="10"
@@ -29,8 +38,16 @@
                 autocomplete="one-time-code"
                 autofocus
                 max-width="400px"
-                @finish="submit"
+                @finish="!requiresPassword && submit()"
                 :error="!!errorMessage"
+            />
+            <v-text-field
+                v-if="requiresPassword"
+                v-model="password"
+                class="mt-4"
+                label="Current password"
+                type="password"
+                autocomplete="current-password"
             />
             <a
                 class="text-blue font-weight-bold cursor-pointer"
@@ -47,7 +64,8 @@
                 width="500px"
                 max-width="100%"
             >
-                This will disable your multi-factor authentication. You can re-enable it later from your account settings.
+                This will disable your multi-factor authentication. You can
+                re-enable it later from your account settings.
             </v-alert>
         </template>
         <v-alert
@@ -63,16 +81,16 @@
         </v-alert>
     </v-card-text>
     <v-card-actions>
-        <v-btn
-            text
-            @click="$emit('cancel')"
-        >
-            Cancel
-        </v-btn>
+        <v-btn text @click="$emit('cancel')"> Cancel </v-btn>
         <v-spacer />
         <v-btn
             color="primary"
-            :disabled="code.length !== 6"
+            :disabled="
+                (usingRecoveryCode
+                    ? recoveryCode.length !== 10
+                    : code.length !== 6) ||
+                (requiresPassword && !password)
+            "
             @click="submit"
             :loading="loading"
         >
@@ -82,68 +100,48 @@
 </template>
 
 <script setup>
-import { mfaFactors, user } from "@/stores/auth";
-import { VAlert, VBtn, VCardActions, VCardText, VOtpInput, VSpacer } from "vuetify/components";
-import { account } from "@/appwrite";
-import { completeMFAchallenge } from "@/stores/mfa";
-import { create as createDialog } from "@/stores/dialogs";
 import { shallowRef } from "vue";
+import {
+    VAlert,
+    VBtn,
+    VCardActions,
+    VCardText,
+    VOtpInput,
+    VSpacer,
+    VTextField,
+} from "vuetify/components";
+import { completeMFAchallenge } from "@/stores/mfa";
 
 const emit = defineEmits(["cancel", "success", "totp-removed"]);
+const { requiresPassword = false } = defineProps({
+    requiresPassword: Boolean,
+});
 
 const code = shallowRef("");
 const recoveryCode = shallowRef("");
+const password = shallowRef("");
 const errorMessage = shallowRef("");
 const usingRecoveryCode = shallowRef(false);
 const loading = shallowRef(false);
 
 const submit = async () => {
-    if (loading.value) return;
+    if (loading.value || (requiresPassword && !password.value)) return;
     loading.value = true;
     try {
         if (usingRecoveryCode.value) {
             await completeMFAchallenge(recoveryCode.value, "recoverycode");
-            await account.deleteMFAAuthenticator({
-                type: "totp"
-            });
-
-            await account.updateMFA({
-                mfa: false
-            });
-
-            const factors = await account.listMFAFactors();
-            if (user.value) {
-                mfaFactors.set(factors);
-                user.set({
-                    ...user.value,
-                    mfa: factors.length > 0
-                });
-            }
-
-            createDialog({
-                actions: [
-                    {
-                        action: "close",
-                        color: "primary",
-                        text: "OK"
-                    }
-                ],
-                fullscreen: false,
-                maxWidth: "90%",
-                text: "Your TOTP authenticator has been successfully removed from your account. You can re-enable multi-factor authentication from your account settings at any time.",
-                title: "TOTP Removed"
-            });
-            emit("totp-removed");
+            emit("success", { password: password.value });
         } else {
             await completeMFAchallenge(code.value, "totp");
-            emit("success");
+            emit("success", { password: password.value });
         }
     } catch (error) {
         console.log("TOTP Challenge Error:", error);
         errorMessage.value = error.message || "An unknown error occurred.";
     } finally {
         code.value = "";
+        password.value = "";
         loading.value = false;
     }
-}; 
+};
 </script>

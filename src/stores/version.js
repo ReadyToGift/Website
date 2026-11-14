@@ -12,7 +12,9 @@ export const getBuildInfo = async () => {
     try {
         const response = await fetch("/api/version");
         if (!response.ok) {
-            throw new Error(`Failed to fetch build info: ${response.status} ${response.statusText}`);
+            throw new Error(
+                `Failed to fetch build info: ${response.status} ${response.statusText}`,
+            );
         }
         const data = await response.json();
         if (!loadCommit.get() && data.commit) {

@@ -1,0 +1,76 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1794073675534,
+      "tag": "0000_bumpy_darwin",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1794074629706,
+      "tag": "0001_better-auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794075487246,
+      "tag": "0002_quick_lady_ursula",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794085483015,
+      "tag": "0003_puzzling_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794087067566,
+      "tag": "0004_dizzy_the_liberteens",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1794087724630,
+      "tag": "0005_glamorous_lilith",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794145580491,
+      "tag": "0006_sparkling_leopardon",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1794671727378,
+      "tag": "0007_real_terror",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794674772555,
+      "tag": "0008_flawless_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794675240963,
+      "tag": "0009_modern_deathstrike",
+      "breakpoints": true
+    }
+  ]
+}

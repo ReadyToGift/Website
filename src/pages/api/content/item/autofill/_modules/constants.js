@@ -35,7 +35,7 @@ export const CONSTANTS = {
             // resource path
             "(?:[/?#]\\S*)?" +
             "$",
-        "i"
+        "i",
     ),
 
     REGEX_LOOPBACK: new RegExp(
@@ -65,16 +65,16 @@ export const CONSTANTS = {
             // Carrier-Grade NAT (CGNAT): 100.64.0.0 - 100.127.255.255
             "(?:100\\.(?:6[4-9]|[7-9]\\d|1[0-1]\\d)(?:\\.\\d{1,3}){2})" +
             "$",
-        "i"
+        "i",
     ),
 
-    REGEX_CONTENT_TYPE_IMAGE: new RegExp("image/.*", "i"),
+    REGEX_CONTENT_TYPE_IMAGE: /image\/.*/i,
 
-    REGEX_CONTENT_TYPE_AUDIO: new RegExp("audio/.*", "i"),
+    REGEX_CONTENT_TYPE_AUDIO: /audio\/.*/i,
 
-    REGEX_CONTENT_TYPE_VIDEO: new RegExp("video/.*", "i"),
+    REGEX_CONTENT_TYPE_VIDEO: /video\/.*/i,
 
-    REGEX_CONTENT_TYPE_TEXT: new RegExp("text/.*", "i"),
+    REGEX_CONTENT_TYPE_TEXT: /text\/.*/i,
 
-    REGEX_CONTENT_TYPE_APPLICATION: new RegExp("application/.*", "i")
+    REGEX_CONTENT_TYPE_APPLICATION: /application\/.*/i,
 };

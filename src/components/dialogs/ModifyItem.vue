@@ -28,7 +28,9 @@
                 :title="
                     item
                         ? 'Edit' + (wishlistOwner ? '' : ' Purchased') + ' Item'
-                        : 'Create' + (wishlistOwner ? '' : ' Purchased') + ' Item'
+                        : 'Create' +
+                          (wishlistOwner ? '' : ' Purchased') +
+                          ' Item'
                 "
             >
                 <v-card-text>
@@ -40,9 +42,10 @@
                         class="m-4 mb-8"
                         color="primary"
                     >
-                        You are adding an item to someone else's wishlist. This item will be marked
-                        as purchased on their list, but it will not be shown to the wishlist owner.
-                        This should help prevent duplicate items.
+                        You are adding an item to someone else's wishlist. This
+                        item will be marked as purchased on their list, but it
+                        will not be shown to the wishlist owner. This should
+                        help prevent duplicate items.
                     </v-alert>
                     <ItemFields
                         v-model:item="modifiedItem"
@@ -62,25 +65,34 @@
                         :title="alert.title"
                         :text="alert.text"
                         class="mt-4"
-                    />                    
+                    />
                 </v-card-text>
                 <v-card-actions>
                     <v-btn
                         :prepend-icon="mdiRobot"
                         variant="tonal"
-                        :disabled="!(modifiedItem.url && (limits.autofill || autofillUsage.remainingAllowance.value !== 0))"
+                        :disabled="
+                            !(
+                                modifiedItem.url &&
+                                (limits.autofill ||
+                                    autofillUsage.remainingAllowance.value !==
+                                        0)
+                            )
+                        "
                         @click="autofill"
-                        v-if="limits.autofill || autofillUsage.totalAllowance.value > 0"
+                        v-if="
+                            limits.autofill ||
+                            autofillUsage.totalAllowance.value > 0
+                        "
                     >
                         Autofill
                         <template v-if="!limits.autofill">
-                            ({{ autofillUsage.remainingAllowance }}/{{ autofillUsage.totalAllowance }})
+                            ({{ autofillUsage.remainingAllowance }}/{{
+                                autofillUsage.totalAllowance
+                            }})
                         </template>
                     </v-btn>
-                    <v-btn
-                        text="Cancel"
-                        @click="isActive.value = false"
-                    />
+                    <v-btn text="Cancel" @click="isActive.value = false" />
                     <v-btn
                         color="primary"
                         text="Save"
@@ -104,21 +116,30 @@
 </template>
 
 <script>
-import { autofillUsage as autofillUsageStore, limits as limitsStore } from "@/stores/billing";
-import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VFab } from "vuetify/components";
-import { create as createDialog } from "@/stores/dialogs";
 import { ENABLE_BILLING } from "astro:env/client";
-import { getJwt } from "@/stores/auth";
-import { handleFetch } from "@/utils/handleFetch";
-import { ID } from "appwrite";
-import ImageSelector from "@/components/dialogs/ImageSelector.vue";
-import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
-import { markRaw } from "vue";
-import mime from "mime-types";
-import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
-import { user as userStore } from "@/stores/auth";
+import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
+import mime from "mime-types";
+import { markRaw } from "vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+    VFab,
+} from "vuetify/components";
+import ProcessingAutofill from "@/components/dialogs/autofill/ProcessingAutofill.vue";
+import ItemFields from "@/components/dialogs/fields/ItemFields.vue";
+import ImageSelector from "@/components/dialogs/ImageSelector.vue";
+import { user as userStore } from "@/stores/auth";
+import {
+    autofillUsage as autofillUsageStore,
+    limits as limitsStore,
+} from "@/stores/billing";
+import { create as createDialog } from "@/stores/dialogs";
+import { handleFetch } from "@/utils/handleFetch";
 
 export default {
     title: "ListDialog",
@@ -130,36 +151,36 @@ export default {
         VCardActions,
         VCardText,
         VDialog,
-        VFab
+        VFab,
     },
     props: {
         currency: {
             type: String,
-            required: true
+            required: true,
         },
         item: {
-            type: Object
+            type: Object,
         },
         list: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         itemLimitReached: {
             type: Boolean,
-            default: false
+            default: false,
         },
         quickCreateURL: {
             type: String,
-            default: ""
+            default: "",
         },
         variant: {
             type: String,
-            default: "elevated"
+            default: "elevated",
         },
         wishlistOwner: {
             type: Boolean,
-            default: false
-        }
+            default: false,
+        },
     },
     data() {
         return {
@@ -185,12 +206,12 @@ export default {
                 price: "",
                 priority: "none",
                 title: "",
-                url: ""
+                url: "",
             },
             limits: useStore(limitsStore),
             previousValues: {},
             uploadingFile: false,
-            user: useStore(userStore)
+            user: useStore(userStore),
         };
     },
     watch: {
@@ -202,20 +223,22 @@ export default {
                     this.dialogOpen = false;
                     this.$emit("itemLimitReached");
                 }
-                this.listId = this.list.$id;
+                this.listId = this.list.id;
 
                 if (this.item) {
-                    this.itemID = this.item.$id;
+                    this.itemID = this.item.id;
                     this.modifiedItem = {
                         description: this.item.description,
                         displayPrice: this.item.displayPrice,
                         image: this.item.image,
-                        imageFile: this.getExistingImageFilePlaceholder(this.item.imageID),
+                        imageFile: this.getExistingImageFilePlaceholder(
+                            this.item.imageID,
+                        ),
                         imageID: this.item.imageID,
                         price: this.item.price,
                         priority: this.item.priority,
                         title: this.item.title,
-                        url: this.item.url
+                        url: this.item.url,
                     };
 
                     this.previousValues = { ...this.modifiedItem };
@@ -224,7 +247,7 @@ export default {
                         this.loadExistingImageFile(this.item.imageID);
                     }
                 } else {
-                    this.itemID = ID.unique();
+                    this.itemID = crypto.randomUUID();
                 }
             } else {
                 this.fileState = false;
@@ -238,7 +261,7 @@ export default {
                     price: "",
                     priority: "none",
                     title: "",
-                    url: ""
+                    url: "",
                 };
             }
         },
@@ -246,14 +269,14 @@ export default {
             if (newURL) {
                 this.dialogOpen = false;
                 this.modifiedItem.url = newURL;
-                this.itemID = ID.unique();
+                this.itemID = crypto.randomUUID();
                 this.$emit("unsetQuickCreateURL", "");
 
                 await this.autofill();
 
                 this.dialogOpen = true;
             }
-        }
+        },
     },
     methods: {
         async autofill() {
@@ -266,14 +289,14 @@ export default {
                         actions: [
                             {
                                 action: "close",
-                                text: "No"
+                                text: "No",
                             },
                             {
                                 action: "close",
                                 color: "primary",
-                                text: "Yes"
-                            }
-                        ]
+                                text: "Yes",
+                            },
+                        ],
                     });
 
                     if (useAutofill.action !== "Yes") {
@@ -283,33 +306,33 @@ export default {
                     this.createDialog(
                         ENABLE_BILLING
                             ? {
-                                title: "Auto-fill Unavailable",
-                                text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",
-                                actions: [
-                                    {
-                                        action: "close",
-                                        color: "primary",
-                                        text: "Close"
-                                    },
-                                    {
-                                        to: "/dash/settings/billing",
-                                        color: "secondary",
-                                        closeAfterAction: true,
-                                        text: "Upgrade to Pro"
-                                    }
-                                ]
-                            }
+                                  title: "Auto-fill Unavailable",
+                                  text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",
+                                  actions: [
+                                      {
+                                          action: "close",
+                                          color: "primary",
+                                          text: "Close",
+                                      },
+                                      {
+                                          to: "/dash/settings/billing",
+                                          color: "secondary",
+                                          closeAfterAction: true,
+                                          text: "Upgrade to Pro",
+                                      },
+                                  ],
+                              }
                             : {
-                                title: "Auto-fill Unavailable",
-                                text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually.",
-                                actions: [
-                                    {
-                                        action: "close",
-                                        color: "primary",
-                                        text: "Close"
-                                    }
-                                ]
-                            }
+                                  title: "Auto-fill Unavailable",
+                                  text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually.",
+                                  actions: [
+                                      {
+                                          action: "close",
+                                          color: "primary",
+                                          text: "Close",
+                                      },
+                                  ],
+                              },
                     );
 
                     return;
@@ -321,16 +344,14 @@ export default {
             const resp = await this.createDialog({
                 async: true,
                 component: markRaw(ProcessingAutofill),
-                emits: [
-                    "complete", "error"
-                ],
+                emits: ["complete", "error"],
                 fullscreen: false,
                 maxWidth: "90%",
                 props: {
                     currency: this.currency,
                     itemID: this.itemID,
-                    url: this.modifiedItem.url
-                }
+                    url: this.modifiedItem.url,
+                },
             });
 
             if (resp.action === "closed") {
@@ -343,12 +364,14 @@ export default {
                         {
                             action: "close",
                             color: "primary",
-                            text: "OK"
-                        }
+                            text: "OK",
+                        },
                     ],
-                    text: resp.data || "An unknown error occurred during auto-fill.",
+                    text:
+                        resp.data ||
+                        "An unknown error occurred during auto-fill.",
                     title: "Error",
-                    variant: "error"
+                    variant: "error",
                 });
                 return;
             }
@@ -360,42 +383,43 @@ export default {
                         {
                             action: "close",
                             color: "primary",
-                            text: "OK"
-                        }
+                            text: "OK",
+                        },
                     ],
                     text: "No data was returned from the auto-fill process.",
                     title: "Error",
-                    variant: "error"
+                    variant: "error",
                 });
                 return;
             }
 
             if (autofillData.images.length > 1) {
-                const images = autofillData.images.map((image) => {
-                    image.best = image.src === autofillData.bestImage.src;
-                    return image;
-                }).sort((a, b) => {
-                    if (a.best && !b.best) {
-                        return -1;
-                    }
-                    if (!a.best && b.best) {
-                        return 1;
-                    }
-                    return 0;
-                });
+                const images = autofillData.images
+                    .map((image) => {
+                        image.best = image.src === autofillData.bestImage.src;
+                        return image;
+                    })
+                    .sort((a, b) => {
+                        if (a.best && !b.best) {
+                            return -1;
+                        }
+                        if (!a.best && b.best) {
+                            return 1;
+                        }
+                        return 0;
+                    });
                 const imageSelectorResp = await this.createDialog({
                     async: true,
                     component: markRaw(ImageSelector),
-                    emits: [
-                        "select-image"
-                    ],
+                    emits: ["select-image"],
                     fullscreen: false,
                     props: {
-                        images: images
-                    }
+                        images: images,
+                    },
                 });
                 if (imageSelectorResp.action === "select-image") {
-                    this.modifiedItem.image = images[imageSelectorResp.data].src;
+                    this.modifiedItem.image =
+                        images[imageSelectorResp.data].src;
                     this.modifiedItem.imageFile = null;
                     this.modifiedItem.imageID = null;
                 } else {
@@ -410,7 +434,8 @@ export default {
                 this.modifiedItem.imageID = null;
             }
 
-            this.modifiedItem.title = autofillData.title || this.modifiedItem.title;
+            this.modifiedItem.title =
+                autofillData.title || this.modifiedItem.title;
             this.modifiedItem.price = autofillData.price
                 ? autofillData.price.price
                 : this.modifiedItem.price;
@@ -435,26 +460,19 @@ export default {
                 loading: true,
                 name: "Current image",
                 size: 0,
-                type: "image/*"
+                type: "image/*",
             };
         },
         async loadExistingImageFile(imageID) {
             try {
-                const jwt = await getJwt();
-                if (!jwt) {
-                    return;
-                }
-
                 const params = new URLSearchParams({
                     fileId: imageID,
-                    itemId: this.itemID
+                    itemId: this.itemID,
                 });
 
-                const [data, error] = await handleFetch(`/api/content/item/image?${params.toString()}`, {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`
-                    }
-                });
+                const [data, error] = await handleFetch(
+                    `/api/content/item/image?${params.toString()}`,
+                );
 
                 if (error || !data?.file) {
                     if (error) {
@@ -463,47 +481,26 @@ export default {
                     return;
                 }
 
-                if (this.modifiedItem.imageID !== imageID || this.fileState === "removed") {
+                if (
+                    this.modifiedItem.imageID !== imageID ||
+                    this.fileState === "removed"
+                ) {
                     return;
                 }
 
                 const { file } = data;
                 this.modifiedItem.imageFile = {
                     existing: true,
-                    lastModified: file.updatedAt ? new Date(file.updatedAt).getTime() : undefined,
+                    lastModified: file.updatedAt
+                        ? new Date(file.updatedAt).getTime()
+                        : undefined,
                     name: file.name || "Current image",
                     size: file.size || 0,
-                    type: file.mimeType || "image/*"
+                    type: file.mimeType || "image/*",
                 };
             } catch (error) {
                 console.error("Failed to load existing image metadata:", error);
             }
-        },
-        async uploadImageFile({ jwt }) {
-            const formData = new FormData();
-            formData.append("file", this.modifiedItem.imageFile);
-            formData.append("listId", this.listId);
-
-            const response = await fetch("/api/content/item/image", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${jwt}`
-                },
-                body: formData
-            });
-
-            let data;
-            try {
-                data = await response.json();
-            } catch {
-                data = null;
-            }
-
-            if (!response.ok) {
-                throw new Error(data?.message || "Failed to upload image");
-            }
-
-            return data.file;
         },
         async createItem() {
             let result;
@@ -513,17 +510,7 @@ export default {
             if (this.modifiedItem.title === "") {
                 this.alert = {
                     text: "Title is required.",
-                    title: "Error"
-                };
-                this.loading = false;
-                return;
-            }
-
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to create an item.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -534,48 +521,39 @@ export default {
                     await this.downloadRemoteImage(this.modifiedItem.image);
                 }
 
-                if (this.modifiedItem.imageFile && !this.modifiedItem.imageID) {
-                    this.uploadingFile = true;
-                    let fileUpload;
-
-                    try {
-                        fileUpload = await this.uploadImageFile({ jwt });
-                    } finally {
-                        this.uploadingFile = false;
-                    }
-
-                    this.modifiedItem.imageID = fileUpload.$id;
-                    this.modifiedItem.image = "";
+                const itemData = {
+                    communityList: this.wishlistOwner ? null : this.listId,
+                    contributorId: this.wishlistOwner ? null : this.user.id,
+                    contributorName: this.wishlistOwner ? null : this.user.name,
+                    description: this.modifiedItem.description || null,
+                    displayPrice: this.modifiedItem.displayPrice,
+                    image: this.modifiedItem.image || null,
+                    imageID: this.modifiedItem.imageID || null,
+                    list: this.listId,
+                    price: parseFloat(this.modifiedItem.price) || 0,
+                    priority: this.modifiedItem.priority,
+                    title: this.modifiedItem.title,
+                    url: this.modifiedItem.url || null,
+                };
+                const formData = new FormData();
+                formData.append("itemData", JSON.stringify(itemData));
+                if (this.modifiedItem.imageFile) {
+                    formData.append("file", this.modifiedItem.imageFile);
                 }
 
-                const [createRespData, createError] = await handleFetch("/api/content/item", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [createRespData, createError] = await handleFetch(
+                    "/api/content/item",
+                    {
+                        method: "POST",
+                        body: formData,
                     },
-                    body: JSON.stringify({
-                        itemData: {
-                            communityList: this.wishlistOwner ? null : this.listId,
-                            contributorId: this.wishlistOwner ? null : this.user.$id,
-                            contributorName: this.wishlistOwner ? null : this.user.name,
-                            description: this.modifiedItem.description || null,
-                            displayPrice: this.modifiedItem.displayPrice,
-                            image: this.modifiedItem.image || null,
-                            imageID: this.modifiedItem.imageID || null,
-                            list: this.listId,
-                            price: parseFloat(this.modifiedItem.price) || 0,
-                            priority: this.modifiedItem.priority,
-                            title: this.modifiedItem.title,
-                            url: this.modifiedItem.url || null
-                        }
-                    })
-                });
+                );
 
                 if (createError) {
                     this.alert = {
-                        text: createError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            createError.message || "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -586,7 +564,7 @@ export default {
                 this.uploadingFile = false;
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 console.error(e);
                 this.loading = false;
@@ -594,7 +572,7 @@ export default {
             }
 
             this.$emit("newItem", {
-                item: result
+                item: result,
             });
 
             this.modifiedItem = {
@@ -605,7 +583,7 @@ export default {
                 price: 0,
                 priority: "none",
                 title: "",
-                url: ""
+                url: "",
             };
 
             this.dialogOpen = false;
@@ -615,16 +593,6 @@ export default {
             let result;
             this.alert = false;
             this.loading = true;
-
-            const jwt = await getJwt();
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to edit an item.",
-                    title: "Error"
-                };
-                this.loading = false;
-                return;
-            }
 
             try {
                 // Upload hotlinked image if present (manually added)
@@ -637,45 +605,45 @@ export default {
                     this.modifiedItem.image = null;
                 }
 
-                if (["added", "replaced"].includes(this.fileState)) {
-                    this.uploadingFile = true;
-                    let fileUpload;
-
-                    try {
-                        fileUpload = await this.uploadImageFile({ jwt });
-                    } finally {
-                        this.uploadingFile = false;
-                    }
-
-                    this.modifiedItem.imageID = fileUpload.$id;
-                    this.modifiedItem.image = "";
+                const itemData = {
+                    description: this.modifiedItem.description || null,
+                    displayPrice: this.modifiedItem.displayPrice,
+                    image: this.modifiedItem.image || null,
+                    imageID: this.modifiedItem.imageID || null,
+                    price: parseFloat(this.modifiedItem.price) || 0,
+                    priority: this.modifiedItem.priority,
+                    title: this.modifiedItem.title,
+                    url: this.modifiedItem.url || null,
+                };
+                const formData = new FormData();
+                formData.append(
+                    "itemData",
+                    JSON.stringify({
+                        itemId: this.item.id,
+                        updateData: itemData,
+                        removeImage: this.fileState === "removed",
+                    }),
+                );
+                if (
+                    ["added", "replaced"].includes(this.fileState) &&
+                    this.modifiedItem.imageFile
+                ) {
+                    formData.append("file", this.modifiedItem.imageFile);
                 }
 
-                const [updateRespData, updateError] = await handleFetch("/api/content/item", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [updateRespData, updateError] = await handleFetch(
+                    "/api/content/item",
+                    {
+                        method: "PUT",
+                        body: formData,
                     },
-                    body: JSON.stringify({
-                        itemId: this.item.$id,
-                        updateData: {
-                            description: this.modifiedItem.description || null,
-                            displayPrice: this.modifiedItem.displayPrice,
-                            image: this.modifiedItem.image || null,
-                            imageID: this.modifiedItem.imageID || null,
-                            price: parseFloat(this.modifiedItem.price) || 0,
-                            priority: this.modifiedItem.priority,
-                            title: this.modifiedItem.title,
-                            url: this.modifiedItem.url || null
-                        }
-                    })
-                });
+                );
 
                 if (updateError) {
                     this.alert = {
-                        text: updateError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            updateError.message || "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
@@ -686,14 +654,14 @@ export default {
                 this.uploadingFile = false;
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
             }
 
             this.$emit("editItem", {
-                item: result
+                item: result,
             });
 
             this.dialogOpen = false;
@@ -707,34 +675,30 @@ export default {
 
                 let fileExt = mime.extension(imageBlob.type) || "png";
 
-                if (fileExt === "webp") {
-                    // Leave webp as is, due to https://github.com/appwrite/appwrite/issues/10699
-                    return;
-                }
-
-                const imageFile = new File(
-                    [imageBlob], `image.${fileExt}`,
-                    { type: imageBlob.type }
-                );
-                this.fileState = this.modifiedItem.imageID ? "replaced" : "added";
+                const imageFile = new File([imageBlob], `image.${fileExt}`, {
+                    type: imageBlob.type,
+                });
+                this.fileState = this.modifiedItem.imageID
+                    ? "replaced"
+                    : "added";
                 this.modifiedItem.imageFile = imageFile;
                 this.modifiedItem.image = "";
             } catch (error) {
                 // Will just be hotlinked instead
                 console.error("Failed to download remote image:", error);
             }
-        }
+        },
     },
     async mounted() {
         if (this.quickCreateURL) {
             this.dialogOpen = false;
             this.modifiedItem.url = this.quickCreateURL;
-            this.itemID = ID.unique();
+            this.itemID = crypto.randomUUID();
             this.$emit("unsetQuickCreateURL", "");
             await this.autofill();
 
             this.dialogOpen = true;
         }
-    }
+    },
 };
 </script>

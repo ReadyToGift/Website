@@ -8,7 +8,7 @@ export const getCurrency = (code) => {
     if (!currency) {
         return {
             code: "USD",
-            symbol: "$"
+            symbol: "$",
         };
     }
 
@@ -21,11 +21,11 @@ export const formatter = (code) => {
         style: "currency",
         currency: code,
         minimumFractionDigits: currency?.decimalDigits || 2,
-        maximumFractionDigits: currency?.decimalDigits || 2
+        maximumFractionDigits: currency?.decimalDigits || 2,
     });
 };
 
 export default {
     getCurrency,
-    formatter
+    formatter,
 };

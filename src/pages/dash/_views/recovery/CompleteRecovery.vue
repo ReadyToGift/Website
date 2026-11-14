@@ -13,11 +13,7 @@
                     label="Password Confirmation"
                     type="password"
                 />
-                <v-btn
-                    type="submit"
-                    color="primary"
-                    :loading="loadingRecovery"
-                >
+                <v-btn type="submit" color="primary" :loading="loadingRecovery">
                     Recover Account
                 </v-btn>
             </v-form>
@@ -37,15 +33,16 @@
 
 <script>
 import { mdiAlert, mdiInformation } from "@mdi/js";
+import { useRouter } from "vue-router";
 import { VAlert, VBtn, VForm, VTextField } from "vuetify/components";
-import { account } from "@/appwrite";
+import { authClient } from "@/stores/auth";
 
 export default {
     components: {
         VForm,
         VTextField,
         VBtn,
-        VAlert
+        VAlert,
     },
     data() {
         return {
@@ -55,20 +52,9 @@ export default {
             recoveryDetails: {
                 password: "",
                 passwordConfirmation: "",
-                secret: "",
-                userId: ""
-            }
+                token: "",
+            },
         };
-    },
-    props: {
-        secret: {
-            type: String,
-            required: true
-        },
-        userId: {
-            type: String,
-            required: true
-        }
     },
     methods: {
         async completeRecovery() {
@@ -76,57 +62,54 @@ export default {
             if (!this.recoveryDetails.password) {
                 this.alert = {
                     text: "Please enter a password.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
 
             if (
-                this.recoveryDetails.password !== this.recoveryDetails.passwordConfirmation
+                this.recoveryDetails.password !==
+                this.recoveryDetails.passwordConfirmation
             ) {
                 this.alert = {
                     text: "Passwords do not match.",
-                    title: "Error"
+                    title: "Error",
                 };
                 return;
             }
 
             this.loadingRecovery = true;
-            try {
-                await account.updateRecovery(
-                    this.recoveryDetails.userId,
-                    this.recoveryDetails.secret,                    
-                    this.recoveryDetails.password.trim(),
-                    this.recoveryDetails.passwordConfirmation.trim()
-                );
+            const { error } = await authClient.resetPassword({
+                newPassword: this.recoveryDetails.password.trim(),
+                token: this.recoveryDetails.token,
+            });
 
+            this.loadingRecovery = false;
+
+            if (error) {
+                this.alert = {
+                    text: error.message,
+                    title: "Error",
+                    type: "error",
+                };
+            } else {
                 this.alert = {
                     icon: mdiInformation,
                     text: "Account recovered successfully, redirecting you to the login page.",
                     title: "Success",
-                    type: "success"
+                    type: "success",
                 };
-
-                this.loadingRecovery = false;
 
                 setTimeout(() => {
                     this.$router.push("/dash/login");
                 }, 2000);
-            } catch (error) {
-                this.alert = {
-                    text: error.message,
-                    title: "Error"
-                };
-
-                this.loadingRecovery = false;
-                return;
             }
-        }
+        },
     },
     mounted() {
-        this.recoveryDetails.userId = this.userId;
-        this.recoveryDetails.secret = this.secret;
-    }
+        const router = useRouter();
+        this.recoveryDetails.token = router.currentRoute.value.query.token;
+    },
 };
 </script>
 

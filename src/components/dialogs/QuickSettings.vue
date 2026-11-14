@@ -1,18 +1,12 @@
 <template>
-    <v-menu
-        :close-on-content-click="false"
-        v-model="menu"
-    >
+    <v-menu :close-on-content-click="false" v-model="menu">
         <template v-slot:activator="{ props }">
-            <slot
-                name="activator"
-                :props="props"
-            ></slot>
+            <slot name="activator" :props="props"></slot>
         </template>
         <v-card>
             <v-list v-if="user">
                 <v-list-item
-                    :prepend-avatar="user.avatar"
+                    :prepend-avatar="`/api/avatar/${user.id}?v=${encodeURIComponent(user.updatedAt || '')}`"
                     :subtitle="user.name ? user.email : null"
                     :title="user.name || user.email"
                 />
@@ -45,27 +39,10 @@
                                     class="mr-4"
                                 />
                             </template>
-                        </v-list-item>                            
-                        <v-list-item
-                            v-if="!!account"
-                            title="Spoil Surprises"
-                        >
-                            <template #prepend>
-                                <v-switch
-                                    v-model="newUserPrefs.spoilSurprises"
-                                    hide-details
-                                    inset
-                                    color="primary"
-                                    class="mr-4"
-                                />
-                            </template>
                         </v-list-item>
                     </v-list>
                 </v-list-item>
-                <v-list-item
-                    :prepend-icon="mdiInformation"
-                    to="/dash/about"
-                >
+                <v-list-item :prepend-icon="mdiInformation" to="/dash/about">
                     About
                 </v-list-item>
                 <v-list-item
@@ -99,11 +76,9 @@
                 </v-btn>
                 <v-btn @click="menu = false">Cancel</v-btn>
 
-                <v-btn
-                    @click="updatePrefs"
-                    color="primary"
-                    variant="elevated"
-                >Save</v-btn>
+                <v-btn @click="updatePrefs" color="primary" variant="elevated"
+                    >Save</v-btn
+                >
             </v-card-actions>
         </v-card>
     </v-menu>
@@ -111,23 +86,10 @@
 
 <script setup>
 import { mdiCog, mdiInformation } from "@mdi/js";
-import { 
-    VBtn, 
-    VCard, 
-    VCardActions, 
-    VDivider, 
-    VList, 
-    VListItem, 
-    VMenu, 
-    VSpacer, 
-    VSwitch 
-} from "vuetify/components";
-import { account } from "@/appwrite";
-import { ref } from "vue";
-
-import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
-import { user as authUser } from "@/stores/auth";
 import { useStore } from "@nanostores/vue";
+import { ref } from "vue";
+import { user as authUser } from "@/stores/auth";
+import { $prefs, updatePrefs as updateUserPrefs } from "@/stores/prefs";
 
 const prefs = useStore($prefs);
 const newUserPrefs = ref(Object.assign({}, prefs.value));
@@ -139,9 +101,9 @@ const menu = ref(false);
 
 defineProps({
     hide: {
-        default: () => ([]),
-        type: Array
-    }
+        default: () => [],
+        type: Array,
+    },
 });
 
 const emit = defineEmits(["logout"]);
@@ -156,7 +118,6 @@ const updatePrefs = async () => {
 };
 
 const redirectURL = encodeURIComponent(
-    window.location.pathname + window.location.search
+    window.location.pathname + window.location.search,
 );
-
 </script>

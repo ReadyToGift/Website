@@ -1,124 +1,121 @@
-import { APPWRITE_DB, APPWRITE_LIST_COLLECTION } from "astro:env/client";
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import { user as users } from "@/auth-schema";
+import { db } from "@/db";
+import { items, lists } from "@/schema";
+
 export const prerender = false;
-import { createAdminClient, requireAuth } from "@/server/appwrite";
-import { Query } from "node-appwrite";
 
 export const GET = async (context) => {
     try {
-        const { sessionClient, account } = await requireAuth(context);
-
-        if (!sessionClient || !account) {
-            return new Response(
-                JSON.stringify({
-                    message: "Unauthenticated"
-                }),
-                {
-                    status: 401,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
-
-
-        let adminClient;
-
-        try {
-            adminClient = createAdminClient();
-        } catch (err) {
-            console.log(err);
-
-            return new Response(
-                JSON.stringify({
-                    message: "Error creating admin client"
-                }),
-                {
-                    status: 500,
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
-            );
-        }
+        const { unauthorizedResponse, user } = requireAuth(context);
+        if (unauthorizedResponse) return unauthorizedResponse;
 
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
-        const sortField = searchParams.get("sort") || "$createdAt";
+        const requestedSortField = searchParams.get("sort") || "createdAt";
+        const sortField = requestedSortField;
 
-        const savedListIDs = account?.prefs?.savedLists || [];
-
-        let listQuery = [
-            Query.limit(1000),
-            sortOrder === "asc" ?
-                Query.orderAsc(sortField) :
-                Query.orderDesc(sortField)
+        const validSortFields = [
+            "createdAt",
+            "updatedAt",
+            "title",
+            "itemCount",
         ];
-
-        const authorQuery = Query.equal("author", account.$id);
-
-        if (savedListIDs.length > 0) {
-            listQuery.push(
-                Query.or([
-                    authorQuery,
-                    Query.and([
-                        Query.equal("$id", savedListIDs),
-                        Query.equal("private", false)
-                    ])
-                ])
-            );
-        } else {
-            listQuery.push(authorQuery);
-        }
-
-        let lists;
-
-        try {
-            lists = await adminClient.tablesDB.listRows({
-                databaseId: APPWRITE_DB,
-                tableId: APPWRITE_LIST_COLLECTION,
-                queries: listQuery
+        if (!validSortFields.includes(sortField)) {
+            console.warn("Invalid list sort field", {
+                sortField: requestedSortField,
+                validSortFields,
             });
-        } catch (err) {
-            console.log(err);
 
             return new Response(
                 JSON.stringify({
-                    message: "Error fetching lists"
+                    message: `Invalid sort field: ${sortField}`,
                 }),
                 {
-                    status: 500,
+                    status: 400,
                     headers: {
-                        "Content-Type": "application/json"
-                    }
-                }
+                        "Content-Type": "application/json",
+                    },
+                },
             );
         }
 
+        const requestedSavedListIDs = (searchParams.get("savedLists") || "")
+            .split(",")
+            .filter(Boolean);
+        const savedListIDs = [
+            ...new Set([...(user?.savedLists || []), ...requestedSavedListIDs]),
+        ];
+
+        const authorQuery = eq(lists.author, user.id);
+        const savedListsQuery =
+            savedListIDs.length > 0
+                ? and(inArray(lists.id, savedListIDs), eq(lists.private, false))
+                : undefined;
+
+        const itemCount = count(items.id);
+
+        const returnedLists = await db
+            .select({
+                id: lists.id,
+                author: users.id,
+                authorName: users.name,
+                title: lists.title,
+                description: lists.description,
+                currency: lists.currency,
+                shortUrl: lists.shortUrl,
+                private: lists.private,
+                spoilSurprises: lists.spoilSurprises,
+                createdAt: lists.createdAt,
+                updatedAt: lists.updatedAt,
+                itemCount,
+            })
+            .from(lists)
+            .leftJoin(users, eq(users.id, lists.author))
+            .leftJoin(
+                items,
+                or(eq(items.list, lists.id), eq(items.communityList, lists.id)),
+            )
+            .where(or(authorQuery, savedListsQuery))
+            .groupBy(lists.id, users.id, users.name)
+            .orderBy(
+                sortOrder === "asc"
+                    ? asc(
+                          sortField === "itemCount"
+                              ? itemCount
+                              : lists[sortField],
+                      )
+                    : desc(
+                          sortField === "itemCount"
+                              ? itemCount
+                              : lists[sortField],
+                      ),
+            );
+
         return new Response(
             JSON.stringify({
-                lists: lists.rows
+                lists: returnedLists,
             }),
             {
                 status: 200,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
-
     } catch (error) {
         console.log("Internal server error:", error);
         return new Response(
             JSON.stringify({
-                message: "Internal server error"
+                message: "Internal server error",
             }),
             {
                 status: 500,
                 headers: {
-                    "Content-Type": "application/json"
-                }
-            }
+                    "Content-Type": "application/json",
+                },
+            },
         );
     }
 };

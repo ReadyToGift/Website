@@ -1,98 +1,22 @@
 <template>
-    <v-list>
-        <v-list-item
-            title="Multi-Factor Authentication (MFA)"
-            subtitle="Require another step after using your usual login method."
-            :prepend-icon="mdiShieldCheck"
-        >
-            <template v-slot:append>
-                <v-tooltip
-                    :text="
-                        hasAuthenticator
-                            ? user.mfa
-                                ? 'Disable MFA'
-                                : 'Enable MFA'
-                            : 'You need at least one MFA method enabled to use MFA.'
-                    "
-                    v-if="user"
-                >
-                    <template v-slot:activator="{ props }">
-                        <div v-bind="props">
-                            <v-switch
-                                inset
-                                color="primary"
-                                hide-details
-                                :disabled="!hasAuthenticator"
-                                class="ml-4"
-                                :model-value="user.mfa"
-                                @change="toggleMFA"
-                            />
-                        </div>
-                    </template>
-                </v-tooltip>
-            </template>
-        </v-list-item>
-        <v-list-item>
-            <v-list>
-                <TOTPFactor :loading="loadingMFAFactors" />
-            </v-list>
-        </v-list-item>
-    </v-list>
+    <v-list-item
+        title="Multi-Factor Authentication (TOTP)"
+        :prepend-icon="mdiShieldCheck"
+        class="mfa-item"
+    >
+        <template #append>
+            <TOTPFactor :loading="loadingMFAFactors" />
+        </template>
+    </v-list-item>
 </template>
 
 <script setup>
-import { computed, onMounted, shallowRef } from "vue";
-import { VList, VListItem, VSwitch, VTooltip } from "vuetify/components";
-import { account } from "@/appwrite";
 import { mdiShieldCheck } from "@mdi/js";
+import { onMounted, shallowRef } from "vue";
+import { getMFAFactors } from "@/stores/auth";
 import TOTPFactor from "./factors/totp/TOTP.vue";
 
-import { getMFAFactors, mfaFactors as mfaFactorsStore, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
-import { useStore } from "@nanostores/vue";
-
-const user = useStore(userStore);
-const mfaFactors = useStore(mfaFactorsStore);
-
 const loadingMFAFactors = shallowRef(true);
-
-const hasAuthenticator = computed(() => mfaFactors.value.totp);
-
-const toggleMFA = async () => {
-    try {
-        await account.updateMFA({
-            mfa: !user.mfa
-        });
-        userStore.set({
-            ...user.value,
-            mfa: !user.value.mfa
-        });
-        createDialog({
-            actions: [
-                {
-                    action: "close",
-                    color: "primary",
-                    text: "OK"
-                }
-            ],
-            text: `Multi-Factor Authentication has been ${user.value.mfa ? "enabled" : "disabled"}.`,
-            title: "MFA Updated"
-        });
-    } catch (error) {
-        console.error("Error toggling MFA:", error);
-        createDialog({
-            actions: [
-                {
-                    action: "close",
-                    color: "primary",
-                    text: "OK"
-                }
-            ],
-            text: "There was an error updating your MFA settings. Please try again.",
-            title: "Error"
-        });
-    }
-};
 
 onMounted(async () => {
     await getMFAFactors();
@@ -100,7 +24,7 @@ onMounted(async () => {
 });
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .mfa {
     > .v-card-item > .v-card-item__content {
         > .v-card-title {
@@ -114,18 +38,15 @@ onMounted(async () => {
 }
 
 .v-list-item.mfa-item {
-    > .v-list-item__prepend,
-    > .v-list-item__append {
-        align-self: flex-start;
-    }
-    > .v-list-item__content > .v-card-title {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        .v-input__details {
-            display: none;
-        }
-    }
+    align-items: flex-start;
+}
+
+.totp-factor-controls,
+.totp-factor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .enable-mfa {
@@ -133,40 +54,22 @@ onMounted(async () => {
 }
 
 .totp-qrcode {
-    width: 12rem;
-    height: 12rem;
+    width: min(16rem, 100%);
+    height: auto;
+    aspect-ratio: 1;
     display: block;
-    max-width: 80%;
+    object-fit: contain;
     border-radius: 1rem;
     background-color: white;
     padding: 0.7rem;
 }
 
-/* .timeline-item-body {
-    transition: max-height 0.25s ease-in-out;
-    max-height: 0;
-    overflow: hidden;
-} */
-
-/* .v-timeline-item[data-active="true"] .timeline-item-body {
-    max-height: 200vh;
+.totp-secret {
+    width: 100%;
 }
 
-.recovery-codes-container {
-    .recovery-codes {
-        padding: 0 1rem;
-        font-size: 1.2rem;
-        margin: 0;
-    }
+.totp-secret input {
+    min-width: 0;
+    font-size: 0.875rem;
 }
-
-.v-timeline-item {
-    &[data-step="4"] {
-        .v-otp-input {
-            justify-content: flex-start;
-            width: 30rem;
-            font-weight: bold;
-        }
-    }
-} */
 </style>

@@ -12,7 +12,8 @@
             />
         </template>
 
-        <template v-slot:default="{ isActive }">s
+        <template v-slot:default="{ isActive }"
+            >s
             <template v-if="!success">
                 <v-card title="Move Item">
                     <template v-slot:title>
@@ -22,10 +23,7 @@
                         </v-card-text>
                     </template>
                     <v-card-text>
-                        <div
-                            class="lists mt-5 loader"
-                            v-if="loading"
-                        >
+                        <div class="lists mt-5 loader" v-if="loading">
                             <v-skeleton-loader
                                 :height="50"
                                 class="mb-4 pa-4"
@@ -33,13 +31,10 @@
                                 :key="i"
                             />
                         </div>
-                        <div
-                            class="lists mt-5"
-                            v-else
-                        >
+                        <div class="lists mt-5" v-else>
                             <ListCard
                                 v-for="list in lists"
-                                :key="list.$id"
+                                :key="list.id"
                                 :list="list"
                                 :selected="selectedList === list"
                                 @click="selectList(list)"
@@ -59,10 +54,7 @@
                         />
                     </v-card-text>
                     <v-card-actions>
-                        <v-btn
-                            text="Cancel"
-                            @click="isActive.value = false"
-                        />
+                        <v-btn text="Cancel" @click="isActive.value = false" />
                         <v-btn
                             color="primary"
                             text="Move"
@@ -77,12 +69,11 @@
             <template v-else>
                 <v-card title="Item Moved">
                     <template v-slot:title> Item Moved </template>
-                    <v-card-text> The item has been moved to the selected list. </v-card-text>
+                    <v-card-text>
+                        The item has been moved to the selected list.
+                    </v-card-text>
                     <v-card-actions>
-                        <v-btn
-                            @click="goToList"
-                            text="View List"
-                        />
+                        <v-btn @click="goToList" text="View List" />
                         <v-btn
                             text="Close"
                             color="primary"
@@ -97,16 +88,27 @@
 </template>
 
 <script>
-import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
-import { VAlert, VBtn, VCard, VCardActions, VCardText, VDialog, VSkeletonLoader } from "vuetify/components";
 import { ENABLE_BILLING } from "astro:env/client";
+import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
+import { useStore } from "@nanostores/vue";
+import {
+    VAlert,
+    VBtn,
+    VCard,
+    VCardActions,
+    VCardText,
+    VDialog,
+    VSkeletonLoader,
+} from "vuetify/components";
+import { user as userStore } from "@/stores/auth";
+
+import {
+    allLimits as allLimitsStore,
+    limits as limitsStore,
+} from "@/stores/billing";
+import { create as createDialog } from "@/stores/dialogs";
 import { handleFetch } from "@/utils/handleFetch";
 import ListCard from "../ListCard.vue";
-
-import { allLimits as allLimitsStore, limits as limitsStore } from "@/stores/billing";
-import { getJwt, user as userStore } from "@/stores/auth";
-import { create as createDialog } from "@/stores/dialogs";
-import { useStore } from "@nanostores/vue";
 
 export default {
     title: "ListDialog",
@@ -118,21 +120,21 @@ export default {
         VCardText,
         VCardActions,
         VAlert,
-        VSkeletonLoader
+        VSkeletonLoader,
     },
     props: {
         item: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         list: {
             type: Object,
-            default: () => ({})
+            default: () => ({}),
         },
         variant: {
             type: String,
-            default: "elevated"
-        }
+            default: "elevated",
+        },
     },
     data() {
         return {
@@ -148,7 +150,7 @@ export default {
             success: false,
             user: useStore(userStore),
             limits: useStore(limitsStore),
-            allLimits: useStore(allLimitsStore)
+            allLimits: useStore(allLimitsStore),
         };
     },
     watch: {
@@ -156,50 +158,45 @@ export default {
             if (value) {
                 this.getLists();
             }
-        }
+        },
     },
     methods: {
         closeAfterSuccess() {
             this.dialogOpen = false;
-            this.$emit("removeItem", this.item.$id);
+            this.$emit("removeItem", this.item.id);
         },
         async getLists() {
             this.loading = true;
             try {
-                const jwt = await getJwt();
-
-                if (!jwt) {
-                    this.alert = {
-                        text: "You must be logged in to move an item.",
-                        title: "Error"
-                    };
-                    this.loading = false;
-                    return;
-                }
-
-                const [response, listsError] = await handleFetch("/api/content/lists", {
-                    headers: {
-                        Authorization: `Bearer ${jwt}`
-                    }
-                });
+                const [response, listsError] =
+                    await handleFetch("/api/content/lists");
 
                 if (listsError) {
                     this.alert = {
-                        text: listsError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            listsError.message || "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loading = false;
                     return;
                 }
 
                 const userLists = (response.lists || [])
-                    .filter((list) => list.author === this.user.$id && list.$id !== this.list.$id)
-                    .sort((a, b) => new Date(b.$updatedAt).getTime() - new Date(a.$updatedAt).getTime());
+                    .filter(
+                        (list) =>
+                            list.author === this.user.id &&
+                            list.id !== this.list.id,
+                    )
+                    .sort(
+                        (a, b) =>
+                            new Date(b.updatedAt).getTime() -
+                            new Date(a.updatedAt).getTime(),
+                    );
 
                 if (userLists.length === 0) {
                     this.alert = {
                         text: "You have no other lists to move this item to.",
-                        title: "No lists"
+                        title: "No lists",
                     };
                     this.loading = false;
                     return;
@@ -212,7 +209,7 @@ export default {
                 console.error(e);
                 this.alert = {
                     text: e.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loading = false;
                 return;
@@ -221,36 +218,29 @@ export default {
         async moveToList() {
             this.loadingMove = true;
 
-            const jwt = await getJwt();
-
-            if (!jwt) {
-                this.alert = {
-                    text: "You must be logged in to move an item.",
-                    title: "Error"
-                };
-                this.loadingMove = false;
-                return;
-            }
-
             try {
-                const [, moveItemError] = await handleFetch("/api/content/item", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${jwt}`
+                const [, moveItemError] = await handleFetch(
+                    "/api/content/item",
+                    {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            itemId: this.item.id,
+                            updateData: {
+                                list: this.selectedList.id,
+                            },
+                        }),
                     },
-                    body: JSON.stringify({
-                        itemId: this.item.$id,
-                        updateData: {
-                            list: this.selectedList.$id
-                        }
-                    })
-                });
+                );
 
                 if (moveItemError) {
                     this.alert = {
-                        text: moveItemError.message || "An unknown error occurred.",
-                        title: "Error"
+                        text:
+                            moveItemError.message ||
+                            "An unknown error occurred.",
+                        title: "Error",
                     };
                     this.loadingMove = false;
                     return;
@@ -262,60 +252,63 @@ export default {
                 console.error(error);
                 this.alert = {
                     text: error.message || "An unknown error occurred.",
-                    title: "Error"
+                    title: "Error",
                 };
                 this.loadingMove = false;
                 return;
             }
         },
         goToList() {
-            this.$router.push(`/list/${this.selectedList.$id}`);
+            this.$router.push(`/list/${this.selectedList.id}`);
             this.dialogOpen = false;
         },
         selectList(list) {
-            if (list.itemCount + 1 >= this.limits.itemsPerList) {
+            if (
+                this.limits.itemsPerList !== -1 &&
+                list.itemCount + 1 > this.limits.itemsPerList
+            ) {
                 this.selectedList = null;
                 createDialog(
                     ENABLE_BILLING
                         ? {
-                            actions: [
-                                {
-                                    action: "close",
-                                    color: "primary",
-                                    text: "OK"
-                                },
-                                {
-                                    to: "/dash/settings/billing",
-                                    color: "secondary",
-                                    closeAfterAction: true,
-                                    text: "Upgrade"
-                                }
-                            ],
-                            text: `This list has reached its limit of ${this.limits.itemsPerList}.`,
-                            title: "You cannot add any more items into this list"
-                        }
+                              actions: [
+                                  {
+                                      action: "close",
+                                      color: "primary",
+                                      text: "OK",
+                                  },
+                                  {
+                                      to: "/dash/settings/billing",
+                                      color: "secondary",
+                                      closeAfterAction: true,
+                                      text: "Upgrade",
+                                  },
+                              ],
+                              text: `This list has reached its limit of ${this.limits.itemsPerList}.`,
+                              title: "You cannot add any more items into this list",
+                          }
                         : {
-                            actions: [
-                                {
-                                    action: "close",
-                                    color: "primary",
-                                    text: "OK"
-                                }
-                            ],
-                            text: `This list has reached its limit of ${this.limits.itemsPerList}. Please remove an item from that list before moving another item into it.`,
-                            title: "You cannot add any more items into this list"
-                        }
+                              actions: [
+                                  {
+                                      action: "close",
+                                      color: "primary",
+                                      text: "OK",
+                                  },
+                              ],
+                              text: `This list has reached its limit of ${this.limits.itemsPerList}. Please remove an item from that list before moving another item into it.`,
+                              title: "You cannot add any more items into this list",
+                          },
                 );
                 return;
             } else {
                 this.alert = false;
             }
-            if (this.selectedList && this.selectedList.$id === list.$id) {
+            if (this.selectedList && this.selectedList.id === list.id) {
                 this.selectedList = null;
                 return;
             }
             this.selectedList = list;
-        }
-    }
+        },
+    },
 };
 </script>

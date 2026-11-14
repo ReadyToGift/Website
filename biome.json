@@ -12,9 +12,7 @@
         "useIgnoreFile": true
     },
     "files": {
-        "includes": [
-            "**"
-        ]
+        "includes": ["**", "!**/*.svg", "!!migrations/meta"]
     },
     "formatter": {
         "enabled": true,
@@ -24,7 +22,13 @@
     "linter": {
         "enabled": true,
         "rules": {
-            "preset": "recommended"
+            "preset": "recommended",
+            "a11y": {
+                "noAutofocus": "off"
+            },
+            "style": {
+                "useVueMultiWordComponentNames": "off"
+            }
         }
     },
     "javascript": {

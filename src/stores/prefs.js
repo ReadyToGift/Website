@@ -1,46 +1,144 @@
-import { account } from "@/appwrite";
 import { persistentMap } from "@nanostores/persistent";
-import { user } from "./auth";
+import { authClient, user } from "./auth";
 
 const defaultPrefs = {
     darkMode: false,
-    spoilSurprises: false,
     showTotalPrice: false,
     savedLists: [],
     listSorting: {
-        type: { name: "Last updated", value: "$updatedAt" },
-        order: "asc"
+        type: { name: "Last updated", value: "updatedAt" },
+        order: "asc",
     },
     history: [],
-    hidePWAInstallPrompt: false
+    hidePWAInstallPrompt: false,
 };
 
-export const $prefs = persistentMap("userPrefs", { ...defaultPrefs }, {
-    encode: JSON.stringify,
-    decode: JSON.parse
-});
+const validListSortFields = new Set([
+    "createdAt",
+    "updatedAt",
+    "title",
+    "itemCount",
+]);
+
+const normalizeListSorting = (listSorting) => {
+    const sorting =
+        listSorting && typeof listSorting === "object"
+            ? listSorting
+            : defaultPrefs.listSorting;
+    const requestedField = sorting.type?.value;
+    const value = validListSortFields.has(requestedField)
+        ? requestedField
+        : defaultPrefs.listSorting.type.value;
+
+    return {
+        type: {
+            name:
+                value === "updatedAt"
+                    ? "Last updated"
+                    : value === "createdAt"
+                      ? "Created"
+                      : value === "itemCount"
+                        ? "Item Count"
+                        : "Title",
+            value,
+        },
+        order: sorting.order === "desc" ? "desc" : "asc",
+    };
+};
+
+const normalizeHistory = (history) =>
+    (Array.isArray(history) ? history : []).map((entry) => {
+        const normalizedEntry = { ...entry };
+        delete normalizedEntry.avatar;
+        return normalizedEntry;
+    });
+
+export const $prefs = persistentMap(
+    "userPrefs",
+    { ...defaultPrefs },
+    {
+        encode: JSON.stringify,
+        decode: JSON.parse,
+    },
+);
+$prefs.listen(() => {});
 
 export const newUserPrefs = { ...defaultPrefs };
 
 export const loadPrefs = (prefs) => {
-    $prefs.set({ ...defaultPrefs, ...prefs });
-    Object.assign(newUserPrefs, { ...defaultPrefs, ...prefs });
+    const persistedPrefs = $prefs.get();
+    const accountPrefs = Object.fromEntries(
+        Object.keys(defaultPrefs)
+            .filter((key) => prefs?.[key] !== undefined)
+            .map((key) => [key, prefs[key]]),
+    );
+    const savedLists =
+        prefs?.savedLists?.length > 0
+            ? prefs.savedLists
+            : persistedPrefs.savedLists;
+    const history = normalizeHistory(
+        prefs?.history?.length > 0 ? prefs.history : persistedPrefs.history,
+    );
+    const loadedPrefs = {
+        ...defaultPrefs,
+        ...accountPrefs,
+        savedLists,
+        history,
+        listSorting: normalizeListSorting(prefs?.listSorting),
+    };
+    $prefs.set(loadedPrefs);
+    Object.assign(newUserPrefs, loadedPrefs);
 };
 
 export const updatePrefs = async (updatedPrefs) => {
     const userAccount = user.get();
-    const newPrefs = Object.assign({}, $prefs.get(), updatedPrefs);
+    const newPrefs = {
+        ...Object.assign({}, $prefs.get(), updatedPrefs),
+        listSorting: normalizeListSorting(
+            updatedPrefs.listSorting || $prefs.get().listSorting,
+        ),
+    };
     if (userAccount) {
-        await account.updatePrefs(newPrefs);
+        const preferenceUpdate = Object.fromEntries(
+            Object.keys(defaultPrefs).map((key) => [key, newPrefs[key]]),
+        );
+        const { data, error } = await authClient.updateUser(preferenceUpdate);
+        if (error) {
+            throw new Error(error.message || "Failed to update preferences");
+        }
+
+        if (data) {
+            user.set(data);
+        }
     }
     $prefs.set(newPrefs);
 };
 
 export const addToHistory = (item) => {
     let history = $prefs.get().history;
-    history.unshift(item);
-    history = history.filter((v, i, a) => a.findIndex(t => (t.id === v.id)) === i) // remove duplicates
-        .slice(0, 5); 
+    history.unshift(normalizeHistory([item])[0]);
+    history = history
+        .filter((v, i, a) => a.findIndex((t) => t.id === v.id) === i) // remove duplicates
+        .slice(0, 5);
     $prefs.set({ ...$prefs.get(), history });
 
+    if (user.get()) {
+        updatePrefs({ history }).catch((error) => {
+            console.error("Failed to sync history:", error);
+        });
+    }
+};
+
+export const removeFromHistory = (listId) => {
+    const history = $prefs.get().history.filter((item) => item.id !== listId);
+
+    if (history.length === $prefs.get().history.length) return;
+
+    $prefs.set({ ...$prefs.get(), history });
+
+    if (user.get()) {
+        updatePrefs({ history }).catch((error) => {
+            console.error("Failed to sync history:", error);
+        });
+    }
 };
