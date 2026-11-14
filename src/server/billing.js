@@ -18,17 +18,38 @@ export const ensurePolarCustomer = async ({ user }) => {
     const externalId = user.id;
     try {
         return await polar.customers.getExternal(externalId);
-    } catch {
+    } catch (error) {
+        if (error.statusCode !== 404) {
+            throw error;
+        }
+
         console.log("Customer not found, creating new one");
-        await polar.customers.create({
-            individual: {
+        try {
+            return await polar.customers.create({
                 email: user.email,
                 external_id: externalId,
-                name: user.name,
-            },
-        });
+                name: user.name || user.email,
+                type: "individual",
+            });
+        } catch (createError) {
+            console.error("Unable to create Polar customer", {
+                cause: error,
+                code: createError.code,
+                detail: createError.detail,
+                error: createError.error,
+                errors: createError.errors,
+                message: createError.message,
+                statusCode: createError.statusCode,
+            });
 
-        return await polar.customers.getExternal(externalId);
+            // Better Auth may create the same customer concurrently. If the
+            // create lost that race, the customer should now be retrievable.
+            if ([409, 422].includes(createError.statusCode)) {
+                return await polar.customers.getExternal(externalId);
+            }
+
+            throw createError;
+        }
     }
 };
 
