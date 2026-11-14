@@ -239,7 +239,13 @@
                     type="button"
                     :loading="!billing.billingLoaded"
                 >
-                    <v-btn @click="openPortal"> Open billing portal </v-btn>
+                    <v-btn
+                        :loading="portalLoading"
+                        :disabled="portalLoading"
+                        @click="openPortal"
+                    >
+                        Open billing portal
+                    </v-btn>
                 </v-skeleton-loader>
             </v-card-text>
         </v-card>
@@ -282,6 +288,7 @@ const billing = useStore(billingStore);
 const allLimits = useStore(allLimitsStore);
 
 const proCheckoutLoading = shallowRef(false);
+const portalLoading = shallowRef(false);
 
 const proLoading = shallowRef(false);
 const proPrice = shallowRef("");
@@ -333,7 +340,12 @@ const checkoutPro = async () => {
 };
 
 const openPortal = async () => {
-    await authClient.customer.portal();
+    portalLoading.value = true;
+    try {
+        await authClient.customer.portal();
+    } finally {
+        portalLoading.value = false;
+    }
 };
 
 const formatDate = (timestamp) => {
