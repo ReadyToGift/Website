@@ -24,6 +24,10 @@ export const lists = sqliteTable("lists", {
     createdAt: integer("createdAt", { mode: "timestamp" }),
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
     spoilSurprises: integer("spoilSurprises", { mode: "boolean" }).default(0),
+    type: text("type", {
+        enum: ["standard", "wedding"],
+    }).default("standard"),
+    images: text("images"),
 });
 
 export const items = sqliteTable("items", {

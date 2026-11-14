@@ -57,6 +57,20 @@
       "when": 1794671727378,
       "tag": "0007_real_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1794674772555,
+      "tag": "0008_flawless_solo",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1794675240963,
+      "tag": "0009_modern_deathstrike",
+      "breakpoints": true
     }
   ]
 }
