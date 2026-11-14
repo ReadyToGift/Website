@@ -8,12 +8,14 @@
             <TOTPFactor :loading="loadingMFAFactors" />
         </template>
     </v-list-item>
+    <PasskeyFactor />
 </template>
 
 <script setup>
 import { mdiShieldCheck } from "@mdi/js";
 import { onMounted, shallowRef } from "vue";
 import { getMFAFactors } from "@/stores/auth";
+import PasskeyFactor from "./factors/passkey/Passkey.vue";
 import TOTPFactor from "./factors/totp/TOTP.vue";
 
 const loadingMFAFactors = shallowRef(true);

@@ -1,12 +1,13 @@
 import { ENABLE_BILLING } from "astro:env/client";
+import { passkeyClient } from "@better-auth/passkey/client";
 import { persistentAtom } from "@nanostores/persistent";
 import { polarClient } from "@polar-sh/better-auth/client";
 import { createAuthClient } from "better-auth/client";
-import { twoFactorClient } from "better-auth/client/plugins";
+import { magicLinkClient, twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
 import { loadPrefs } from "./prefs";
 
-const plugins = [twoFactorClient()];
+const plugins = [twoFactorClient(), magicLinkClient(), passkeyClient()];
 
 if (ENABLE_BILLING) {
     plugins.push(polarClient());

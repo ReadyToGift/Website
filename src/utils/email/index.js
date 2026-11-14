@@ -1,6 +1,6 @@
+import { env } from "cloudflare:workers";
 import mjml2html from "mjml";
 import { Plunk } from "plunk-node-sdk";
-import { env } from "cloudflare:workers";
 import templateContent from "./templates/email-template.mjml?raw";
 
 const getFooter = ({ footer, contactSupportDefaultSubject }) => {
@@ -37,7 +37,13 @@ export const sendEmail = async ({
     preview,
 }) => {
     console.log(`Sending email to ${to}`);
-    const { PLUNK_BASE_URL, PLUNK_SECRET_KEY, PLUNK_SENDING_EMAIL } = env;
+
+    const PLUNK_BASE_URL = env.PLUNK_BASE_URL || import.meta.env.PLUNK_BASE_URL;
+    const PLUNK_SECRET_KEY =
+        env.PLUNK_SECRET_KEY || import.meta.env.PLUNK_SECRET_KEY;
+    const PLUNK_SENDING_EMAIL =
+        env.PLUNK_SENDING_EMAIL || import.meta.env.PLUNK_SENDING_EMAIL;
+
     if (!PLUNK_SECRET_KEY) {
         throw new Error("PLUNK_SECRET_KEY is not configured");
     }

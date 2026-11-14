@@ -24,6 +24,7 @@
         "@astrojs/cloudflare": "^14.4.6",
         "@astrojs/vue": "^7.1.2",
         "@better-auth/drizzle-adapter": "^1.7.18",
+        "@better-auth/passkey": "^1.7.23",
         "@dicebear/converter": "^10.7.0",
         "@dicebear/core": "^10.7.0",
         "@dicebear/styles": "^10.6.0",

@@ -71,6 +71,13 @@
       "when": 1794675240963,
       "tag": "0009_modern_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1794695072607,
+      "tag": "0010_faulty_songbird",
+      "breakpoints": true
     }
   ]
 }

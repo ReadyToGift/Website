@@ -1,9 +1,10 @@
 import { env, waitUntil } from "cloudflare:workers";
+import { passkey } from "@better-auth/passkey";
 import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { createPolarCore } from "@polar-sh/sdk/2026-10";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { twoFactor } from "better-auth/plugins";
+import { magicLink, twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { sendEmail } from "@/utils/email/index";
@@ -22,7 +23,33 @@ export const requireAuth = (context) => {
     return { unauthorizedResponse: null, user, session };
 };
 
-const plugins = [twoFactor()];
+const plugins = [
+    twoFactor(),
+    magicLink({
+        sendMagicLink: async ({ email, url }) => {
+            console.log("Sending magic link to", email);
+
+            const body = `You requested a magic link.<br/>
+                Click the link below to sign in.<br/><br/>
+                <a href="${url}">${url}</a>`;
+            const footer = `If you didn't request this, you can ignore this email.`;
+            return sendEmail({
+                to: email,
+                name: email,
+                subject: "Sign in link",
+                preview: "You requested a sign in link",
+                body,
+                footer,
+                contactSupportDefaultSubject: `Sign in link - ${new Date().toLocaleString("en-GB")}`,
+            });
+        },
+    }),
+    passkey({
+        registration: {
+            requireSession: true,
+        },
+    }),
+];
 
 if (ENABLE_BILLING) {
     const polarClient = createPolarCore({
