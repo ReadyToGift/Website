@@ -1,5 +1,5 @@
 {
-    "name": "readytogift",
+    "name": "readytogift-prod",
     "compatibility_date": "2026-04-21",
     "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
     "assets": {
@@ -39,5 +39,32 @@
             "binding": "BUCKET",
             "remote": true
         }
-    ]
+    ],
+    "vars": {
+        "AUTOFILL_PROXY_ATTEMPTS": "2",
+        "AUTOFILL_PROXY_COUNTRY_PREFIX": "-cc-",
+        "AUTOFILL_PROXY_HOST": "pr.oxylabs.io:7777",
+        "AUTOFILL_PROXY_USERNAME": "{country}",
+        "AUTOFILL_USE_LOCAL_FETCH": "true",
+        "BETTER_AUTH_URL": "https://next.readyto.gift",
+        "CLOUDFLARE_ACCOUNT_ID": "216243d60e3747616344868b601a1f99",
+        "CLOUDFLARE_DATABASE_ID": "c5a00055-e5d6-4e47-8f46-212f9c9e9e81",
+        "CLOUDFLARE_R2_BUCKET": "readytogift",
+        "CLOUDFLARE_R2_ENDPOINT": "https://storage.readyto.gift",
+        "ENABLE_BILLING": "true",
+        "FREE_TIER_ENABLE_AUTOFILL": "true",
+        "FREE_TIER_ITEMS_PER_LIST": "50",
+        "FREE_TIER_PRIVATE_LIST_LIMIT": "10",
+        "FREE_TIER_PUBLIC_LIST_LIMIT": "5",
+        "PLUNK_BASE_URL": "https://email.jackbailey.dev/api",
+        "PLUNK_SENDING_EMAIL": "noreply@readyto.gift",
+        "POLAR_AUTOFILL_METER_ID": "cf76d151-432f-4527-8549-982f39101a72",
+        "POLAR_PRO_PRODUCT_ID": "44d4f00e-df0e-43f4-ae41-0ab4e76069e8",
+        "SENTRY_DSN": "https://b33f8cb6df1a14b0a815ad2820a8f323@sentry.jackbailey.cloud/2",
+        "SENTRY_ORG_ID": "sentry",
+        "SENTRY_PROJECT": "readytogift",
+        "UMAMI_DOMAINS": "readyto.gift",
+        "UMAMI_ID": "9aa2f725-c41f-466c-a36d-bcbe81d2b979",
+        "UMAMI_URL": "https://analytics.jackbailey.dev/script.js"
+    }
 }
