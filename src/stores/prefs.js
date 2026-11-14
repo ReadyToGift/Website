@@ -129,3 +129,17 @@ export const addToHistory = (item) => {
         });
     }
 };
+
+export const removeFromHistory = (listId) => {
+    const history = $prefs.get().history.filter((item) => item.id !== listId);
+
+    if (history.length === $prefs.get().history.length) return;
+
+    $prefs.set({ ...$prefs.get(), history });
+
+    if (user.get()) {
+        updatePrefs({ history }).catch((error) => {
+            console.error("Failed to sync history:", error);
+        });
+    }
+};

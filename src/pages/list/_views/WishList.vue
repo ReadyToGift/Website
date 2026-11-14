@@ -139,7 +139,7 @@ import {
 } from "@/stores/billing";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { create as createDialog } from "@/stores/dialogs";
-import { $prefs, addToHistory } from "@/stores/prefs";
+import { $prefs, addToHistory, removeFromHistory } from "@/stores/prefs";
 import {
     setCount as setListCount,
     userLists as userListsStore,
@@ -678,6 +678,7 @@ export default {
                 this.quickCreateURL = this.quickCreateURLParam;
             } catch (error) {
                 if (error.code === 404) {
+                    removeFromHistory(listId);
                     this.newItem.notFound = true;
                     return;
                 }
