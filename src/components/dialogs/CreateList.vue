@@ -226,7 +226,7 @@ export default {
     watch: {
         dialogOpen(open) {
             if (open === true) {
-                this.listId = this.list.$id;
+                this.listId = this.list.id;
                 this.newList.private = this.private;
             } else {
                 this.alert = false;

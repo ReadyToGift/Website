@@ -14,13 +14,7 @@ export const GET = async (context) => {
         const searchParams = context.url.searchParams;
         const sortOrder = searchParams.get("order") || "desc";
         const requestedSortField = searchParams.get("sort") || "createdAt";
-        // `$updatedAt` was used by the old Appwrite-backed implementation.
-        // Accept it so stale clients/preferences continue to work after the
-        // migration to the local schema.
-        const sortField =
-            requestedSortField === "$updatedAt"
-                ? "updatedAt"
-                : requestedSortField;
+        const sortField = requestedSortField;
 
         const validSortFields = [
             "createdAt",

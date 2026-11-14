@@ -27,12 +27,9 @@ const normalizeListSorting = (listSorting) => {
             ? listSorting
             : defaultPrefs.listSorting;
     const requestedField = sorting.type?.value;
-    const value =
-        requestedField === "$updatedAt"
-            ? "updatedAt"
-            : validListSortFields.has(requestedField)
-              ? requestedField
-              : defaultPrefs.listSorting.type.value;
+    const value = validListSortFields.has(requestedField)
+        ? requestedField
+        : defaultPrefs.listSorting.type.value;
 
     return {
         type: {
