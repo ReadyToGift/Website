@@ -9,7 +9,7 @@
                 label="Authentication Code"
                 autocomplete="one-time-code"
                 autofocus
-                @finish="submit"
+                @finish="!requiresPassword && submit()"
                 :error="!!errorMessage"
             />
             <v-text-field
@@ -38,7 +38,7 @@
                 autocomplete="one-time-code"
                 autofocus
                 max-width="400px"
-                @finish="submit"
+                @finish="!requiresPassword && submit()"
                 :error="!!errorMessage"
             />
             <v-text-field
@@ -125,7 +125,7 @@ const usingRecoveryCode = shallowRef(false);
 const loading = shallowRef(false);
 
 const submit = async () => {
-    if (loading.value) return;
+    if (loading.value || (requiresPassword && !password.value)) return;
     loading.value = true;
     try {
         if (usingRecoveryCode.value) {

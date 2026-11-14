@@ -24,15 +24,8 @@
 
                     <b>Thank you!</b>
 
-                    This will only be shown to other viewers of this list to
-                    help prevent duplicates.<br>
-                    It will
-                    <span
-                        class="text-error"
-                        style="font-weight: bold; text-decoration: underline"
-                        >not be shown</span
-                    >
-                    to the owner of this list.
+                    This helps other viewers avoid duplicates. The list owner
+                    sees fulfilled gifts only if they enable Spoil surprises.
 
                     <v-alert
                         v-if="alert"

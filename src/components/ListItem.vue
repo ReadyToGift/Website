@@ -4,7 +4,7 @@
         :data-fulfilled="
             !item.communityList &&
             !!item.fulfillment &&
-            (!wishlistOwner || spoilSurprises)
+            (!wishlistOwner || list.spoilSurprises)
         "
         variant="tonal"
         :data-item-id="item.id"
@@ -14,8 +14,9 @@
             <v-btn-group base-color="primary" divided rounded="pill">
                 <FulfillItem
                     v-if="
-                        (!item.communityList && !wishlistOwner) ||
-                        (wishlistOwner && spoilSurprises && !item.communityList)
+                        !item.communityList &&
+                        (!wishlistOwner ||
+                            (list.spoilSurprises && !!item.fulfillment))
                     "
                     :item="item"
                     @fulfillItem="$emit('fulfillItem', $event)"
@@ -112,7 +113,10 @@
                 <div class="chips">
                     <v-chip
                         :prepend-icon="mdiGift"
-                        v-if="item.fulfilledBy"
+                        v-if="
+                            item.fulfilledBy &&
+                            (!wishlistOwner || list.spoilSurprises)
+                        "
                         color="primary"
                         variant="elevated"
                         rounded
@@ -235,9 +239,6 @@ export default {
             } else {
                 return null;
             }
-        },
-        spoilSurprises() {
-            return this.prefs.spoilSurprises;
         },
     },
     methods: {

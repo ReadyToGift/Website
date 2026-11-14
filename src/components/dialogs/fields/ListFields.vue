@@ -93,6 +93,14 @@
         inset
         color="primary"
     />
+    <v-switch
+        label="Spoil surprises"
+        v-model="list.spoilSurprises"
+        hint="When enabled, you will see what items have been fulfilled and by who."
+        persistent-hint
+        inset
+        color="primary"
+    />
 </template>
 
 <script setup>

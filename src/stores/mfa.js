@@ -15,7 +15,7 @@ export const createTOTPChallengeDialog = (props = {}) =>
         component: markRaw(TotpChallenge),
         emits: ["cancel", "success", "totp-removed"],
         fullscreen: false,
-        maxWidth: "80%",
+        maxWidth: "500px",
         props,
         title: "Multi-Factor Authentication",
     });

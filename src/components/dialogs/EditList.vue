@@ -221,6 +221,7 @@ export default {
                     private: this.list.private,
                     shortUrl: this.list.shortUrl,
                     title: this.list.title,
+                    spoilSurprises: this.list.spoilSurprises,
                 };
                 this.previousValues = { ...this.editedList };
                 this.listId = this.list.id;

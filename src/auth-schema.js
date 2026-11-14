@@ -22,9 +22,6 @@ export const user = sqliteTable("user", {
     darkMode: integer("dark_mode", { mode: "boolean" })
         .default(false)
         .notNull(),
-    spoilSurprises: integer("spoil_surprises", { mode: "boolean" })
-        .default(false)
-        .notNull(),
     showTotalPrice: integer("show_total_price", { mode: "boolean" })
         .default(false)
         .notNull(),

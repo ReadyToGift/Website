@@ -126,7 +126,8 @@
                                     (sum, item) => sum + (item.price || 0),
                                     0,
                                 ) +
-                                    (!ownList || (ownList && spoilSurprises)
+                                    (!ownList ||
+                                    (ownList && list.spoilSurprises)
                                         ? communityItems.reduce(
                                               (sum, item) =>
                                                   sum + (item.price || 0),
@@ -264,10 +265,6 @@ const props = defineProps({
         type: [String, Boolean],
     },
     selected: {
-        default: false,
-        type: Boolean,
-    },
-    spoilSurprises: {
         default: false,
         type: Boolean,
     },

@@ -23,6 +23,7 @@ export const lists = sqliteTable("lists", {
     private: integer("private", { mode: "boolean" }).default(0),
     createdAt: integer("createdAt", { mode: "timestamp" }),
     updatedAt: integer("updatedAt", { mode: "timestamp" }),
+    spoilSurprises: integer("spoilSurprises", { mode: "boolean" }).default(0),
 });
 
 export const items = sqliteTable("items", {

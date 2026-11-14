@@ -1,5 +1,3 @@
-import { ENABLE_BILLING } from "astro:env/client";
-import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
 import { waitUntil } from "cloudflare:workers";
 import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { createPolarCore } from "@polar-sh/sdk/2026-10";
@@ -9,6 +7,10 @@ import { twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { sendEmail } from "@/utils/email/index";
+
+const ENABLE_BILLING = import.meta.env.ENABLE_BILLING;
+const POLAR_ACCESS_TOKEN = import.meta.env.POLAR_ACCESS_TOKEN;
+const POLAR_PRO_PRODUCT_ID = import.meta.env.POLAR_PRO_PRODUCT_ID;
 
 export const requireAuth = (context) => {
     const { user, session } = context.locals;
@@ -95,9 +97,7 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         sendVerificationEmail: async ({ user, url }) => {
             const callbackURL = new URL(url).searchParams.get("callbackURL");
-            const isEmailChange = callbackURL?.includes(
-                "emailChange=pending",
-            );
+            const isEmailChange = callbackURL?.includes("emailChange=pending");
             const body = isEmailChange
                 ? `Your email address change is almost complete.<br/>
                     Click the link below to verify your new email address.<br/><br/>
@@ -141,10 +141,6 @@ export const auth = betterAuth({
         },
         additionalFields: {
             darkMode: {
-                type: "boolean",
-                defaultValue: false,
-            },
-            spoilSurprises: {
                 type: "boolean",
                 defaultValue: false,
             },

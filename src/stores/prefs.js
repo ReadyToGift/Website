@@ -3,7 +3,6 @@ import { authClient, user } from "./auth";
 
 const defaultPrefs = {
     darkMode: false,
-    spoilSurprises: false,
     showTotalPrice: false,
     savedLists: [],
     listSorting: {

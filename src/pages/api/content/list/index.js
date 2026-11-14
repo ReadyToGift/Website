@@ -58,6 +58,7 @@ export const GET = async (context) => {
                 currency: lists.currency,
                 shortUrl: lists.shortUrl,
                 private: lists.private,
+                spoilSurprises: lists.spoilSurprises,
                 createdAt: lists.createdAt,
                 updatedAt: lists.updatedAt,
                 itemCount: count(items.id),
@@ -189,6 +190,7 @@ export const POST = async (context) => {
             description = null,
             private: isPrivate = false,
             shortUrl = null,
+            spoilSurprises = false,
             title,
         } = await context.request.json();
 
@@ -249,6 +251,7 @@ export const POST = async (context) => {
                 description,
                 private: Boolean(isPrivate),
                 shortUrl,
+                spoilSurprises: spoilSurprises === true,
                 title: title.trim(),
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -389,6 +392,7 @@ export const PUT = async (context) => {
             "description",
             "private",
             "shortUrl",
+            "spoilSurprises",
             "title",
         ];
         const changes = Object.fromEntries(

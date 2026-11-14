@@ -19,7 +19,6 @@
                 :header="true"
                 :list="list"
                 :communityItems="communityItems"
-                :spoilSurprises="spoilSurprises"
                 :quickCreateURL="quickCreateURL"
                 :own-list="wishlistOwner"
                 :itemLimitReached="itemLimitReached"
@@ -43,7 +42,7 @@
                 :icon="mdiInformation"
                 elevation="2"
                 class="mt-5"
-                text="Make sure to mark anything as Fulfilled if you've purchased or plan on purchasing any of the items on the list! This will not be shown to the owner of this list."
+                text="Mark anything as fulfilled if you've purchased or plan to purchase it. This helps other visitors avoid duplicates. The list owner sees fulfilled gifts only if they enable Spoil surprises."
                 color="primary"
             />
 
@@ -301,7 +300,7 @@ export default {
             }
 
             if (
-                (!this.wishlistOwner || this.spoilSurprises) &&
+                (!this.wishlistOwner || this.list.spoilSurprises) &&
                 this.communityItems.length
             ) {
                 groups.push({
@@ -316,9 +315,6 @@ export default {
             }
 
             return groups;
-        },
-        spoilSurprises() {
-            return this.prefs.spoilSurprises;
         },
         wishlistOwner() {
             if (this.loadedAsAuthor) return true;
@@ -419,6 +415,7 @@ export default {
             this.list.itemCount = data.list.itemCount;
             this.list.updatedAt = data.list.updatedAt;
             this.list.private = data.list.private;
+            this.list.spoilSurprises = data.list.spoilSurprises;
         },
         addItem(data) {
             if (data.item.communityList) {

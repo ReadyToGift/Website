@@ -40,17 +40,6 @@
                                 />
                             </template>
                         </v-list-item>
-                        <v-list-item v-if="!!user" title="Spoil Surprises">
-                            <template #prepend>
-                                <v-switch
-                                    v-model="newUserPrefs.spoilSurprises"
-                                    hide-details
-                                    inset
-                                    color="primary"
-                                    class="mr-4"
-                                />
-                            </template>
-                        </v-list-item>
                     </v-list>
                 </v-list-item>
                 <v-list-item :prepend-icon="mdiInformation" to="/dash/about">

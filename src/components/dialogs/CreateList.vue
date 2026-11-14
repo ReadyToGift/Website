@@ -215,6 +215,7 @@ export default {
                 private: this.private,
                 shortUrl: null,
                 title: "",
+                spoilSurprises: false,
             },
             publicListLimitReached: useStore(publicListLimitReachedStore),
             privateListLimitReached: useStore(privateListLimitReachedStore),
@@ -236,6 +237,7 @@ export default {
                     description: "",
                     private: false,
                     shortUrl: null,
+                    spoilSurprises: false,
                     title: "",
                 };
             }
@@ -283,6 +285,7 @@ export default {
             this.newList = {
                 description: "",
                 shortUrl: "",
+                spoilSurprises: false,
                 title: "",
             };
 
