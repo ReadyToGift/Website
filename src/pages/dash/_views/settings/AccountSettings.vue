@@ -2,26 +2,42 @@
     <v-card variant="tonal">
         <v-card-title> Profile Picture </v-card-title>
         <v-card-text class="profile-picture-settings">
-            <v-avatar size="96">
+            <v-avatar size="96" class="profile-picture-preview">
                 <v-img :src="profilePicture" alt="Profile picture" />
             </v-avatar>
-            <input
-                ref="fileInput"
-                type="file"
-                accept="image/*"
-                hidden
-                @change="selectProfilePicture"
-            >
-            <v-btn color="primary" variant="tonal" @click="openFilePicker">
-                Upload picture
-            </v-btn>
-            <v-btn
-                v-if="user?.image"
-                variant="text"
-                @click="resetProfilePicture"
-            >
-                Remove picture
-            </v-btn>
+            <div class="profile-picture-controls">
+                <div class="profile-picture-description">
+                    <div class="text-body-1 font-weight-medium">
+                        Choose a picture for your account
+                    </div>
+                    <div class="text-body-2 text-medium-emphasis">
+                        JPG, PNG, or GIF up to 256 pixels.
+                    </div>
+                </div>
+                <input
+                    ref="fileInput"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    @change="selectProfilePicture"
+                >
+                <div class="profile-picture-actions">
+                    <v-btn
+                        color="primary"
+                        variant="tonal"
+                        @click="openFilePicker"
+                    >
+                        Upload picture
+                    </v-btn>
+                    <v-btn
+                        v-if="user?.image"
+                        variant="text"
+                        @click="resetProfilePicture"
+                    >
+                        Remove picture
+                    </v-btn>
+                </div>
+            </div>
         </v-card-text>
     </v-card>
     <v-card class="mt-4" variant="tonal">
@@ -355,7 +371,23 @@ const savePassword = async (newValue) => {
 .profile-picture-settings {
     display: flex;
     align-items: center;
+    gap: 1.5rem;
+}
+
+.profile-picture-controls {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
     gap: 1rem;
+}
+
+.profile-picture-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .profile-picture-cropper {
@@ -369,6 +401,18 @@ main {
         width: var(--section-width);
         margin: 0 auto;
         padding: 2rem 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .profile-picture-settings {
+        align-items: flex-start;
+    }
+
+    .profile-picture-controls,
+    .profile-picture-actions {
+        align-items: flex-start;
+        flex-direction: column;
     }
 }
 </style>
