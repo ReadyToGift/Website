@@ -7,9 +7,13 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink, twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
+import { deleteCache, getCache, setCache } from "@/server/cache";
 import { sendEmail } from "@/utils/email/index";
 
 const ENABLE_BILLING = String(env.ENABLE_BILLING) === "true";
+const BETTER_AUTH_SECRET = env.BETTER_AUTH_SECRET;
+
+if (!BETTER_AUTH_SECRET) throw new Error("Missing BETTER_AUTH_SECRET");
 
 export const requireAuth = (context) => {
     const { user, session } = context.locals;
@@ -79,6 +83,7 @@ if (ENABLE_BILLING) {
 
 export const auth = betterAuth({
     appName: "Readyto.gift",
+    secret: BETTER_AUTH_SECRET,
     advanced: {
         backgroundTasks: {
             handler: waitUntil,
@@ -193,5 +198,15 @@ export const auth = betterAuth({
                 defaultValue: false,
             },
         },
+    },
+    session: {
+        expiresIn: 60 * 60 * 24 * 30, // 30 days
+        updateAge: 60 * 60 * 24, // 1 day
+    },
+    secondaryStorage: {
+        get: async (key) => await getCache(`auth:${key}`),
+        set: async (key, value, ttl) =>
+            await setCache(`auth:${key}`, value, ttl),
+        delete: async (key) => await deleteCache(`auth:${key}`),
     },
 });
