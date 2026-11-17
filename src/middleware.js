@@ -1,7 +1,9 @@
 import { sequence } from "astro:middleware";
-import { auth } from "@/auth";
 
 const setAuth = async (context, next) => {
+    if (["/api/version", "/404"].includes(context.routePattern)) return next();
+
+    const { auth } = await import("@/auth");
     const isAuthed = await auth.api.getSession({
         headers: context.request.headers,
     });
