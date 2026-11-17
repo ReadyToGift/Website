@@ -2,6 +2,8 @@
 import VueLayout from "@/layouts/VueLayout.astro";
 import NotFound from "./_NotFound.vue";
 
+export const prerender = false;
+
 if (Astro.url.pathname === "/") {
     return Astro.redirect("/dash/lists");
 }
