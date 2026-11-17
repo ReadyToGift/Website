@@ -106,6 +106,11 @@ export default defineConfig({
                 default: false,
             }),
 
+            BETTER_AUTH_SECRET: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
             POLAR_ACCESS_TOKEN: envField.string({
                 context: "server",
                 access: "secret",
