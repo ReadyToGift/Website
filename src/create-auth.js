@@ -203,10 +203,14 @@ export const createAuth = ({
             expiresIn: 60 * 60 * 24 * 30, // 30 days
             updateAge: 60 * 60 * 24, // 1 day
         },
+        verification: {
+            storeInDatabase: true,
+        },
         secondaryStorage: {
             get: async (key) => await getCache(`auth:${key}`),
             set: async (key, value, ttl) =>
-                await setCache(`auth:${key}`, value, ttl),
+                // Better Auth supplies TTLs in seconds; setCache uses ms.
+                await setCache(`auth:${key}`, value, ttl * 1000),
             delete: async (key) => await deleteCache(`auth:${key}`),
         },
     });
