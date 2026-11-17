@@ -1,28 +1,13 @@
-import { REDIS_HOST } from "astro:env/server";
 import { env } from "cloudflare:workers";
-import { createClient } from "redis";
 
 const cloudflareKV = env.CACHE;
-let redis;
 const fallbackCache = new Map();
-
-if (REDIS_HOST) {
-    redis = createClient({ url: `redis://${REDIS_HOST}:6379` });
-
-    redis.on("error", (err) => console.error("Redis Client Error", err));
-    redis.connect().then(
-        () => console.log("Connected to Redis"),
-        (err) => console.error("Error connecting to Redis:", err),
-    );
-}
 
 export const setCache = async (key, value, ttl) => {
     try {
         const exp = Date.now() + ttl;
         const serialized = JSON.stringify({ data: value, ttl, exp });
-        if (redis) {
-            await redis.set(key, serialized, { EX: Math.ceil(ttl / 1000) });
-        } else if (cloudflareKV) {
+        if (cloudflareKV) {
             await cloudflareKV.put(key, serialized, {
                 expirationTtl: Math.ceil(ttl / 1000),
             });
@@ -38,9 +23,7 @@ export const setCache = async (key, value, ttl) => {
 export const getCache = async (key) => {
     try {
         let value;
-        if (redis) {
-            value = await redis.get(key);
-        } else if (cloudflareKV) {
+        if (cloudflareKV) {
             value = await cloudflareKV.get(key);
         } else {
             value = fallbackCache.get(key);
@@ -66,9 +49,7 @@ export const getCache = async (key) => {
 
 export const deleteCache = async (key) => {
     try {
-        if (redis) {
-            await redis.del(key);
-        } else if (cloudflareKV) {
+        if (cloudflareKV) {
             await cloudflareKV.delete(key);
         } else {
             fallbackCache.delete(key);

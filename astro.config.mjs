@@ -162,11 +162,6 @@ export default defineConfig({
                 access: "public",
                 default: 3,
             }),
-            REDIS_HOST: envField.string({
-                context: "server",
-                access: "secret",
-                optional: true,
-            }),
             BUILD_COMMIT: envField.string({
                 context: "client",
                 access: "public",
