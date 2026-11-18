@@ -73,7 +73,7 @@
         "better-sqlite3": "^13.0.3",
         "cross-env": "^10.1.0",
         "drizzle-kit": "^0.31.11",
-        "node-appwrite": "^20.3.0",
+        "node-appwrite": "^31.0.0",
         "vite": "^7.3.7"
     }
 }
