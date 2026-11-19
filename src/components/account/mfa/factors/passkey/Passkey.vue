@@ -97,6 +97,7 @@ const deletePasskey = async (passkey) => {
             { action: "close", text: "Cancel" },
             { action: "close", color: "error", text: "Delete" },
         ],
+        async: true,
         text: `Delete ${passkey.name || "this passkey"}? You will no longer be able to use it to sign in.`,
         title: "Delete passkey?",
         type: "warning",
