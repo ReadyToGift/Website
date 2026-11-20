@@ -1,7 +1,8 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-    "extends": ["config:best-practices", "group:all"],
+    "extends": ["config:best-practices"],
     "timezone": "Europe/London",
+    "separateMajorMinor": false,
     "lockFileMaintenance": {
         "enabled": true,
         "automerge": true,
@@ -21,8 +22,28 @@
             "groupName": "Migration tooling"
         },
         {
-            "matchPackageNames": ["astro", "/^@astrojs\\//"],
-            "groupName": "Astro"
+            "matchPackageNames": ["astro", "@astrojs/*"],
+            "groupName": "astro"
+        },
+        {
+            "matchPackageNames": ["better-auth", "@better-auth/*"],
+            "groupName": "better-auth"
+        },
+        {
+            "matchPackageNames": ["@dicebear/*"],
+            "groupName": "dicebear"
+        },
+        {
+            "matchPackageNames": ["nanostores", "@nanostores/*"],
+            "groupName": "nanostores"
+        },
+        {
+            "matchPackageNames": ["@polar-sh/*"],
+            "groupName": "polar"
+        },
+        {
+            "matchPackageNames": ["@sentry/*"],
+            "groupName": "sentry"
         },
         {
             "matchUpdateTypes": ["pin", "pinDigest"],
