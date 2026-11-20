@@ -32,7 +32,7 @@
         "@nanostores/vue": "^1.1.0",
         "@polar-sh/better-auth": "^2.1.4",
         "@polar-sh/checkout": "0.6.0",
-        "@polar-sh/sdk": "1.0.2",
+        "@polar-sh/sdk": "1.1.0",
         "@sentry/astro": "^10.78.0",
         "@sentry/cloudflare": "^11.11.0",
         "@sentry/vite-plugin": "^4.9.1",
