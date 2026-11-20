@@ -17,6 +17,7 @@ const getItem = async (itemId) => {
             communityList: items.communityList,
             listAuthor: lists.author,
             listPrivate: lists.private,
+            spoilSurprises: lists.spoilSurprises,
         })
         .from(items)
         .leftJoin(lists, eq(lists.id, items.list))
@@ -43,9 +44,12 @@ export const POST = async (context) => {
         if (item.listPrivate && (!user || item.listAuthor !== user.id)) {
             return json({ message: "Unauthorized" }, 403);
         }
-        if (user && item.listAuthor === user.id) {
+        if (user && item.listAuthor === user.id && !item.spoilSurprises) {
             return json(
-                { message: "List owners cannot fulfill their own items" },
+                {
+                    message:
+                        "List owners can only fulfill their own items when Spoil surprises is enabled",
+                },
                 403,
             );
         }

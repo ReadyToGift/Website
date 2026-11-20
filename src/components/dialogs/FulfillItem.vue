@@ -1,15 +1,16 @@
 <template>
-    <v-dialog max-width="500px" v-model="dialogOpen">
-        <template v-slot:activator="{ props: activatorProps }">
-            <v-btn
-                v-bind="activatorProps"
-                :prepend-icon="item.fulfillment ? mdiGiftOff : mdiGift"
-                :variant="variant"
-            >
-                {{ item.fulfillment ? item.fulfillment.name : "Fulfill" }}
-            </v-btn>
-        </template>
+    <v-btn
+        :prepend-icon="item.fulfillment ? mdiGiftOff : mdiGift"
+        :variant="variant"
+        :loading="instant && loading"
+        @click="handleActivate"
+    >
+        {{
+            item.fulfillment ? item.fulfillment.name || "Fulfilled" : "Fulfill"
+        }}
+    </v-btn>
 
+    <v-dialog max-width="500px" v-model="dialogOpen">
         <template v-slot:default="{ isActive }">
             <v-card title="Fulfill Item" v-if="!item.fulfillment">
                 <v-card-text>
@@ -115,6 +116,10 @@ export default {
             type: String,
             default: "elevated",
         },
+        instant: {
+            type: Boolean,
+            default: false,
+        },
     },
     data() {
         return {
@@ -129,6 +134,18 @@ export default {
         };
     },
     methods: {
+        handleActivate() {
+            if (this.instant) {
+                if (this.item.fulfillment) {
+                    this.unfulfillItem();
+                } else {
+                    this.fulfillItem();
+                }
+                return;
+            }
+
+            this.dialogOpen = true;
+        },
         async fulfillItem() {
             this.loading = true;
             this.alert = false;
@@ -221,7 +238,7 @@ export default {
         },
     },
     mounted() {
-        if (this.user && this.user.name) {
+        if (this.user?.name) {
             this.name = this.user.name.split(" ")[0];
         }
     },

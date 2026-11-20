@@ -15,10 +15,10 @@
                 <FulfillItem
                     v-if="
                         !item.communityList &&
-                        (!wishlistOwner ||
-                            (list.spoilSurprises && !!item.fulfillment))
+                        (!wishlistOwner || list.spoilSurprises)
                     "
                     :item="item"
+                    :instant="wishlistOwner && list.spoilSurprises"
                     @fulfillItem="$emit('fulfillItem', $event)"
                     @unfulfillItem="$emit('unfulfillItem', item.id)"
                 />
@@ -102,7 +102,7 @@
         <template
             v-slot:actions
             v-if="
-                item.fulfilledBy ||
+                item.fulfillment ||
                 item.price ||
                 item.priority !== 'none' ||
                 websiteUrl ||
@@ -114,14 +114,14 @@
                     <v-chip
                         :prepend-icon="mdiGift"
                         v-if="
-                            item.fulfilledBy &&
+                            item.fulfillment?.name &&
                             (!wishlistOwner || list.spoilSurprises)
                         "
                         color="primary"
                         variant="elevated"
                         rounded
                     >
-                        <span> Fulfilled by {{ item.fulfilledBy }} </span>
+                        <span> Fulfilled by {{ item.fulfillment.name }} </span>
                     </v-chip>
                     <v-chip
                         v-if="item.price && item.displayPrice"
