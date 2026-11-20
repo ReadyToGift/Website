@@ -67,7 +67,7 @@
         "wrangler": "^4.158.0"
     },
     "devDependencies": {
-        "@biomejs/biome": "2.6.5",
+        "@biomejs/biome": "2.6.7",
         "@mdi/js": "7.4.47",
         "@types/node": "26.6.6",
         "better-sqlite3": "13.0.3",
