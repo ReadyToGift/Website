@@ -95,7 +95,7 @@
                                 : `${list.itemCount}`
                         }}
                         items
-                        <div class="progress" v-if="ENABLE_BILLING">
+                        <div class="progress" v-if="config.enableBilling">
                             <v-progress-linear
                                 :max="limits.itemsPerList"
                                 :model-value="list.itemCount"
@@ -197,7 +197,6 @@
 </template>
 
 <script setup>
-import { ENABLE_BILLING } from "astro:env/client";
 import {
     mdiAlert,
     mdiDotsVertical,
@@ -221,6 +220,7 @@ import {
 import ListManagementButtons from "@/components/dialogs/ListManagementButtons.vue";
 import { user as userStore } from "@/stores/auth";
 import { limits as limitsStore } from "@/stores/billing";
+import { config as configStore } from "@/stores/config";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { $prefs } from "@/stores/prefs";
 import DeleteList from "./dialogs/DeleteList.vue";
@@ -231,6 +231,8 @@ const user = useStore(userStore);
 const limits = useStore(limitsStore);
 
 import VueMarkdown from "vue-markdown-render";
+
+const config = useStore(configStore);
 
 const emit = defineEmits(["newItem", "updateList", "quickCreate"]);
 

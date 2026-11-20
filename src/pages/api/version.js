@@ -1,4 +1,4 @@
-import { BUILD_COMMIT } from "astro:env/client";
+import { BUILD_COMMIT } from "astro:env/server";
 
 export const prerender = true;
 

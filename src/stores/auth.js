@@ -1,4 +1,3 @@
-import { ENABLE_BILLING } from "astro:env/client";
 import { passkeyClient } from "@better-auth/passkey/client";
 import { persistentAtom } from "@nanostores/persistent";
 import { polarClient } from "@polar-sh/better-auth/client";
@@ -6,19 +5,12 @@ import * as Sentry from "@sentry/astro";
 import { createAuthClient } from "better-auth/client";
 import { magicLinkClient, twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
+import { loadConfig } from "./config";
 import { loadPrefs } from "./prefs";
 
-const plugins = [twoFactorClient(), magicLinkClient(), passkeyClient()];
-
-if (ENABLE_BILLING) {
-    plugins.push(polarClient());
-}
-
-export const authClient = createAuthClient({
-    plugins,
-});
-
-export const session = authClient.useSession;
+export let authClient;
+export let session;
+let authReady;
 export const user = atom(null);
 export const mfaFactors = atom({});
 export const previouslyLoggedInUserID = persistentAtom(
@@ -26,10 +18,6 @@ export const previouslyLoggedInUserID = persistentAtom(
     null,
 );
 export const authInitialized = atom(false);
-let resolveAuthReady;
-const authReady = new Promise((resolve) => {
-    resolveAuthReady = resolve;
-});
 
 const updateUser = (sessionData) => {
     const sessionUser = sessionData?.user ?? null;
@@ -47,13 +35,25 @@ const updateUser = (sessionData) => {
     return sessionUser;
 };
 
-session.listen((state) => {
-    if (!state.isPending) {
-        updateUser(state.data);
-        authInitialized.set(true);
-        resolveAuthReady();
-    }
-});
+export const init = () => {
+    authReady ??= loadConfig().then(({ enableBilling }) => {
+        const plugins = [twoFactorClient(), magicLinkClient(), passkeyClient()];
+        if (enableBilling) plugins.push(polarClient());
+
+        authClient = createAuthClient({ plugins });
+        session = authClient.useSession;
+
+        return new Promise((resolve) => {
+            session.subscribe((state) => {
+                if (state.isPending) return;
+                updateUser(state.data);
+                authInitialized.set(true);
+                resolve();
+            });
+        });
+    });
+    return authReady;
+};
 
 export const setUser = ({ user: userData }) => user.set(userData);
 
@@ -71,20 +71,21 @@ export const getCurrentUser = async () => {
 };
 
 export const getMFAFactors = async () => {
+    await init();
     await session.get().refetch();
     updateUser(session.get().data);
     return mfaFactors.get();
 };
 
 export const refreshSession = async () => {
+    await init();
     await session.get().refetch();
     return updateUser(session.get().data);
 };
 
-export const init = () => authReady;
-
 export async function logOut() {
     try {
+        await init();
         await authClient.signOut();
     } catch (error) {
         console.error("Error signing out:", error);

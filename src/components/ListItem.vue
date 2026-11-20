@@ -172,7 +172,6 @@
 </template>
 
 <script>
-import { CLOUDFLARE_R2_ENDPOINT } from "astro:env/client";
 import { mdiGift, mdiOpenInNew, mdiWeb } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import VueMarkdown from "vue-markdown-render";
@@ -181,6 +180,7 @@ import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
 import { user as userStore } from "@/stores/auth";
+import { config as configStore } from "@/stores/config";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { $prefs } from "@/stores/prefs";
 import { convertPriority } from "@/utils";
@@ -220,6 +220,7 @@ export default {
     },
     data() {
         return {
+            config: useStore(configStore),
             convertPriority,
             currencyFormatter,
             mdiGift,
@@ -231,8 +232,9 @@ export default {
     },
     computed: {
         imageURL() {
-            if (this.item.imageID) {
-                return `${CLOUDFLARE_R2_ENDPOINT}/${this.item.imageID}`;
+            const { imageBaseUrl } = this.config;
+            if (this.item.imageID && imageBaseUrl) {
+                return `${imageBaseUrl}/${this.item.imageID}`;
             } else if (this.item.image) {
                 return this.item.image;
             } else {

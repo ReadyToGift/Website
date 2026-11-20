@@ -127,7 +127,6 @@
 </template>
 
 <script>
-import { ENABLE_BILLING } from "astro:env/client";
 import { mdiInformation } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import {
@@ -149,6 +148,7 @@ import {
     billing as billingStore,
     limits as limitsStore,
 } from "@/stores/billing";
+import { config } from "@/stores/config";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { create as createDialog } from "@/stores/dialogs";
 import { $prefs, addToHistory, removeFromHistory } from "@/stores/prefs";
@@ -348,7 +348,7 @@ export default {
             }
         },
         itemLimitReachedDialog() {
-            if (!ENABLE_BILLING) {
+            if (!config.get().enableBilling) {
                 createDialog({
                     actions: [
                         {

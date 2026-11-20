@@ -88,7 +88,6 @@
 </template>
 
 <script>
-import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert, mdiFileDocumentArrowRight } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import {
@@ -101,11 +100,11 @@ import {
     VSkeletonLoader,
 } from "vuetify/components";
 import { user as userStore } from "@/stores/auth";
-
 import {
     allLimits as allLimitsStore,
     limits as limitsStore,
 } from "@/stores/billing";
+import { config } from "@/stores/config";
 import { create as createDialog } from "@/stores/dialogs";
 import { handleFetch } from "@/utils/handleFetch";
 import ListCard from "../ListCard.vue";
@@ -269,7 +268,7 @@ export default {
             ) {
                 this.selectedList = null;
                 createDialog(
-                    ENABLE_BILLING
+                    config.get().enableBilling
                         ? {
                               actions: [
                                   {

@@ -1,7 +1,10 @@
-import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
+import {
+    ENABLE_BILLING,
+    POLAR_ACCESS_TOKEN,
+    POLAR_PRO_PRODUCT_ID,
+} from "astro:env/server";
 export const prerender = false;
 
-import { ENABLE_BILLING } from "astro:env/client";
 import { createPolar } from "@polar-sh/sdk/2026-10";
 
 import { getCache, setCache } from "@/server/cache";

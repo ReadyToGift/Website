@@ -1,6 +1,6 @@
 export const prerender = false;
 
-import { ENABLE_BILLING } from "astro:env/client";
+import { ENABLE_BILLING } from "astro:env/server";
 import { requireAuth } from "@/auth";
 import {
     ensurePolarCustomer,

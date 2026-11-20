@@ -3,16 +3,14 @@ export const prerender = false;
 
 import {
     AUTOFILL_FREE_ALLOWANCE,
-    AUTOFILL_PROXY_ATTEMPTS,
-    ENABLE_BILLING,
-} from "astro:env/client";
-import {
     AUTOFILL_HTTP_PROXIES,
+    AUTOFILL_PROXY_ATTEMPTS,
     AUTOFILL_PROXY_COUNTRY_PREFIX,
     AUTOFILL_PROXY_HOST,
     AUTOFILL_PROXY_PASSWORD,
     AUTOFILL_PROXY_USERNAME,
     AUTOFILL_USE_LOCAL_FETCH,
+    ENABLE_BILLING,
     POLAR_ACCESS_TOKEN,
 } from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";

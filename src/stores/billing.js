@@ -1,13 +1,6 @@
-import {
-    AUTOFILL_FREE_ALLOWANCE,
-    ENABLE_BILLING,
-    FREE_TIER_ENABLE_AUTOFILL,
-    FREE_TIER_ITEMS_PER_LIST,
-    FREE_TIER_PRIVATE_LIST_LIMIT,
-    FREE_TIER_PUBLIC_LIST_LIMIT,
-} from "astro:env/client";
 import { computed, map } from "nanostores";
 import { handleFetch } from "@/utils/handleFetch";
+import { config, loadConfig } from "./config";
 import { userLists } from "./userLists";
 
 export const billing = map({
@@ -18,11 +11,11 @@ export const billing = map({
     inactiveSubscription: null,
 });
 
-const getFreeLimits = () => ({
-    publicLists: FREE_TIER_PUBLIC_LIST_LIMIT,
-    privateLists: FREE_TIER_PRIVATE_LIST_LIMIT,
-    itemsPerList: FREE_TIER_ITEMS_PER_LIST,
-    autofill: FREE_TIER_ENABLE_AUTOFILL,
+const getFreeLimits = (settings = config.get()) => ({
+    publicLists: settings.freeTierPublicListLimit,
+    privateLists: settings.freeTierPrivateListLimit,
+    itemsPerList: settings.freeTierItemsPerList,
+    autofill: settings.freeTierEnableAutofill,
 });
 
 export const limits = map({
@@ -34,10 +27,21 @@ export const allLimits = map({
     pro: limits.get(),
 });
 
-export const autofillUsage = map({
-    totalAllowance: AUTOFILL_FREE_ALLOWANCE,
+const getInitialAutofillUsage = (allowance) => ({
+    totalAllowance: allowance,
     usedAllowance: 0,
-    remainingAllowance: AUTOFILL_FREE_ALLOWANCE,
+    remainingAllowance: allowance,
+});
+
+export const autofillUsage = map(
+    getInitialAutofillUsage(config.get().autofillFreeAllowance),
+);
+
+config.listen((settings) => {
+    const freeLimits = getFreeLimits(settings);
+    limits.set(freeLimits);
+    allLimits.set({ free: freeLimits, pro: freeLimits });
+    autofillUsage.set(getInitialAutofillUsage(settings.autofillFreeAllowance));
 });
 
 export const setUsedAutofillAllowance = (used) => {
@@ -68,14 +72,8 @@ const applyLimits = ({ isPro, proLimits }) => {
 };
 
 export const getBillingDetails = async () => {
-    console.log(ENABLE_BILLING);
-    console.log(
-        "Fetching billing details..." +
-            (ENABLE_BILLING
-                ? "Billing is enabled"
-                : "Billing is disabled, using free limits"),
-    );
-    if (!ENABLE_BILLING) {
+    const { enableBilling } = await loadConfig();
+    if (!enableBilling) {
         console.log("Billing is disabled, using free limits");
         applyLimits({ isPro: false });
         billing.setKey("billingLoaded", true);
@@ -117,12 +115,6 @@ export const getBillingDetails = async () => {
 
 export const init = async () => {
     try {
-        if (!ENABLE_BILLING) {
-            applyLimits({ isPro: false });
-            billing.setKey("billingLoaded", true);
-            return;
-        }
-
         await getBillingDetails();
     } catch (error) {
         console.log(error);

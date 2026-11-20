@@ -41,7 +41,6 @@
 </template>
 
 <script setup>
-import { UMAMI_DOMAINS, UMAMI_ID, UMAMI_URL } from "astro:env/client";
 import { useStore } from "@nanostores/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
@@ -110,16 +109,6 @@ window.addEventListener("appinstalled", () => {
 onMounted(async () => {
     loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
     await initAuth({ router });
-    if (UMAMI_URL && UMAMI_ID) {
-        const script = document.createElement("script");
-        script.src = `${UMAMI_URL}`;
-        script.setAttribute("data-website-id", UMAMI_ID);
-        if (UMAMI_DOMAINS) {
-            script.setAttribute("data-domains", UMAMI_DOMAINS);
-        }
-        document.head.appendChild(script);
-    }
-
     await initBilling();
 
     loading.value = false;

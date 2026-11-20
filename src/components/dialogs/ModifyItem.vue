@@ -108,7 +108,6 @@
 </template>
 
 <script>
-import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert, mdiPencil, mdiPlus, mdiRobot } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import mime from "mime-types";
@@ -130,6 +129,7 @@ import {
     autofillUsage as autofillUsageStore,
     limits as limitsStore,
 } from "@/stores/billing";
+import { config } from "@/stores/config";
 import { create as createDialog } from "@/stores/dialogs";
 import { handleFetch } from "@/utils/handleFetch";
 
@@ -296,7 +296,7 @@ export default {
                     }
                 } else {
                     this.createDialog(
-                        ENABLE_BILLING
+                        config.get().enableBilling
                             ? {
                                   title: "Auto-fill Unavailable",
                                   text: "You have used all of your available auto-fill attempts.\nPlease enter the details manually or upgrade to the Pro plan for unlimited auto-fill.",

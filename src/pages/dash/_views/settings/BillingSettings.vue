@@ -1,5 +1,5 @@
 <template>
-    <template v-if="ENABLE_BILLING">
+    <template v-if="config.enableBilling">
         <v-card variant="tonal">
             <table class="pricing">
                 <thead>
@@ -270,7 +270,6 @@
 </template>
 
 <script setup>
-import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import { onMounted, shallowRef } from "vue";
@@ -282,7 +281,10 @@ import {
     getProProduct,
     init as initBilling,
 } from "@/stores/billing";
+import { config as configStore } from "@/stores/config";
 import { create as createDialog } from "@/stores/dialogs";
+
+const config = useStore(configStore);
 
 const billing = useStore(billingStore);
 const allLimits = useStore(allLimitsStore);

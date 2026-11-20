@@ -56,53 +56,53 @@ export default defineConfig({
     env: {
         schema: {
             UMAMI_URL: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 optional: true,
             }),
             UMAMI_ID: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 optional: true,
             }),
             UMAMI_DOMAINS: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 optional: true,
             }),
             SENTRY_DSN: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 optional: true,
             }),
             FREE_TIER_PUBLIC_LIST_LIMIT: envField.number({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: -1,
             }),
             FREE_TIER_PRIVATE_LIST_LIMIT: envField.number({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: -1,
             }),
             FREE_TIER_ITEMS_PER_LIST: envField.number({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: -1,
             }),
             FREE_TIER_ENABLE_AUTOFILL: envField.boolean({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: true,
             }),
             AUTOFILL_FREE_ALLOWANCE: envField.number({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: 0,
             }),
             ENABLE_BILLING: envField.boolean({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: false,
             }),
 
@@ -117,19 +117,14 @@ export default defineConfig({
                 optional: true,
             }),
             POLAR_AUTOFILL_METER_ID: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 optional: true,
             }),
             POLAR_PRO_PRODUCT_ID: envField.string({
                 context: "server",
                 access: "secret",
                 optional: true,
-            }),
-            FLUSH_CACHE_ON_START: envField.boolean({
-                context: "server",
-                access: "secret",
-                default: false, // TODO: May need to be updated
             }),
 
             AUTOFILL_USE_LOCAL_FETCH: envField.boolean({
@@ -163,19 +158,35 @@ export default defineConfig({
                 optional: true,
             }),
             AUTOFILL_PROXY_ATTEMPTS: envField.number({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
                 default: 3,
             }),
             BUILD_COMMIT: envField.string({
-                context: "client",
+                context: "server",
                 access: "public",
                 default: buildCommit,
             }),
 
             CLOUDFLARE_R2_ENDPOINT: envField.string({
-                context: "client",
-                access: "public",
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
+            PLUNK_BASE_URL: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
+            PLUNK_SECRET_KEY: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
+            PLUNK_SENDING_EMAIL: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
             }),
         },
     },
@@ -203,19 +214,7 @@ export default defineConfig({
         ssr: {
             noExternal: ["vuetify", "vite-plugin-vuetify"],
         },
-        build: {
-            // cssCodeSplit: true,
-        },
-        //         output: {
-        //             manualChunks(id) {
-        //                 // Ensure Vue SFC styles are always extracted to separate CSS files
-        //                 if (id.includes(".vue") && id.includes("?vue&type=style")) {
-        //                     return "styles";
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        build: {},
     },
 
     output: "static",

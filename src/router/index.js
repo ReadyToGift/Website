@@ -1,6 +1,6 @@
-import { ENABLE_BILLING } from "astro:env/client";
 import { createRouter, createWebHistory } from "vue-router";
 import { getCurrentUser } from "@/stores/auth";
+import { config } from "@/stores/config";
 
 let clientRouter;
 
@@ -59,7 +59,7 @@ if (!import.meta.env.SSR) {
                 component: () => import("@/pages/dash/_views/UserLists.vue"),
                 meta: { requiresAuth: true },
             },
-            ENABLE_BILLING && {
+            config.get().enableBilling && {
                 path: "/dash/settings/billing",
                 component: () => import("@/pages/dash/_views/SettingsPage.vue"),
                 meta: { requiresAuth: true },
@@ -69,14 +69,14 @@ if (!import.meta.env.SSR) {
 
     clientRouter.beforeEach(async (to, from, next) => {
         const currentUser = await getCurrentUser();
-        if (to.meta && to.meta.requiresAuth) {
+        if (to.meta?.requiresAuth) {
             if (!currentUser) {
                 return next({
                     path: "/dash/login",
                     query: { redirect: encodeURIComponent(to.fullPath) },
                 });
             }
-        } else if (to.meta && to.meta.requiresAuth === false) {
+        } else if (to.meta?.requiresAuth === false) {
             if (currentUser) {
                 return next("/dash/lists");
             }

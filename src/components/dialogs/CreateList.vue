@@ -55,7 +55,7 @@
                         You have reached your private list allowance.<br><br>
                         Please make some of your other lists public, or delete
                         some of your lists.<br>
-                        <template v-if="ENABLE_BILLING">
+                        <template v-if="config.enableBilling">
                             <template v-if="!billing.isPro">
                                 Alternatively, upgrade to create up to
                                 {{
@@ -98,7 +98,7 @@
                         You have reached your public list allowance.<br><br>
                         Please make some of your other lists private, or delete
                         some of your lists.<br>
-                        <template v-if="ENABLE_BILLING">
+                        <template v-if="config.enableBilling">
                             <template v-if="!billing.isPro">
                                 Alternatively, upgrade to create up to
                                 {{
@@ -151,7 +151,6 @@
 </template>
 
 <script>
-import { ENABLE_BILLING } from "astro:env/client";
 import { mdiAlert, mdiPlus } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import {
@@ -169,6 +168,7 @@ import {
     privateListLimitReached as privateListLimitReachedStore,
     publicListLimitReached as publicListLimitReachedStore,
 } from "@/stores/billing";
+import { config as configStore } from "@/stores/config";
 import { userLists as userListsStore } from "@/stores/userLists";
 import { handleFetch } from "@/utils/handleFetch";
 
@@ -203,6 +203,7 @@ export default {
     },
     data() {
         return {
+            config: useStore(configStore),
             alert: false,
             dialogOpen: false,
             listId: null,

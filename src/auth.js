@@ -1,6 +1,6 @@
-import { ENABLE_BILLING } from "astro:env/client";
 import {
     BETTER_AUTH_SECRET,
+    ENABLE_BILLING,
     POLAR_ACCESS_TOKEN,
     POLAR_PRO_PRODUCT_ID,
 } from "astro:env/server";

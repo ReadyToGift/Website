@@ -4,9 +4,10 @@ import {
     FREE_TIER_ITEMS_PER_LIST,
     FREE_TIER_PRIVATE_LIST_LIMIT,
     FREE_TIER_PUBLIC_LIST_LIMIT,
+    POLAR_ACCESS_TOKEN,
     POLAR_AUTOFILL_METER_ID,
-} from "astro:env/client";
-import { POLAR_ACCESS_TOKEN, POLAR_PRO_PRODUCT_ID } from "astro:env/server";
+    POLAR_PRO_PRODUCT_ID,
+} from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";
 import { getCache, setCache } from "@/server/cache";
 
