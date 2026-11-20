@@ -21,8 +21,12 @@ export const lists = sqliteTable("lists", {
     currency: text("currency").default("USD"),
     shortUrl: text("shortUrl").unique(),
     private: integer("private", { mode: "boolean" }).default(0),
-    createdAt: integer("createdAt", { mode: "timestamp" }),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).$defaultFn(
+        () => new Date(),
+    ),
+    updatedAt: integer("updatedAt", { mode: "timestamp" })
+        .$defaultFn(() => new Date())
+        .$onUpdate(() => new Date()),
     spoilSurprises: integer("spoilSurprises", { mode: "boolean" }).default(0),
     type: text("type", {
         enum: ["standard", "wedding"],
@@ -47,8 +51,12 @@ export const items = sqliteTable("items", {
         onDelete: "cascade",
     }),
     contributor: text("contributor"),
-    createdAt: integer("createdAt", { mode: "timestamp" }),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).$defaultFn(
+        () => new Date(),
+    ),
+    updatedAt: integer("updatedAt", { mode: "timestamp" })
+        .$defaultFn(() => new Date())
+        .$onUpdate(() => new Date()),
 });
 
 export const fulfillments = sqliteTable(
@@ -57,8 +65,12 @@ export const fulfillments = sqliteTable(
         id: text("id")
             .primaryKey()
             .$defaultFn(() => uuidv7()),
-        createdAt: integer("createdAt", { mode: "timestamp" }),
-        updatedAt: integer("updatedAt", { mode: "timestamp" }),
+        createdAt: integer("createdAt", { mode: "timestamp" }).$defaultFn(
+            () => new Date(),
+        ),
+        updatedAt: integer("updatedAt", { mode: "timestamp" })
+            .$defaultFn(() => new Date())
+            .$onUpdate(() => new Date()),
         item: text("item").references(() => items.id, { onDelete: "set null" }),
         name: text("name").notNull(),
     },
@@ -78,8 +90,12 @@ export const autofills = sqliteTable("autofills", {
     executionTime: real("executionTime"),
     outputData: text("outputData"),
     totalAttempts: integer("totalAttempts"),
-    createdAt: integer("createdAt", { mode: "timestamp" }),
-    updatedAt: integer("updatedAt", { mode: "timestamp" }),
+    createdAt: integer("createdAt", { mode: "timestamp" }).$defaultFn(
+        () => new Date(),
+    ),
+    updatedAt: integer("updatedAt", { mode: "timestamp" })
+        .$defaultFn(() => new Date())
+        .$onUpdate(() => new Date()),
 });
 
 export const listRelations = relations(lists, ({ many, one }) => ({

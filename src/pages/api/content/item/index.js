@@ -85,6 +85,13 @@ const deleteImage = async (imageID) => {
     }
 };
 
+const touchLists = async (listIds) => {
+    const updatedAt = new Date();
+    for (const listId of new Set(listIds.filter(Boolean))) {
+        await db.update(lists).set({ updatedAt }).where(eq(lists.id, listId));
+    }
+};
+
 export const POST = async (context) => {
     try {
         const { unauthorizedResponse, user } = requireAuth(context);
@@ -162,6 +169,8 @@ export const POST = async (context) => {
             throw error;
         }
 
+        await touchLists([listId]);
+
         return json({
             item: formatItem(item, communityItem ? user.name : null),
         });
@@ -187,6 +196,7 @@ export const DELETE = async (context) => {
             return json({ message: "Unauthorized" }, 403);
 
         await db.delete(items).where(eq(items.id, itemId));
+        await touchLists([item.listId]);
 
         if (item.imageID) {
             try {
@@ -295,6 +305,8 @@ export const PUT = async (context) => {
         if (newImageID || removeImage) {
             await deleteImage(item.imageID);
         }
+
+        await touchLists([item.listId, targetListId]);
 
         return json({
             message: "Item updated successfully",

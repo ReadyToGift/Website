@@ -253,8 +253,6 @@ export const POST = async (context) => {
                 shortUrl,
                 spoilSurprises: spoilSurprises === true,
                 title: title.trim(),
-                createdAt: new Date(),
-                updatedAt: new Date(),
             })
             .returning();
 
