@@ -2,6 +2,7 @@ import { ENABLE_BILLING } from "astro:env/client";
 import { passkeyClient } from "@better-auth/passkey/client";
 import { persistentAtom } from "@nanostores/persistent";
 import { polarClient } from "@polar-sh/better-auth/client";
+import * as Sentry from "@sentry/astro";
 import { createAuthClient } from "better-auth/client";
 import { magicLinkClient, twoFactorClient } from "better-auth/client/plugins";
 import { atom } from "nanostores";
@@ -32,6 +33,9 @@ const authReady = new Promise((resolve) => {
 
 const updateUser = (sessionData) => {
     const sessionUser = sessionData?.user ?? null;
+    if (!import.meta.env.SSR) {
+        Sentry.setUser(sessionUser?.id ? { id: sessionUser.id } : null);
+    }
     user.set(sessionUser);
     if (sessionUser?.id) {
         previouslyLoggedInUserID.set(sessionUser.id);
@@ -85,6 +89,9 @@ export async function logOut() {
     } catch (error) {
         console.error("Error signing out:", error);
     } finally {
+        if (!import.meta.env.SSR) {
+            Sentry.setUser(null);
+        }
         user.set(null);
         mfaFactors.set({});
         authInitialized.set(true);

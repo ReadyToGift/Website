@@ -6,10 +6,5 @@ Sentry.init({
     enabled: !import.meta.env.DEV,
     sendDefaultPii: true,
     replaysSessionSampleRate: 1.0,
-    integrations: [
-        Sentry.replayIntegration({
-            maskAllText: false, // Only sensitive is password, which is masked by default
-            blockAllMedia: false,
-        }),
-    ],
+    integrations: [Sentry.replayIntegration()],
 });
