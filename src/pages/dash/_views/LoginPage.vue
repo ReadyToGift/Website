@@ -230,6 +230,7 @@ const passwordLogin = async () => {
         return;
     }
 
+    await refreshSession();
     await router.push(props.redirect);
 };
 

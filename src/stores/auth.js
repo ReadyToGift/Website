@@ -33,6 +33,9 @@ const authReady = new Promise((resolve) => {
 const updateUser = (sessionData) => {
     const sessionUser = sessionData?.user ?? null;
     user.set(sessionUser);
+    if (sessionUser?.id) {
+        previouslyLoggedInUserID.set(sessionUser.id);
+    }
     loadPrefs(sessionUser || {});
     mfaFactors.set({
         totp: Boolean(sessionUser?.twoFactorEnabled),
