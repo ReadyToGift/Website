@@ -187,7 +187,7 @@ export default defineConfig({
         sentry({
             telemetry: false,
             sourcemaps: {
-                disable: true,
+                disable: !process.env.SENTRY_AUTH_TOKEN,
             },
         }),
     ],
