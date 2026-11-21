@@ -54,6 +54,15 @@
                         (user && item.contributorId === user.id)
                     "
                 />
+                <ReportContent
+                    v-if="
+                        item.communityList &&
+                        !(user && item.contributorId === user.id)
+                    "
+                    :item="item"
+                    :list="list"
+                    variant="outlined"
+                />
                 <MoveItem
                     variant="outlined"
                     :item="item"
@@ -77,6 +86,7 @@
             <vue-markdown
                 v-if="item.description"
                 :source="item.description"
+                :options="{ html: false, breaks: true, linkify: true }"
                 class="item-description"
             />
             <div class="item-image" v-if="imageURL">
@@ -179,6 +189,7 @@ import { VBtn, VBtnGroup, VCard, VChip, VImg } from "vuetify/components";
 import DeleteItem from "@/components/dialogs/DeleteItem.vue";
 import FulfillItem from "@/components/dialogs/FulfillItem.vue";
 import MoveItem from "@/components/dialogs/MoveItem.vue";
+import ReportContent from "@/components/dialogs/ReportContent.vue";
 import { user as userStore } from "@/stores/auth";
 import { config as configStore } from "@/stores/config";
 import { formatter as currencyFormatter } from "@/stores/currency";
@@ -211,6 +222,7 @@ export default {
         FulfillItem,
         ModifyItem,
         MoveItem,
+        ReportContent,
         VueMarkdown,
         VBtn,
         VCard,

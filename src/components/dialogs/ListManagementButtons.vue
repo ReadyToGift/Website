@@ -53,6 +53,14 @@
             Share
         </v-btn>
 
+        <ReportContent
+            v-if="!wishlistOwner"
+            :list="list"
+            label="Report"
+            target-type="list"
+            variant="outlined"
+        />
+
         <DeleteList
             :list="list"
             @dialogClosed="menuOpen = false"
@@ -90,6 +98,7 @@ import { $prefs, updatePrefs } from "@/stores/prefs";
 import validation from "@/utils/validation";
 import DeleteList from "./DeleteList.vue";
 import EditList from "./EditList.vue";
+import ReportContent from "./ReportContent.vue";
 
 const user = useStore(userStore);
 const prefs = useStore($prefs);
