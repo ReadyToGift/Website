@@ -65,7 +65,7 @@
     },
     "devDependencies": {
         "@astrojs/cloudflare": "^14.4.6",
-        "@biomejs/biome": "2.6.5",
+        "@biomejs/biome": "2.6.7",
         "@mdi/js": "7.4.47",
         "@types/node": "26.6.6",
         "cross-env": "10.1.0",
