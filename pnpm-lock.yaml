@@ -224,6 +224,9 @@ importers:
       '@sentry/astro':
         specifier: ^10.78.0
         version: 10.78.0(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(astro@7.4.7(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.107.1)(tsx@4.23.15)(yaml@2.9.1))(rollup@4.67.5)(supports-color@10.2.2)
+      '@sentry/cloudflare':
+        specifier: ^10.78.0
+        version: 10.78.0(vite@7.3.7(@types/node@26.6.6)(lightningcss@1.33.0)(sass@1.107.1)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.158.0(@types/node@26.6.6))
       '@sentry/vue':
         specifier: ^10.78.0
         version: 10.78.0(pinia@3.0.4(vue@3.5.45))(vue@3.5.45)
@@ -2246,6 +2249,21 @@ packages:
     resolution: {integrity: sha512-baBcNPLLfUi9WuL+Tpri9BFaAdvugZIKelC5X0tt0Zdy+K0K+PCVSrnNmwMWU/HyaF/SEv6b6UHnXIdqanBlcg==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@sentry/cloudflare@10.78.0':
+    resolution: {integrity: sha512-Z2+6yw6zIbUXxk7CIdTt0f7fLYShvMTaB6+JTq7FnMTYj1nEBHQSQ/ItxwVYTtwioL6Kvp4QLn4SZ4amxfTrUA==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@cloudflare/workers-types': ^4.x || ^5.x
+      vite: ^6.1.0 || ^7.0.0 || ^8.0.0
+      wrangler: ^4.x
+    peerDependenciesMeta:
+      '@cloudflare/workers-types':
+        optional: true
+      vite:
+        optional: true
+      wrangler:
+        optional: true
 
   '@sentry/conventions@0.16.0':
     resolution: {integrity: sha512-fO9PLmHdVURcSPUpWCItWAtgKiMwGdJHbovoSEyLplX5sxs2ugvI4CBPTrkkgqhObnZOD0CnWBKDzSVQYBKEyQ==}
@@ -6540,6 +6558,16 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
+
+  '@sentry/cloudflare@10.78.0(vite@7.3.7(@types/node@26.6.6)(lightningcss@1.33.0)(sass@1.107.1)(tsx@4.23.15)(yaml@2.9.1))(wrangler@4.158.0(@types/node@26.6.6))':
+    dependencies:
+      '@opentelemetry/api': 1.9.1
+      '@sentry/core': 10.78.0
+      '@sentry/server-utils': 10.78.0
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.3.7(@types/node@26.6.6)(lightningcss@1.33.0)(sass@1.107.1)(tsx@4.23.15)(yaml@2.9.1)
+      wrangler: 4.158.0(@types/node@26.6.6)
 
   '@sentry/conventions@0.16.0': {}
 

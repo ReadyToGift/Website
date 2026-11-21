@@ -34,6 +34,7 @@
         "@polar-sh/checkout": "0.6.0",
         "@polar-sh/sdk": "1.0.2",
         "@sentry/astro": "^10.78.0",
+        "@sentry/cloudflare": "^10.78.0",
         "@sentry/vue": "^10.78.0",
         "@splidejs/vue-splide": "^0.6.12",
         "abort-controller": "^3.0.0",
@@ -63,10 +64,10 @@
         "vuetify": "^3.13.7"
     },
     "devDependencies": {
+        "@astrojs/cloudflare": "^14.4.6",
         "@biomejs/biome": "2.6.5",
         "@mdi/js": "7.4.47",
         "@types/node": "26.6.6",
-        "@astrojs/cloudflare": "^14.4.6",
         "cross-env": "10.1.0",
         "drizzle-kit": "0.31.11",
         "sass": "^1.107.1",
