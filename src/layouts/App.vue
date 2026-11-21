@@ -166,6 +166,7 @@ nav a:first-of-type {
 }
 
 .route-content {
+    display: contents;
     min-width: 0;
 }
 
