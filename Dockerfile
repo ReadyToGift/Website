@@ -21,7 +21,7 @@ RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store \
 	pnpm build \
 	&& pnpm deploy --filter . --prod /app/prod
 
-FROM --platform=linux/amd64 gcr.io/distroless/nodejs26-debian13 AS runtime
+FROM --platform=linux/amd64 gcr.io/distroless/nodejs26-debian13@sha256:80631bd2f0e7ef192138a7409013b47d92fd11b8ff3bb35f5c0a65be3ecaea4c AS runtime
 
 WORKDIR /app
 
