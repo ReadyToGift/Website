@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+    index,
     integer,
     real,
     sqliteTable,
@@ -96,6 +97,23 @@ export const autofills = sqliteTable("autofills", {
     updatedAt: integer("updatedAt", { mode: "timestamp" })
         .$defaultFn(() => new Date())
         .$onUpdate(() => new Date()),
+});
+
+export const cache = sqliteTable(
+    "local_cache",
+    {
+        key: text().primaryKey(),
+        value: text().notNull(),
+        expiresAt: integer("expires_at").notNull(),
+    },
+    (table) => [index("local_cache_expiry").on(table.expiresAt)],
+);
+
+export const localImages = sqliteTable("local_images", {
+    id: text().primaryKey(),
+    name: text().notNull(),
+    contentType: text("content_type").notNull(),
+    uploaded: integer({ mode: "timestamp_ms" }).notNull(),
 });
 
 export const listRelations = relations(lists, ({ many, one }) => ({

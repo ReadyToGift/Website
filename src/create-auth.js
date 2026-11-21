@@ -1,4 +1,3 @@
-import { waitUntil } from "cloudflare:workers";
 import { passkey } from "@better-auth/passkey";
 import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { createPolarCore } from "@polar-sh/sdk/2026-10";
@@ -8,6 +7,7 @@ import { magicLink, twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { deleteCache, getCache, setCache } from "@/server/cache";
+import { waitUntil } from "@/server/platform";
 import { sendEmail } from "@/utils/email/index";
 
 export const createAuth = ({
@@ -75,7 +75,7 @@ export const createAuth = ({
     return betterAuth({
         appName: "Readyto.gift",
         secret: betterAuthSecret,
-        advanced: {
+        advanced: waitUntil && {
             backgroundTasks: {
                 handler: waitUntil,
             },

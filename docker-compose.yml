@@ -1,31 +1,20 @@
 services:
     readytogift:
+        image: ghcr.io/readytogift/website
         build:
             context: .
         restart: unless-stopped
         env_file:
             - .env
-        networks:
-            - dokploy-network
-        labels:
-            - "traefik.http.routers.traefik.middlewares=traefik-compress"
-            - "traefik.http.middlewares.traefik-compress.compress=true"
-        depends_on:
-            - redis
+        environment:
+            CLOUDFLARE: "false"
+            DATA_DIR: /data
+        volumes:
+            - ./data:/data
         healthcheck:
             test: ["CMD", "curl", "-f", "http://localhost:4321/health"]
             interval: 30s
             timeout: 10s
             retries: 3
         ports:
-            - "4321:4321"
-    redis:
-        container_name: readytogift-redis
-        image: redis:latest@sha256:1f88291b4c57bdf249f02eb085a8669889b2d2954e91d4de5118a5da6b78dd53
-        restart: unless-stopped
-        networks:
-            - dokploy-network
-
-networks:
-    dokploy-network:
-        external: true
+            - "8000:4321"

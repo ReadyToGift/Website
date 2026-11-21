@@ -11,6 +11,7 @@ import {
     UMAMI_ID,
     UMAMI_URL,
 } from "astro:env/server";
+import { localImageBaseUrl } from "@/storage";
 
 export const prerender = false;
 
@@ -23,7 +24,7 @@ export const GET = () =>
             freeTierItemsPerList: FREE_TIER_ITEMS_PER_LIST,
             freeTierEnableAutofill: FREE_TIER_ENABLE_AUTOFILL,
             autofillFreeAllowance: AUTOFILL_FREE_ALLOWANCE,
-            imageBaseUrl: CLOUDFLARE_R2_ENDPOINT ?? null,
+            imageBaseUrl: localImageBaseUrl ?? CLOUDFLARE_R2_ENDPOINT ?? null,
             umamiUrl: UMAMI_URL ?? null,
             umamiId: UMAMI_ID ?? null,
             umamiDomains: UMAMI_DOMAINS ?? null,

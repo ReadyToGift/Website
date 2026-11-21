@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS base
+FROM --platform=linux/amd64 node:26-slim@sha256:e6bedef217677b276c591795e169840edd9096dbf13f29df8ef8d1856b8820bc AS base
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 
@@ -9,19 +9,20 @@ RUN corepack enable
 
 # By copying only the package.json and package-lock.json here, we ensure that the following `-deps` steps are independent of the source code.
 # Therefore, the `-deps` steps will be skipped if only the source code changes.
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN corepack install
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --recursive
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM --platform=linux/amd64 base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --prod
 
 FROM --platform=linux/amd64 base AS build-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install
 
 FROM --platform=linux/amd64 build-deps AS build
 COPY . .
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm build
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm build
 
 FROM --platform=linux/amd64 base AS runtime
 RUN apt-get update \
@@ -29,6 +30,7 @@ RUN apt-get update \
 
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/migrations ./migrations
 
 ENV HOST=0.0.0.0
 ENV PORT=4321

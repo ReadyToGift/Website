@@ -1,14 +1,13 @@
-import { env } from "cloudflare:workers";
+import { cache } from "@/server/platform";
 
-const cloudflareKV = env.CACHE;
 const fallbackCache = new Map();
 
 export const setCache = async (key, value, ttl) => {
     try {
         const exp = Date.now() + ttl;
         const serialized = JSON.stringify({ data: value, ttl, exp });
-        if (cloudflareKV) {
-            await cloudflareKV.put(key, serialized, {
+        if (cache) {
+            await cache.put(key, serialized, {
                 expirationTtl: Math.ceil(ttl / 1000),
             });
         } else {
@@ -23,8 +22,8 @@ export const setCache = async (key, value, ttl) => {
 export const getCache = async (key) => {
     try {
         let value;
-        if (cloudflareKV) {
-            value = await cloudflareKV.get(key);
+        if (cache) {
+            value = await cache.get(key);
         } else {
             value = fallbackCache.get(key);
         }
@@ -49,8 +48,8 @@ export const getCache = async (key) => {
 
 export const deleteCache = async (key) => {
     try {
-        if (cloudflareKV) {
-            await cloudflareKV.delete(key);
+        if (cache) {
+            await cache.delete(key);
         } else {
             fallbackCache.delete(key);
         }

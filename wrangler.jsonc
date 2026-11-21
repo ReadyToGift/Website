@@ -48,6 +48,7 @@
         "AUTOFILL_PROXY_USERNAME": "{country}",
         "AUTOFILL_USE_LOCAL_FETCH": "true",
         "BETTER_AUTH_URL": "https://next.readyto.gift",
+        "CLOUDFLARE": "true",
         "CLOUDFLARE_ACCOUNT_ID": "216243d60e3747616344868b601a1f99",
         "CLOUDFLARE_DATABASE_ID": "c5a00055-e5d6-4e47-8f46-212f9c9e9e81",
         "CLOUDFLARE_R2_BUCKET": "readytogift",

@@ -1,5 +1,6 @@
 // @ts-check
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import vue from "@astrojs/vue";
 import { defineConfig, envField } from "astro/config";
 import vuetifyPlugin from "vite-plugin-vuetify";
@@ -12,7 +13,16 @@ const vuetifyPlugins = vuetifyPlugin({ autoImport: true, styles: "sass" }).map(
 );
 
 import cloudflare from "@astrojs/cloudflare";
+import node from "@astrojs/node";
 import sentry from "@sentry/astro";
+
+const isCloudflare = process.env.CLOUDFLARE === "true";
+const domain = process.env.DOMAIN || "readyto.gift";
+const allowedDomains =
+    process.env.ALLOWED_DOMAINS?.split(",") ||
+    (process.env.DOMAIN
+        ? [process.env.DOMAIN]
+        : ["readyto.gift", "*.readyto.gift"]);
 
 const buildCommit =
     process.env.CF_PAGES_COMMIT_SHA ||
@@ -31,30 +41,33 @@ const buildCommit =
 
 // https://astro.build/config
 export default defineConfig({
-    site: "https://readyto.gift",
-    adapter: cloudflare({
-        sessionKVBindingName: "SESSION",
-    }),
+    site: `https://${domain}`,
+    adapter: isCloudflare
+        ? cloudflare({
+              sessionKVBindingName: "SESSION",
+          })
+        : node({
+              mode: "standalone",
+          }),
 
     devToolbar: {
         enabled: false,
     },
 
     security: {
-        allowedDomains: [
-            {
-                hostname: "readyto.gift",
-                protocol: "https",
-            },
-            {
-                hostname: "*.readyto.gift",
-                protocol: "https",
-            },
-        ],
+        allowedDomains: allowedDomains.map((d) => ({
+            hostname: d,
+            protocol: "https",
+        })),
     },
 
     env: {
         schema: {
+            CLOUDFLARE: envField.boolean({
+                context: "server",
+                access: "secret",
+                default: isCloudflare,
+            }),
             UMAMI_URL: envField.string({
                 context: "server",
                 access: "secret",
@@ -209,6 +222,16 @@ export default defineConfig({
             exclude: ["vuetify", "vite-plugin-vuetify"],
         },
         resolve: {
+            alias: isCloudflare
+                ? {}
+                : {
+                      "@/server/platform": fileURLToPath(
+                          new URL(
+                              "./src/server/platform.node.js",
+                              import.meta.url,
+                          ),
+                      ),
+                  },
             noExternal: [/^vuetify/, /^vite-plugin-vuetify/],
         },
         ssr: {

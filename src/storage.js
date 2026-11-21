@@ -1,3 +1,1 @@
-import { env } from "cloudflare:workers";
-
-export const bucket = env.BUCKET;
+export { bucket, localImageBaseUrl } from "@/server/platform";

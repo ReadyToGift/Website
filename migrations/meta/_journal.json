@@ -92,6 +92,13 @@
       "when": 1794907693712,
       "tag": "0012_orange_sunfire",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1795268294311,
+      "tag": "0013_hard_goliath",
+      "breakpoints": true
     }
   ]
 }

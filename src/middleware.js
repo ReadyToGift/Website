@@ -1,7 +1,14 @@
 import { sequence } from "astro:middleware";
 
 const setAuth = async (context, next) => {
-    if (["/api/config", "/api/version", "/404"].includes(context.routePattern))
+    if (
+        [
+            "/api/config",
+            "/api/content/item/image/[id]",
+            "/api/version",
+            "/404",
+        ].includes(context.routePattern)
+    )
         return next();
 
     const { auth } = await import("@/auth");
