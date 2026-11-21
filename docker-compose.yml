@@ -21,6 +21,9 @@ services:
             retries: 3
         ports:
             - "8000:4321"
+        # remove if not using Redis
+        depends_on:
+            - redis
     redis:
         container_name: readytogift-redis
         image: redis:latest
