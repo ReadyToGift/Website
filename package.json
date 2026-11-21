@@ -42,7 +42,7 @@
         "abort-controller": "^3.0.0",
         "astro": "^7.4.7",
         "better-auth": "^1.7.18",
-        "better-sqlite3": "13.0.3",
+        "better-sqlite3": "13.2.0",
         "cheerio": "^1.2.0",
         "country-data-list": "^1.6.3",
         "cross-fetch": "^4.1.0",
