@@ -3,6 +3,7 @@ import { requireAuth } from "@/auth";
 import { db } from "@/db";
 import { items, lists } from "@/schema";
 import { bucket } from "@/storage";
+import { MAX_ITEM_IMAGE_BYTES, validateImageFile } from "@/utils/validation";
 
 export const prerender = false;
 
@@ -92,10 +93,13 @@ export const POST = async (context) => {
             return json({ message: "Unauthorized" }, 403);
         }
 
+        const validation = await validateImageFile(file, MAX_ITEM_IMAGE_BYTES);
+        if (!validation.ok) return json({ message: validation.message }, 400);
+
         const id = crypto.randomUUID();
-        await bucket.put(id, await file.arrayBuffer(), {
+        await bucket.put(id, validation.bytes, {
             httpMetadata: {
-                contentType: file.type || "application/octet-stream",
+                contentType: validation.type,
             },
             customMetadata: { name: file.name || "Uploaded image" },
         });

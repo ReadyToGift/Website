@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { fulfillments, items, lists } from "@/schema";
 import { getUserLimits } from "@/server/billing";
 import { bucket } from "@/storage";
+import { MAX_TEXT_LENGTHS, sanitizeText } from "@/utils/validation";
 
 export const prerender = false;
 
@@ -194,7 +195,16 @@ export const POST = async (context) => {
             title,
         } = await context.request.json();
 
-        if (typeof title !== "string" || !title.trim()) {
+        const cleanTitle = sanitizeText(title, MAX_TEXT_LENGTHS.title);
+        const cleanDescription =
+            description == null
+                ? null
+                : sanitizeText(description, MAX_TEXT_LENGTHS.description);
+        const cleanShortUrl =
+            shortUrl == null || shortUrl === ""
+                ? null
+                : sanitizeText(shortUrl, MAX_TEXT_LENGTHS.shortUrl);
+        if (!cleanTitle) {
             return new Response(
                 JSON.stringify({ message: "Title is required" }),
                 {
@@ -226,11 +236,19 @@ export const POST = async (context) => {
             );
         }
 
+        if (shortUrl != null && cleanShortUrl === null)
+            return new Response(
+                JSON.stringify({ message: "Invalid short URL" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
         if (shortUrl) {
             const conflicts = await db
                 .select({ id: lists.id })
                 .from(lists)
-                .where(eq(lists.shortUrl, shortUrl));
+                .where(eq(lists.shortUrl, cleanShortUrl));
 
             if (conflicts.length) {
                 return new Response(
@@ -248,11 +266,11 @@ export const POST = async (context) => {
             .values({
                 author: user.id,
                 currency,
-                description,
+                description: cleanDescription,
                 private: Boolean(isPrivate),
-                shortUrl,
+                shortUrl: cleanShortUrl,
                 spoilSurprises: spoilSurprises === true,
-                title: title.trim(),
+                title: cleanTitle,
             })
             .returning();
 
@@ -398,6 +416,51 @@ export const PUT = async (context) => {
                 allowedFields.includes(key),
             ),
         );
+        if ("title" in changes)
+            changes.title = sanitizeText(changes.title, MAX_TEXT_LENGTHS.title);
+        if ("description" in changes)
+            changes.description =
+                changes.description == null
+                    ? null
+                    : sanitizeText(
+                          changes.description,
+                          MAX_TEXT_LENGTHS.description,
+                      );
+        if ("shortUrl" in changes)
+            changes.shortUrl =
+                changes.shortUrl == null || changes.shortUrl === ""
+                    ? null
+                    : sanitizeText(changes.shortUrl, MAX_TEXT_LENGTHS.shortUrl);
+        if ("title" in changes && !changes.title)
+            return new Response(JSON.stringify({ message: "Invalid title" }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+            });
+        if (
+            "description" in changes &&
+            changes.description === null &&
+            updateData.description != null
+        )
+            return new Response(
+                JSON.stringify({ message: "Invalid description" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        if (
+            "shortUrl" in changes &&
+            changes.shortUrl === null &&
+            updateData.shortUrl != null &&
+            updateData.shortUrl !== ""
+        )
+            return new Response(
+                JSON.stringify({ message: "Invalid short URL" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
 
         if (changes.shortUrl && changes.shortUrl !== existingList.shortUrl) {
             const conflicts = await db

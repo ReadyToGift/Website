@@ -146,7 +146,27 @@ const cancelCrop = () => closeCrop();
 const selectProfilePicture = (event) => {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file?.type.startsWith("image/")) return;
+    if (
+        !file ||
+        !["image/jpeg", "image/png", "image/gif", "image/webp"].includes(
+            file.type,
+        )
+    ) {
+        createDialog({
+            text: "Please choose a PNG, JPEG, GIF, or WebP image.",
+            title: "Invalid Profile Picture",
+            type: "error",
+        });
+        return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+        createDialog({
+            text: "Profile pictures must be smaller than 2MB.",
+            title: "Profile Picture Too Large",
+            type: "error",
+        });
+        return;
+    }
 
     closeCrop();
     profilePictureSource.value = URL.createObjectURL(file);

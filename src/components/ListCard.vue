@@ -163,6 +163,7 @@
             <VueMarkdown
                 v-if="props.list.description"
                 :source="props.list.description"
+                :options="{ html: false, breaks: true, linkify: true }"
                 class="description user-item-markdown mb-4"
             />
             <div class="mobile-list-buttons">
@@ -310,6 +311,12 @@ const props = defineProps({
         grid-template-columns: 1fr max-content;
         align-items: center;
         gap: 1rem;
+
+        .title-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
     
         h2, h3 {
             word-break: break-word;

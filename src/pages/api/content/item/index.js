@@ -5,6 +5,12 @@ import { db } from "@/db";
 import { items, lists } from "@/schema";
 import { getUserLimits } from "@/server/billing";
 import { bucket } from "@/storage";
+import {
+    isSafeHttpUrl,
+    MAX_TEXT_LENGTHS,
+    sanitizeText,
+    validateImageFile,
+} from "@/utils/validation";
 
 export const prerender = false;
 
@@ -66,10 +72,16 @@ const parseRequest = async (request) => {
 
 const uploadImage = async (file) => {
     if (!file || typeof file === "string") return null;
+    const validation = await validateImageFile(file);
+    if (!validation.ok) {
+        const error = new Error(validation.message);
+        error.status = 400;
+        throw error;
+    }
     const id = crypto.randomUUID();
-    await bucket.put(id, await file.arrayBuffer(), {
+    await bucket.put(id, validation.bytes, {
         httpMetadata: {
-            contentType: file.type || "application/octet-stream",
+            contentType: validation.type,
         },
         customMetadata: { name: file.name || "Uploaded image" },
     });
@@ -112,6 +124,23 @@ export const POST = async (context) => {
             url,
         } = itemData || {};
 
+        const cleanTitle = sanitizeText(title, MAX_TEXT_LENGTHS.title);
+        const cleanDescription =
+            description == null
+                ? null
+                : sanitizeText(description, MAX_TEXT_LENGTHS.description);
+        const cleanUrl =
+            url == null || url === ""
+                ? null
+                : sanitizeText(url, MAX_TEXT_LENGTHS.url);
+        if (
+            !cleanTitle ||
+            cleanTitle.length > MAX_TEXT_LENGTHS.title ||
+            (cleanDescription === null && description != null) ||
+            (cleanUrl && !isSafeHttpUrl(cleanUrl))
+        )
+            return json({ message: "Invalid item data" }, 400);
+
         const [list] = await db
             .select({
                 id: lists.id,
@@ -153,15 +182,18 @@ export const POST = async (context) => {
                 .values({
                     communityList: communityList || null,
                     contributor: contributorId || null,
-                    description: description || null,
+                    description: cleanDescription || null,
                     displayPrice: Boolean(displayPrice),
-                    image: image || null,
+                    image:
+                        image && isSafeHttpUrl(image)
+                            ? sanitizeText(image, MAX_TEXT_LENGTHS.url)
+                            : null,
                     imageID: imageIDFromFile || imageID || null,
                     list: listId,
                     price: Number(price) || 0,
                     priority: priority || "none",
-                    title,
-                    url: url || null,
+                    title: cleanTitle,
+                    url: cleanUrl,
                 })
                 .returning();
         } catch (error) {
@@ -176,7 +208,15 @@ export const POST = async (context) => {
         });
     } catch (error) {
         console.error(error);
-        return json({ message: "Internal server error" }, 500);
+        return json(
+            {
+                message:
+                    error.status === 400
+                        ? error.message
+                        : "Internal server error",
+            },
+            error.status === 400 ? 400 : 500,
+        );
     }
 };
 
@@ -212,7 +252,15 @@ export const DELETE = async (context) => {
         return json({ message: "Item deleted successfully" });
     } catch (error) {
         console.error(error);
-        return json({ message: "Internal server error" }, 500);
+        return json(
+            {
+                message:
+                    error.status === 400
+                        ? error.message
+                        : "Internal server error",
+            },
+            error.status === 400 ? 400 : 500,
+        );
     }
 };
 
@@ -285,6 +333,25 @@ export const PUT = async (context) => {
                 .filter((field) => field in updateData)
                 .map((field) => [field, updateData[field]]),
         );
+        for (const field of ["title", "description", "url", "image"]) {
+            if (!(field in changes)) continue;
+            const limit =
+                field === "title"
+                    ? MAX_TEXT_LENGTHS.title
+                    : field === "description"
+                      ? MAX_TEXT_LENGTHS.description
+                      : MAX_TEXT_LENGTHS.url;
+            changes[field] =
+                changes[field] == null
+                    ? null
+                    : sanitizeText(changes[field], limit);
+        }
+        if (changes.title !== undefined && !changes.title)
+            return json({ message: "Invalid item title" }, 400);
+        if (changes.url && !isSafeHttpUrl(changes.url))
+            return json({ message: "Invalid item URL" }, 400);
+        if (changes.image && !isSafeHttpUrl(changes.image))
+            changes.image = null;
         const newImageID = await uploadImage(file);
         if (newImageID) changes.imageID = newImageID;
         if (removeImage) changes.imageID = null;

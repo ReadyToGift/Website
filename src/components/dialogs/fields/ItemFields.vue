@@ -234,6 +234,15 @@ const fileUploaded = (event) => {
         imageUploadInput.value?.files?.[0] ||
         item.value?.imageFile;
     if (typeof File !== "undefined" && file instanceof File) {
+        if (
+            file.size > 20 * 1024 * 1024 ||
+            !["image/png", "image/jpeg", "image/gif", "image/webp"].includes(
+                file.type,
+            )
+        ) {
+            item.value.imageFile = null;
+            return;
+        }
         if (item.value && item.value.imageID) {
             emit("file-state", "replaced");
         } else {

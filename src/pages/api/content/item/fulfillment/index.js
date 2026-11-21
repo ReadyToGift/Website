@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { fulfillments, items, lists } from "@/schema";
+import { MAX_TEXT_LENGTHS, sanitizeText } from "@/utils/validation";
 
 export const prerender = false;
 
@@ -32,6 +33,12 @@ export const POST = async (context) => {
         if (!itemId || typeof itemId !== "string") {
             return json({ message: "Invalid item ID" }, 400);
         }
+        if (
+            name != null &&
+            (typeof name !== "string" ||
+                sanitizeText(name, MAX_TEXT_LENGTHS.fulfillmentName) === null)
+        )
+            return json({ message: "Invalid name" }, 400);
 
         const item = await getItem(itemId);
         if (!item) return json({ message: "Item not found" }, 404);
@@ -70,7 +77,13 @@ export const POST = async (context) => {
 
         const [fulfillment] = await db
             .insert(fulfillments)
-            .values({ item: itemId, name: name || "" })
+            .values({
+                item: itemId,
+                name: sanitizeText(
+                    name || "",
+                    MAX_TEXT_LENGTHS.fulfillmentName,
+                ),
+            })
             .returning();
 
         return json({ fulfillment });

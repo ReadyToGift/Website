@@ -3,12 +3,19 @@ import { checkout, polar, portal, usage } from "@polar-sh/better-auth";
 import { createPolarCore } from "@polar-sh/sdk/2026-10";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError } from "better-auth/api";
 import { magicLink, twoFactor } from "better-auth/plugins";
 import * as schema from "@/auth-schema";
 import { db } from "@/db";
 import { deleteCache, getCache, setCache } from "@/server/cache";
 import { waitUntil } from "@/server/platform";
 import { sendEmail } from "@/utils/email/index";
+import {
+    MAX_AVATAR_BYTES,
+    MAX_TEXT_LENGTHS,
+    sanitizeText,
+    validateImageDataUrl,
+} from "@/utils/validation";
 
 export const createAuth = ({
     enableBilling,
@@ -17,6 +24,28 @@ export const createAuth = ({
     polarProProductId,
 }) => {
     if (!betterAuthSecret) throw new Error("Missing BETTER_AUTH_SECRET");
+
+    const sanitizeUserData = async (user) => {
+        const data = { ...user };
+        if (data.name !== undefined) {
+            data.name = sanitizeText(data.name, MAX_TEXT_LENGTHS.name);
+            if (!data.name)
+                throw new APIError("BAD_REQUEST", {
+                    message: "Invalid name",
+                });
+        }
+        if (data.image !== undefined && data.image !== null) {
+            const validation = await validateImageDataUrl(
+                data.image,
+                MAX_AVATAR_BYTES,
+            );
+            if (!validation.ok)
+                throw new APIError("BAD_REQUEST", {
+                    message: validation.message,
+                });
+        }
+        return data;
+    };
 
     const plugins = [
         twoFactor(),
@@ -90,6 +119,20 @@ export const createAuth = ({
             provider: "sqlite",
             schema,
         }),
+        databaseHooks: {
+            user: {
+                create: {
+                    before: async (user) => ({
+                        data: await sanitizeUserData(user),
+                    }),
+                },
+                update: {
+                    before: async (user) => ({
+                        data: await sanitizeUserData(user),
+                    }),
+                },
+            },
+        },
         emailAndPassword: {
             enabled: true,
             requireEmailVerification: true,
