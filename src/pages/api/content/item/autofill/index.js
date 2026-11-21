@@ -209,31 +209,34 @@ const getPreview = async ({
                 attemptStatus: "completed",
             });
 
-            const bandwidthGB = totalBandwidth / (1024 * 1024 * 1024);
-            const costInCents = parseFloat(
-                (bandwidthGB * bandwidthCostPerGB.amount).toFixed(12),
-            );
-
-            try {
-                await polar.events.ingest({
-                    events: [
-                        {
-                            name: "autofill",
-                            external_customer_id: externalCustomerId,
-                            metadata: {
-                                itemID,
-                                imageFound: data.images ? true : false,
-                                totalBandwidth,
-                                _cost: {
-                                    amount: costInCents,
-                                    currency: bandwidthCostPerGB.currency,
+            if (polar) {
+                const bandwidthGB = totalBandwidth / (1024 * 1024 * 1024);
+                const costInCents = parseFloat(
+                    (bandwidthGB * bandwidthCostPerGB.amount).toFixed(12),
+                );
+                try {
+                    await polar.events.ingest({
+                        events: [
+                            {
+                                name: "autofill",
+                                external_customer_id: externalCustomerId,
+                                metadata: {
+                                    itemID,
+                                    imageFound: data.images ? true : false,
+                                    totalBandwidth,
+                                    _cost: {
+                                        amount: costInCents,
+                                        currency: bandwidthCostPerGB.currency,
+                                    },
                                 },
                             },
-                        },
-                    ],
-                });
-            } catch (err) {
-                console.error(`Polar event ingestion failed: ${err.message}`);
+                        ],
+                    });
+                } catch (err) {
+                    console.error(
+                        `Polar event ingestion failed: ${err.message}`,
+                    );
+                }
             }
 
             return data;
