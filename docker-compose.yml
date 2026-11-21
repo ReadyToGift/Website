@@ -9,6 +9,9 @@ services:
         environment:
             CLOUDFLARE: "false"
             DATA_DIR: /data
+            # Optional Redis settings, remove if not using Redis
+            REDIS_HOST: readytogift-redis
+            REDIS_PORT: 6379
         volumes:
             - ./data:/data
         healthcheck:
@@ -18,3 +21,7 @@ services:
             retries: 3
         ports:
             - "8000:4321"
+    redis:
+        container_name: readytogift-redis
+        image: redis:latest
+        restart: unless-stopped
