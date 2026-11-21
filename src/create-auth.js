@@ -22,8 +22,6 @@ export const createAuth = ({
         twoFactor(),
         magicLink({
             sendMagicLink: async ({ email, url }) => {
-                console.log("Sending magic link to", email);
-
                 const body = `You requested a magic link.<br/>
                     Click the link below to sign in.<br/><br/>
                     <a href="${url}">${url}</a>`;

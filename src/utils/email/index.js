@@ -36,8 +36,6 @@ export const sendEmail = async ({
     contactSupportDefaultSubject,
     preview,
 }) => {
-    console.log(`Sending email to ${to}`);
-
     const PLUNK_BASE_URL = getEnv("PLUNK_BASE_URL");
     const PLUNK_SECRET_KEY = getEnv("PLUNK_SECRET_KEY");
     const PLUNK_SENDING_EMAIL = getEnv("PLUNK_SENDING_EMAIL");
@@ -68,6 +66,4 @@ export const sendEmail = async ({
         subject,
         body: html,
     });
-
-    console.log(`Email sent to ${to}`);
 };

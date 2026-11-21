@@ -2,12 +2,15 @@
     <v-app :theme="prefs?.darkMode ? 'dark' : 'light'">
         <DashNav />
         <v-main>
-            <router-view
-                v-if="
-                    !loading &&
-                    (!routeRequiresAuth || (routeRequiresAuth && !!user))
-                "
-            />
+            <div class="route-content">
+                <router-view
+                    v-if="
+                        !loading &&
+                        (!routeRequiresAuth || (routeRequiresAuth && !!user))
+                    "
+                />
+            </div>
+            <SiteFooter />
             <GlobalDialogs />
             <v-snackbar
                 v-model="showUpdatePrompt"
@@ -50,6 +53,7 @@ import "vuetify/styles";
 import "@/assets/main.scss";
 import DashNav from "@/components/DashNav.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
+import SiteFooter from "@/components/SiteFooter.vue";
 import { init as initAuth, user as userStore } from "@/stores/auth";
 import { init as initBilling } from "@/stores/billing";
 import { $prefs } from "@/stores/prefs";
@@ -159,6 +163,10 @@ nav a:first-of-type {
 .v-main {
     display: grid;
     grid-template-rows: 1fr max-content;
+}
+
+.route-content {
+    min-width: 0;
 }
 
 .page-content {

@@ -126,7 +126,7 @@ const createEmail = async ({ name, email, proCode }) => {
         <p>Readyto.gift has moved to a new account system to improve security and reliability.</p>
         <p>Your lists and items have been moved, but passwords could not be transferred securely. You will need to set a new password before signing in again.</p>
         <p style="background:#fff4d6;border-left:4px solid #e6a700;padding:12px 16px;"><strong>What you need to do:</strong><br/>Open the password recovery page and follow the instructions sent to this email address.</p>
-        <p style="text-align:center;padding:12px 0 4px;"><a href="${escapeHtml(siteUrl)}/dash/recovery/start?email=${encodeURIComponent(email)}" style="display:inline-block;background:#405F91;color:#ffffff!important;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;">Reset your password</a></p>
+        <p style="text-align:center;padding:12px 0 4px;"><a href="${escapeHtml(siteUrl)}/dash/recovery/start" style="display:inline-block;background:#405F91;color:#ffffff!important;padding:12px 22px;border-radius:4px;text-decoration:none;font-weight:bold;">Reset your password</a></p>
         ${proOffer}
         <p>If you have not used Readyto.gift recently, no action is required unless you want to access your account again.</p>
     `;

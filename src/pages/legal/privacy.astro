@@ -1,0 +1,10 @@
+---
+import App from "@/layouts/App.vue";
+import Layout from "@/layouts/Layout.astro";
+
+export const prerender = false;
+---
+
+<Layout>
+    <App client:only="vue" />
+</Layout>

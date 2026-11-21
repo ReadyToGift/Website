@@ -7,6 +7,10 @@ let clientRouter;
 if (!import.meta.env.SSR) {
     clientRouter = createRouter({
         history: createWebHistory(import.meta.env.BASE_URL || "/"),
+        scrollBehavior(to, _from, savedPosition) {
+            if (savedPosition) return savedPosition;
+            if (to.meta.scrollToTop) return { top: 0, left: 0 };
+        },
         routes: [
             {
                 path: "/",
@@ -51,13 +55,23 @@ if (!import.meta.env.SSR) {
                     import("@/pages/dash/_views/recovery/CompleteRecovery.vue"),
             },
             {
-                path: "/:pathMatch(.*)",
-                component: () => import("@/pages/404/_NotFound.vue"),
+                path: "/legal/privacy",
+                component: () => import("@/pages/dash/_views/PrivacyPage.vue"),
+                meta: { scrollToTop: true },
+            },
+            {
+                path: "/legal/terms",
+                component: () => import("@/pages/dash/_views/TermsPage.vue"),
+                meta: { scrollToTop: true },
             },
             {
                 path: "/dash/lists",
                 component: () => import("@/pages/dash/_views/UserLists.vue"),
                 meta: { requiresAuth: true },
+            },
+            {
+                path: "/:pathMatch(.*)",
+                component: () => import("@/pages/404/_NotFound.vue"),
             },
             config.get().enableBilling && {
                 path: "/dash/settings/billing",
@@ -67,7 +81,7 @@ if (!import.meta.env.SSR) {
         ].filter(Boolean),
     });
 
-    clientRouter.beforeEach(async (to, from, next) => {
+    clientRouter.beforeEach(async (to, _from, next) => {
         const currentUser = await getCurrentUser();
         if (to.meta?.requiresAuth) {
             if (!currentUser) {

@@ -5,8 +5,13 @@ void loadConfig().then(({ sentryDsn }) => {
     Sentry.init({
         dsn: sentryDsn ?? undefined,
         enabled: !import.meta.env.DEV,
-        sendDefaultPii: true,
-        replaysSessionSampleRate: 1.0,
-        integrations: [Sentry.replayIntegration()],
+        sendDefaultPii: false,
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 0,
+        maxBreadcrumbs: 0,
+        beforeSend(event) {
+            delete event.request;
+            return event;
+        },
     });
 });

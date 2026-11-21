@@ -1,22 +1,20 @@
 <template>
     <v-footer class="mb-4 v-card--variant-tonal pa-0">
-        <div class="made-by">
-            <p>
-                Created by
-                <a href="https://jackbailey.dev" target="_blank">
-                    Jack Bailey
-                </a>
-            </p>
-        </div>
+        <div class="made-by">Readyto.gift</div>
         <div class="footer-links">
             <v-btn
-                :icon="mdiGithub"
+                to="/legal/privacy"
+                text="Privacy"
                 slim
-                href="https://github.com/ReadytoGift/Website"
-                target="_blank"
-                class="ml-2"
+                variant="text"
                 density="compact"
-                size="large"
+            />
+            <v-btn
+                to="/legal/terms"
+                text="Terms"
+                slim
+                variant="text"
+                density="compact"
             />
         </div>
     </v-footer>
@@ -29,6 +27,7 @@ import { mdiGithub } from "@mdi/js";
 <style lang="scss" scoped>
 .v-footer {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     width: var(--section-width);
     margin: 0 auto;

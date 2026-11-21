@@ -258,7 +258,7 @@ const saveEmail = async (newValue) => {
     try {
         const { error } = await authClient.changeEmail({
             newEmail: newValue.value,
-            callbackURL: `/dash/settings/account?emailChange=pending&email=${encodeURIComponent(newValue.value)}`,
+            callbackURL: "/dash/settings/account?emailChange=pending",
         });
         if (!error) {
             createDialog({
@@ -269,8 +269,8 @@ const saveEmail = async (newValue) => {
                         text: "OK",
                     },
                 ],
-                text: "A verification email has been sent to your new email address.",
-                title: "Verification Email Sent",
+                text: "Check your current email address for a link to approve the change.",
+                title: "Email Change Requested",
                 type: "info",
             });
             return true;
@@ -299,9 +299,6 @@ onMounted(() => {
         if (url.searchParams.get("emailChange") !== "pending") return;
 
         await refreshSession();
-        const requestedEmail = url.searchParams.get("email");
-        const isConfirmed =
-            requestedEmail?.toLowerCase() === user.value?.email?.toLowerCase();
 
         createDialog({
             actions: [
@@ -311,18 +308,13 @@ onMounted(() => {
                     text: "OK",
                 },
             ],
-            text: isConfirmed
-                ? "Your new email address has been confirmed."
-                : "The request was approved. Check your new email inbox for the verification link.",
-            title: isConfirmed
-                ? "Email Address Updated"
-                : "Email Change Approved",
+            text: "Check the email address shown in your account. If it hasn't changed yet, follow the verification link sent to your new address.",
+            title: "Email Change Status",
             type: "info",
         });
 
         url.searchParams.delete("emailChange");
-        url.searchParams.delete("email");
-        window.history.replaceState({}, "", url);
+        window.history.replaceState(window.history.state, "", url);
     };
 
     handleEmailChangeStatus();
