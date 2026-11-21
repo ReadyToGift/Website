@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+.astro
+dist
+.DS_Store
+npm-debug.log*
+pnpm-debug.log*
+Dockerfile*
+docker-compose*

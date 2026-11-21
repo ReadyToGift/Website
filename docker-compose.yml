@@ -12,7 +12,7 @@ services:
         volumes:
             - ./data:/data
         healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:4321/health"]
+            test: ["CMD", "/nodejs/bin/node", "-e", "fetch('http://localhost:4321/health').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
             interval: 30s
             timeout: 10s
             retries: 3

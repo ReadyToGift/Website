@@ -19,7 +19,7 @@ import sentry from "@sentry/astro";
 const isCloudflare =
     process.env.CLOUDFLARE === "true" ||
     process.env.CF_PAGES === "true" ||
-    process.env.CF_PAGES_COMMIT_SHA;
+    !!process.env.CF_PAGES_COMMIT_SHA;
 
 const domain = process.env.DOMAIN || "readyto.gift";
 const allowedDomains =

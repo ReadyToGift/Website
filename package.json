@@ -21,7 +21,6 @@
         "auth-db:generate": "pnpm dlx auth@latest generate --config ./src/auth.cli.js --output ./src/auth-schema.js && biome check ./src/auth-schema.js --fix"
     },
     "dependencies": {
-        "@astrojs/cloudflare": "^14.4.6",
         "@astrojs/node": "^11.1.14",
         "@astrojs/vue": "^7.1.2",
         "@better-auth/drizzle-adapter": "^1.7.18",
@@ -35,8 +34,6 @@
         "@polar-sh/checkout": "0.6.0",
         "@polar-sh/sdk": "1.0.2",
         "@sentry/astro": "^10.78.0",
-        "@sentry/cloudflare": "^11.11.0",
-        "@sentry/vite-plugin": "^4.9.1",
         "@sentry/vue": "^10.78.0",
         "@splidejs/vue-splide": "^0.6.12",
         "abort-controller": "^3.0.0",
@@ -56,24 +53,25 @@
         "nanostores": "^1.5.5",
         "plunk-node-sdk": "^0.3.0",
         "qrcode": "^1.5.4",
-        "sass": "^1.107.1",
         "sse.js": "^2.8.0",
         "tidy-url": "^1.18.3",
         "uuid": "^13.0.1",
-        "vite-plugin-vuetify": "^2.1.3",
         "vue": "^3.5.45",
         "vue-advanced-cropper": "^2.8.9",
         "vue-markdown-render": "^2.3.1",
         "vue-router": "^4.6.4",
-        "vuetify": "^3.13.7",
-        "wrangler": "^4.158.0"
+        "vuetify": "^3.13.7"
     },
     "devDependencies": {
         "@biomejs/biome": "2.6.5",
         "@mdi/js": "7.4.47",
         "@types/node": "26.6.6",
+        "@astrojs/cloudflare": "^14.4.6",
         "cross-env": "10.1.0",
         "drizzle-kit": "0.31.11",
-        "vite": "7.3.7"
+        "sass": "^1.107.1",
+        "vite": "7.3.7",
+        "vite-plugin-vuetify": "^2.1.3",
+        "wrangler": "^4.158.0"
     }
 }

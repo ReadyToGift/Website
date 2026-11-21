@@ -12,27 +12,24 @@ RUN corepack enable
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN corepack install
 
-RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --frozen-lockfile
-
-FROM --platform=linux/amd64 base AS prod-deps
-RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --prod
-
 FROM --platform=linux/amd64 base AS build-deps
-RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM --platform=linux/amd64 build-deps AS build
 COPY . .
-RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm build
+RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store \
+	pnpm build \
+	&& pnpm deploy --filter . --prod /app/prod
 
-FROM --platform=linux/amd64 base AS runtime
-RUN apt-get update \
-	&& apt-get install -y --no-install-recommends curl
+FROM --platform=linux/amd64 gcr.io/distroless/nodejs26-debian13 AS runtime
 
-COPY --from=prod-deps /app/node_modules ./node_modules
+WORKDIR /app
+
+COPY --from=build /app/prod/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/migrations ./migrations
 
 ENV HOST=0.0.0.0
 ENV PORT=4321
 EXPOSE 4321
-CMD node ./dist/server/entry.mjs
+CMD ["./dist/server/entry.mjs"]
