@@ -4,6 +4,9 @@
 interface __BaseEnv_Env {
     CACHE: KVNamespace;
     SESSION: KVNamespace;
+    API_RATE_LIMITER: RateLimit;
+    REPORT_RATE_LIMITER: RateLimit;
+    AUTOFILL_RATE_LIMITER: RateLimit;
     readytogift_prod: D1Database;
     ASSETS: Fetcher;
 }

@@ -34,6 +34,61 @@ migrate(database, {
 });
 
 export const db = database;
+export const rateLimiter = undefined;
+export const reportRateLimiter = undefined;
+export const autofillRateLimiter = undefined;
+
+// SQLite is the shared store for the Node deployment. The transaction makes
+// the read/decide/write operation atomic for concurrent requests.
+export const consumeRateLimit = async ({ key, limit, windowSeconds }) => {
+    const now = Date.now();
+    const windowStart =
+        Math.floor(now / (windowSeconds * 1000)) * windowSeconds * 1000;
+    const storageKey = `rate-limit:${windowSeconds}:${windowStart}:${key}`;
+
+    if (redis) {
+        try {
+            const [count] = await redis
+                .multi()
+                .incr(storageKey)
+                .expire(storageKey, windowSeconds)
+                .exec();
+
+            return Number(count) <= limit;
+        } catch (error) {
+            console.error("Rate limiter Redis error; using SQLite", error);
+        }
+    }
+
+    return database.transaction((tx) => {
+        tx.delete(appSchema.cache)
+            .where(lte(appSchema.cache.expiresAt, now))
+            .run();
+
+        const existing = tx
+            .select({ value: appSchema.cache.value })
+            .from(appSchema.cache)
+            .where(eq(appSchema.cache.key, storageKey))
+            .get();
+        const count = Number(existing?.value || 0);
+
+        if (count >= limit) return false;
+
+        tx.insert(appSchema.cache)
+            .values({
+                key: storageKey,
+                value: String(count + 1),
+                expiresAt: windowStart + windowSeconds * 1000,
+            })
+            .onConflictDoUpdate({
+                target: appSchema.cache.key,
+                set: { value: String(count + 1) },
+            })
+            .run();
+
+        return true;
+    });
+};
 export const waitUntil = undefined;
 export const localImageBaseUrl = "/api/content/item/image";
 export const getEnv = (key) => process.env[key];

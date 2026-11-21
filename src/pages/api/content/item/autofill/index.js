@@ -18,6 +18,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { TidyURL } from "tidy-url";
 import { requireAuth } from "@/auth";
 import { getUserAutofillMeter, getUserLimits } from "@/server/billing.js";
+import { enforceRateLimit } from "@/server/rate-limit";
 import getSite from "./_modules/get-site.js";
 import { getLinkPreview } from "./_modules/link-preview-js.js";
 
@@ -263,6 +264,9 @@ export const POST = async (context) => {
         const { unauthorizedResponse, user } = requireAuth(context);
 
         if (unauthorizedResponse) return unauthorizedResponse;
+
+        const limited = await enforceRateLimit(context, "autofill");
+        if (limited) return limited;
 
         try {
             const autofillStartTime = new Date();

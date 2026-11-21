@@ -14,6 +14,10 @@ const database = drizzle(binding, {
 
 export const bucket = env.BUCKET;
 export const cache = env.CACHE;
+export const rateLimiter = env.API_RATE_LIMITER;
+export const reportRateLimiter = env.REPORT_RATE_LIMITER;
+export const autofillRateLimiter = env.AUTOFILL_RATE_LIMITER;
+export const consumeRateLimit = undefined;
 export const db = database;
 export const localImageBaseUrl = null;
 export const getEnv = (key) => env[key];

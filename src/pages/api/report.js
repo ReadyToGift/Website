@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { items, lists } from "@/schema";
 import { getEnv } from "@/server/platform";
+import { enforceRateLimit } from "@/server/rate-limit";
 import { sendEmail } from "@/utils/email/index";
 import { escapeHtml, MAX_TEXT_LENGTHS, sanitizeText } from "@/utils/validation";
 
@@ -23,6 +24,9 @@ const json = (body, status = 200) =>
 
 export const POST = async (context) => {
     try {
+        const limited = await enforceRateLimit(context, "report");
+        if (limited) return limited;
+
         const body = await context.request.json();
         const { details = "", itemId, listId, reason } = body || {};
 
