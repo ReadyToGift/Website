@@ -16,7 +16,11 @@ import cloudflare from "@astrojs/cloudflare";
 import node from "@astrojs/node";
 import sentry from "@sentry/astro";
 
-const isCloudflare = process.env.CLOUDFLARE === "true";
+const isCloudflare =
+    process.env.CLOUDFLARE === "true" ||
+    process.env.CF_PAGES === "true" ||
+    process.env.CF_PAGES_COMMIT_SHA;
+
 const domain = process.env.DOMAIN || "readyto.gift";
 const allowedDomains =
     process.env.ALLOWED_DOMAINS?.split(",") ||
@@ -240,5 +244,7 @@ export default defineConfig({
         build: {},
     },
 
-    output: "static",
+    // Cloudflare needs a Worker entrypoint for the server-rendered API routes
+    // and the KV/D1/R2 bindings declared in wrangler.jsonc.
+    output: "server",
 });
