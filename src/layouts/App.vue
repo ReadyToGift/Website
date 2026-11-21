@@ -9,8 +9,17 @@
                         (!routeRequiresAuth || (routeRequiresAuth && !!user))
                     "
                 />
+                <div v-else class="startup-loader" role="status" aria-live="polite">
+                    <v-progress-circular
+                        indeterminate
+                        size="80"
+                        width="8"
+                        color="primary"
+                        aria-hidden="true"
+                    />
+                    <h1>Loading…</h1>
+                </div>
             </div>
-            <SiteFooter />
             <GlobalDialogs />
             <v-snackbar
                 v-model="showUpdatePrompt"
@@ -40,6 +49,7 @@
                 </div>
             </v-snackbar>
         </v-main>
+        <SiteFooter />
     </v-app>
 </template>
 
@@ -48,7 +58,7 @@ import { useStore } from "@nanostores/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTheme } from "vuetify";
-import { VApp, VBtn, VMain, VSnackbar } from "vuetify/components";
+import { VApp, VBtn, VMain, VProgressCircular, VSnackbar } from "vuetify/components";
 import "vuetify/styles";
 import "@/assets/main.scss";
 import DashNav from "@/components/DashNav.vue";
@@ -111,7 +121,6 @@ window.addEventListener("appinstalled", () => {
 });
 
 onMounted(async () => {
-    loading.value = "Loading Auth..."; // not currently used but could be useful for future loading states
     await initAuth({ router });
     await initBilling();
 
@@ -122,7 +131,7 @@ onMounted(async () => {
 
 <style scoped>
 .v-application {
-    height: auto;
+    min-height: 100vh;
 }
 
 header {
@@ -161,17 +170,32 @@ nav a:first-of-type {
 }
 
 .v-main {
-    display: grid;
-    grid-template-rows: 1fr max-content;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
 }
 
 .route-content {
-    display: contents;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     min-width: 0;
 }
 
-.page-content {
-    height: 100%;
+.route-content > :deep(.page-content),
+.route-content > :deep(.loader-outer) {
+    flex: 1 0 auto;
+    height: auto;
+}
+
+.startup-loader {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem 0;
 }
 
 .update-available {

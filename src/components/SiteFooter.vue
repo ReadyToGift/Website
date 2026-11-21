@@ -27,6 +27,7 @@ import { mdiGithub } from "@mdi/js";
 <style lang="scss" scoped>
 .v-footer {
     display: flex;
+    flex: 0 0 auto;
     flex-wrap: wrap;
     justify-content: space-between;
     width: var(--section-width);
