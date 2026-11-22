@@ -1,5 +1,6 @@
 ---
 import { and, eq, inArray, isNull } from "drizzle-orm";
+import "@/assets/wedding.scss";
 import { requireAuth } from "@/auth";
 import ItemCard from "@/components/wedding/ItemCard.astro";
 import WeddingCreateItem from "@/components/wedding/WeddingCreateItem.vue";
@@ -9,6 +10,10 @@ import WeddingSectionsManager from "@/components/wedding/WeddingSectionsManager.
 import { db } from "@/db";
 import AstroLayout from "@/layouts/AstroLayout.astro";
 import { fulfillments, items, lists as listsTable } from "@/schema";
+import {
+    normalizeWeddingAccent,
+    weddingAccentTheme,
+} from "@/utils/weddingTheme";
 
 const shortUrl = Astro.params.shortUrl;
 const [list] = await db
@@ -24,6 +29,7 @@ if (!list) {
 
 const { user } = await requireAuth(Astro);
 
+// TODO: Re-enable private list check
 // if (list.private && user?.id !== list.author) {
 //     return Astro.rewrite("/404");
 // }
@@ -50,8 +56,11 @@ const itemsWithFulfillments = weddingItems
             ) ?? null,
     }));
 const canManage = user?.id === list.author;
+const accentColor = normalizeWeddingAccent(list.accentColor);
+const accentTheme = weddingAccentTheme(accentColor);
 const editableList = {
     currency: list.currency,
+    accentColor,
     description: list.description,
     id: list.id,
     private: list.private,
@@ -65,39 +74,52 @@ const editableList = {
 };
 ---
 
-<AstroLayout title={list.title}>
-    <div class="header">
-        <h1>{list.title}</h1>
-        <div class="subheader">
-            {list.weddingDate && (
-                <span class="weddingDate">{list.weddingDate}</span>
-            )}
-            {list.weddingDate && list.registryTitle && <span>&bull;</span>}
-            {list.registryTitle && (
-                <span class="registryTitle">{list.registryTitle}</span>
-            )}
+<AstroLayout title={list.title} accentColor={accentColor}>
+    <div
+        class={`wedding-theme wedding-theme--${accentTheme}`}
+        style={`--wedding-accent: ${accentColor};`}
+    >
+        <div class="header">
+            <h1>{list.title}</h1>
+            <div class="subheader">
+                {list.weddingDate && (
+                    <span class="weddingDate">{list.weddingDate}</span>
+                )}
+                {list.weddingDate && list.registryTitle && (
+                    <span> &bull; </span>
+                )}
+                {list.registryTitle && (
+                    <span class="registryTitle">{list.registryTitle}</span>
+                )}
+            </div>
         </div>
-    </div>
-    <div class="wedding-content">
-        {canManage && (
-            <WeddingSectionsManager list={editableList} client:only="vue" />
-        )}
-        <div class="sections" data-wedding-sections>
-            {weddingSections.map((section) => (
-                <WeddingSection section={section} />
-            ))}
-        </div>
-        {itemsWithFulfillments.length > 0 && (
-            <div class="wedding-items">
-                {itemsWithFulfillments.map((item) => (
-                    <ItemCard
-                        item={item}
-                        list={list}
-                        wishlistOwner={canManage}
-                    />
+        <div class="wedding-content">
+            {canManage && (
+                <WeddingSectionsManager list={editableList} client:only="vue" />
+            )}
+            <div class="sections" data-wedding-sections>
+                {weddingSections.map((section) => (
+                    <WeddingSection section={section} />
                 ))}
             </div>
-        )}
+            {itemsWithFulfillments.length > 0 ? (
+                    <div class="wedding-items-header">
+                        <h2>The registry</h2>
+                        <div class="items-controls"></div>
+                    </div>
+                    <div class="wedding-items">
+                        {itemsWithFulfillments.map((item) => (
+                            <ItemCard
+                                item={item}
+                                list={list}
+                                wishlistOwner={canManage}
+                            />
+                        ))}
+                    </div>
+            ) : (
+                <p>No items yet</p>
+            )}
+        </div>
     </div>
     {canManage && (
         <div slot="pageActions">
@@ -110,9 +132,20 @@ const editableList = {
 <style>
 :global(html),
 :global(body) {
-    background: #f9f9ff;
+    background: #f8f7f0;
     color: #191c20;
     color-scheme: light;
+}
+
+.header {
+    text-align: center;
+    h1 {
+        color: var(--wedding-accent);
+        font-size: 3rem;
+    }
+    .subheader {
+        font-size: 1.5rem;
+    }
 }
 
 .wedding-items {

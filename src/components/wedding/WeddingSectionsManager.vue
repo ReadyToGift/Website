@@ -42,6 +42,8 @@ const saveSections = async (updatedSections) => {
 
 <style scoped>
 .wedding-sections-manager {
-    margin-bottom: 1rem;
+    margin: 1rem 0;
+    display: flex;
+    justify-content: center;
 }
 </style>

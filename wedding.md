@@ -5,3 +5,7 @@
   - [ ] Track what has been paid for etc
 - [ ] Add maximum section count
 - [ ] Handle limits for items
+- [ ] Password protection
+- [ ] Duration of 18 months
+- [ ] Custom domain
+- [ ] End of use export, PDF or summary

@@ -64,6 +64,7 @@ export const GET = async (context) => {
                 title: lists.title,
                 description: lists.description,
                 currency: lists.currency,
+                accentColor: lists.accentColor,
                 shortUrl: lists.shortUrl,
                 private: lists.private,
                 spoilSurprises: lists.spoilSurprises,

@@ -1,27 +1,52 @@
 ---
+import ReadyToGiftLogo from "@/components/ReadyToGiftLogo.astro";
+
 const hasPageActions = Astro.slots.has("default");
+const { accentColor = "currentColor" } = Astro.props;
 ---
 
 <header>
-    <a href="/"> ReadyToGift </a>
-    {hasPageActions && (
-        <div class="page-actions">
-            <slot />
-        </div>
-    )}
+    <div class="nav-content">
+        <a class="brand" href="/">
+            <ReadyToGiftLogo accentColor={accentColor} />
+            <span>Readyto.gift</span>
+        </a>
+        {hasPageActions && (
+            <div class="page-actions">
+                <slot />
+            </div>
+        )}
+    </div>
 </header>
 
 <style>
 header {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-    padding: 1rem var(--outer-padding);
+    display: grid;
+    grid-template-columns: var(--page-grid-columns);
+    padding-block: 1rem;
     width: 100%;
     box-sizing: border-box;
 }
 
-header > .page-actions {
+.nav-content {
+    align-items: center;
+    display: flex;
+    grid-column: content;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.brand {
+    align-items: center;
+    color: inherit;
+    display: inline-flex;
+    font-size: 1.25rem;
+    font-weight: 700;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.page-actions {
     margin-left: auto;
     position: relative;
 }

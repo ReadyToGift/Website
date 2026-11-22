@@ -2,11 +2,11 @@
 import AstroNav from "@/components/AstroNav.astro";
 import Layout from "./Layout.astro";
 
-const { title } = Astro.props;
+const { accentColor, title } = Astro.props;
 ---
 
 <Layout title={title}>
-    <AstroNav>
+    <AstroNav accentColor={accentColor}>
         <slot name="pageActions" />
     </AstroNav>
     <main class="astro-main">
@@ -18,16 +18,9 @@ const { title } = Astro.props;
 :global(:root) {
     --outer-padding: 1rem;
     --breakout-width: 1rem;
-}
-
-:global(main.astro-main) {
-    align-content: start;
-    display: grid;
-    flex-grow: 1;
-    grid-template-columns:
-        [full-width-start] minmax(var(--outer-padding), 1fr)
-        [breakout-start] minmax(var(--breakout-width), 1fr)
-        [content-start] min(
+    --page-grid-columns: [full-width-start] minmax(var(--outer-padding), 1fr)
+        [breakout-start] minmax(var(--breakout-width), 1fr) [content-start]
+        min(
             100% -
             calc(
                 var(--outer-padding) +
@@ -37,9 +30,15 @@ const { title } = Astro.props;
             ),
             100rem
         )
-        [content-end] minmax(var(--breakout-width), 1fr)
-        [breakout-end] minmax(var(--outer-padding), 1fr)
-        [full-width-end];
+        [content-end] minmax(var(--breakout-width), 1fr) [breakout-end]
+        minmax(var(--outer-padding), 1fr) [full-width-end];
+}
+
+:global(main.astro-main) {
+    align-content: start;
+    display: grid;
+    flex-grow: 1;
+    grid-template-columns: var(--page-grid-columns);
     width: 100%;
     box-sizing: border-box;
 }

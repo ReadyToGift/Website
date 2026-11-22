@@ -10,6 +10,7 @@ import {
     sanitizeText,
     validateImageDataUrl,
 } from "@/utils/validation";
+import { normalizeWeddingAccent } from "@/utils/weddingTheme";
 
 export const prerender = false;
 
@@ -68,6 +69,7 @@ export const GET = async (context) => {
                 title: lists.title,
                 description: lists.description,
                 currency: lists.currency,
+                accentColor: lists.accentColor,
                 shortUrl: lists.shortUrl,
                 private: lists.private,
                 spoilSurprises: lists.spoilSurprises,
@@ -200,6 +202,7 @@ export const POST = async (context) => {
 
         const {
             currency = "USD",
+            accentColor = null,
             description = null,
             private: isPrivate = false,
             shortUrl = null,
@@ -217,6 +220,8 @@ export const POST = async (context) => {
             shortUrl == null || shortUrl === ""
                 ? null
                 : sanitizeText(shortUrl, MAX_TEXT_LENGTHS.shortUrl);
+        const cleanAccentColor =
+            type === "wedding" ? normalizeWeddingAccent(accentColor) : null;
         if (!cleanTitle) {
             return new Response(
                 JSON.stringify({ message: "Title is required" }),
@@ -288,6 +293,7 @@ export const POST = async (context) => {
             .insert(lists)
             .values({
                 author: user.id,
+                accentColor: cleanAccentColor,
                 currency,
                 description: cleanDescription,
                 private: Boolean(isPrivate),
@@ -429,6 +435,7 @@ export const PUT = async (context) => {
 
         const allowedFields = [
             "currency",
+            "accentColor",
             "description",
             "private",
             "shortUrl",
@@ -465,6 +472,11 @@ export const PUT = async (context) => {
             );
         if ("weddingDate" in changes)
             changes.weddingDate = sanitizeText(changes.weddingDate, 32);
+        if ("accentColor" in changes)
+            changes.accentColor =
+                existingList.type === "wedding"
+                    ? normalizeWeddingAccent(changes.accentColor)
+                    : null;
         const newSectionImageIDs = [];
         if ("weddingSections" in changes) {
             const sectionTypes = new Set([

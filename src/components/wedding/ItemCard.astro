@@ -93,8 +93,12 @@ const listForClient = {
 
 <style>
 .wedding-item-card {
-    background: rgb(var(--v-theme-surface, 249 249 255));
-    border: 1px solid rgb(var(--v-theme-outline-variant, 196 198 208));
+    background: var(
+        --wedding-surface,
+        rgb(var(--v-theme-surface, 249 249 255))
+    );
+    border: 1px solid
+        var(--wedding-border, rgb(var(--v-theme-outline-variant, 196 198 208)));
     border-radius: 1rem;
     display: flex;
     flex-direction: column;
@@ -148,9 +152,12 @@ h2 {
 }
 
 .item-chip {
-    background: rgb(var(--v-theme-primary, 65 95 145));
+    background: var(--wedding-accent, rgb(var(--v-theme-primary, 65 95 145)));
     border-radius: 999px;
-    color: rgb(var(--v-theme-on-primary, 255 255 255));
+    color: var(
+        --wedding-on-accent,
+        rgb(var(--v-theme-on-primary, 255 255 255))
+    );
     padding: 0.4rem 0.75rem;
     text-decoration: none;
 }

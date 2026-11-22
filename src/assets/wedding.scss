@@ -1,0 +1,67 @@
+@use "sass:color";
+@use "sass:map";
+
+$wedding-accents: (
+    "navy": #083c62,
+    "slate": #244b5a,
+    "plum": #4a3b59,
+    "burgundy": #633b3b,
+    "forest": #2f5d50,
+    "umber": #6b4f2a,
+);
+
+@mixin wedding-accent($accent) {
+    --wedding-accent: #{$accent};
+    --wedding-accent-light: #{color.mix(#fff, $accent, 75%)};
+    --wedding-on-accent: #fff;
+    --wedding-background: #{color.mix(#fff, $accent, 94%)};
+    --wedding-surface: #{color.mix(#fff, $accent, 88%)};
+    --wedding-surface-raised: #{color.mix(#fff, $accent, 78%)};
+    --wedding-border: #{color.mix(#000, $accent, 15%)};
+}
+
+.wedding-theme {
+    @include wedding-accent(map.get($wedding-accents, "navy"));
+    color: #191c20;
+
+    @each $name, $accent in $wedding-accents {
+        &.wedding-theme--#{$name} {
+            @include wedding-accent($accent);
+        }
+    }
+
+    &.wedding-theme--custom {
+        --wedding-accent-light: color-mix(
+            in srgb,
+            var(--wedding-accent) 25%,
+            white
+        );
+        --wedding-on-accent: #fff;
+        --wedding-background: color-mix(
+            in srgb,
+            var(--wedding-accent) 6%,
+            white
+        );
+        --wedding-surface: color-mix(in srgb, var(--wedding-accent) 12%, white);
+        --wedding-surface-raised: color-mix(
+            in srgb,
+            var(--wedding-accent) 22%,
+            white
+        );
+        --wedding-border: color-mix(in srgb, var(--wedding-accent) 28%, white);
+    }
+
+    .wedding-accent-background {
+        background: var(--wedding-accent);
+        color: var(--wedding-on-accent);
+    }
+
+    .wedding-surface {
+        background: var(--wedding-surface);
+    }
+
+    .wedding-surface-raised {
+        background: var(--wedding-surface-raised);
+    }
+
+}

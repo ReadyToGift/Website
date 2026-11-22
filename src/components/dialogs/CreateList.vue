@@ -13,7 +13,7 @@
                   ? '100%'
                   : '400px'
         "
-        :fullscreen="$vuetify.display.mobile ? true : false"
+        :fullscreen="$vuetify.display.mobile"
         v-model="dialogOpen"
     >
         <template v-slot:activator="{ props: activatorProps }">
@@ -214,8 +214,8 @@ import {
     publicListLimitReached as publicListLimitReachedStore,
 } from "@/stores/billing";
 import { config as configStore } from "@/stores/config";
-import { userLists as userListsStore } from "@/stores/userLists";
 import { formatMinorCurrency } from "@/stores/currency";
+import { userLists as userListsStore } from "@/stores/userLists";
 import { handleFetch } from "@/utils/handleFetch";
 
 export default {
@@ -260,6 +260,7 @@ export default {
             mdiPlus,
             newList: {
                 currency: "USD",
+                accentColor: "#083C62",
                 description: "",
                 private: this.private,
                 shortUrl: null,
@@ -289,6 +290,7 @@ export default {
                 this.listTypeSelected = false;
                 this.newList = {
                     currency: "USD",
+                    accentColor: "#083C62",
                     description: "",
                     private: false,
                     shortUrl: null,

@@ -227,6 +227,9 @@ export default {
             if (open === true) {
                 this.editedList = {
                     currency: this.list.currency,
+                    ...(this.list.type === "wedding"
+                        ? { accentColor: this.list.accentColor || "#083C62" }
+                        : {}),
                     description: this.list.description,
                     private: this.list.private,
                     shortUrl: this.list.shortUrl,

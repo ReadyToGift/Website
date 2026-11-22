@@ -104,6 +104,38 @@
             hide-details="auto"
         />
     </template>
+    <template v-if="list.type === 'wedding'">
+        <div class="accent-picker mt-4">
+            <div class="accent-picker-title">Accent colour</div>
+            <fieldset class="accent-options">
+                <button
+                    v-for="option in accentOptions"
+                    :key="option.value"
+                    type="button"
+                    class="accent-option"
+                    :class="{
+                        selected:
+                            list.accentColor?.toUpperCase() === option.value,
+                    }"
+                    :style="{ backgroundColor: option.value }"
+                    :aria-label="option.title"
+                    :aria-pressed="
+                        list.accentColor?.toUpperCase() === option.value
+                    "
+                    @click="list.accentColor = option.value"
+                />
+            </fieldset>
+            <label class="custom-accent">
+                <span>Custom</span>
+                <input
+                    v-model="list.accentColor"
+                    type="color"
+                    aria-label="Custom accent colour"
+                >
+                <code>{{ list.accentColor }}</code>
+            </label>
+        </div>
+    </template>
     <v-label v-if="list.type !== 'wedding'" class="mt-4 mb-0">
         List Privacy
     </v-label>
@@ -131,6 +163,7 @@
 import { computed, watch } from "vue";
 import RevertPrompt from "@/components/RevertPrompt.vue";
 import { currencies } from "@/stores/currency";
+import { WEDDING_ACCENTS } from "@/utils/weddingTheme";
 
 const list = defineModel("list");
 
@@ -146,6 +179,8 @@ const props = defineProps({
         type: Object,
     },
 });
+
+const accentOptions = WEDDING_ACCENTS;
 
 watch(
     () => list.value?.type,
@@ -176,6 +211,57 @@ const revertValue = (field) => {
 </script>
 
 <style scoped>
+.accent-options {
+    border: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    padding: 0;
+}
+
+.accent-picker-title {
+    color: rgba(var(--v-theme-on-surface), 0.7);
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+}
+
+.custom-accent {
+    align-items: center;
+    display: inline-flex;
+    gap: 0.625rem;
+    margin-top: 0.75rem;
+}
+
+.custom-accent input {
+    appearance: none;
+    background: transparent;
+    border: 1px solid rgba(var(--v-theme-on-surface), 0.35);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    height: 2.5rem;
+    padding: 0.2rem;
+    width: 2.5rem;
+}
+
+.custom-accent code {
+    font-size: 0.875rem;
+}
+
+.accent-option {
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    height: 2.5rem;
+    width: 2.5rem;
+}
+
+.accent-option.selected {
+    border-color: rgb(var(--v-theme-on-surface));
+    box-shadow: 0 0 0 2px rgb(var(--v-theme-surface));
+}
+
 :deep(.v-counter) {
     margin-left: 0.5rem;
 }
