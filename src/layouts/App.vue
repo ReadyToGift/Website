@@ -9,7 +9,12 @@
                         (!routeRequiresAuth || (routeRequiresAuth && !!user))
                     "
                 />
-                <div v-else class="startup-loader" role="status" aria-live="polite">
+                <div
+                    v-else
+                    class="startup-loader"
+                    role="status"
+                    aria-live="polite"
+                >
                     <v-progress-circular
                         indeterminate
                         size="80"
@@ -58,7 +63,13 @@ import { useStore } from "@nanostores/vue";
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTheme } from "vuetify";
-import { VApp, VBtn, VMain, VProgressCircular, VSnackbar } from "vuetify/components";
+import {
+    VApp,
+    VBtn,
+    VMain,
+    VProgressCircular,
+    VSnackbar,
+} from "vuetify/components";
 import "vuetify/styles";
 import "@/assets/main.scss";
 import DashNav from "@/components/DashNav.vue";
@@ -131,7 +142,9 @@ onMounted(async () => {
 
 <style scoped>
 .v-application {
+    height: auto;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 header {
