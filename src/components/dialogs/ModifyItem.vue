@@ -74,11 +74,13 @@
                         :disabled="!modifiedItem.url"
                         @click="autofill"
                         v-if="
-                            limits.autofill || autofillUsage.totalAllowance > 0
+                            weddingList ||
+                            limits.autofill ||
+                            autofillUsage.totalAllowance > 0
                         "
                     >
                         Autofill
-                        <template v-if="!limits.autofill">
+                        <template v-if="!weddingList && !limits.autofill">
                             ({{ autofillUsage.remainingAllowance }}/{{
                                 autofillUsage.totalAllowance
                             }})
@@ -170,6 +172,10 @@ export default {
             default: "elevated",
         },
         wishlistOwner: {
+            type: Boolean,
+            default: false,
+        },
+        weddingList: {
             type: Boolean,
             default: false,
         },
@@ -272,7 +278,7 @@ export default {
     },
     methods: {
         async autofill() {
-            if (!this.limits.autofill) {
+            if (!this.weddingList && !this.limits.autofill) {
                 if (this.autofillUsage.remainingAllowance > 0) {
                     const useAutofill = await this.createDialog({
                         async: true,
@@ -342,6 +348,7 @@ export default {
                 props: {
                     currency: this.currency,
                     itemID: this.itemID,
+                    listID: this.list.id,
                     url: this.modifiedItem.url,
                 },
             });

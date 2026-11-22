@@ -14,9 +14,12 @@ import {
     POLAR_ACCESS_TOKEN,
 } from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";
+import { eq } from "drizzle-orm";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { TidyURL } from "tidy-url";
 import { requireAuth } from "@/auth";
+import { db } from "@/db";
+import { lists } from "@/schema";
 import { getUserAutofillMeter, getUserLimits } from "@/server/billing.js";
 import { enforceRateLimit } from "@/server/rate-limit";
 import getSite from "./_modules/get-site.js";
@@ -270,7 +273,8 @@ export const POST = async (context) => {
 
         try {
             const autofillStartTime = new Date();
-            const { url, currency, itemID } = await context.request.json();
+            const { url, currency, itemID, listID } =
+                await context.request.json();
 
             const userID = user.id;
             if (!url) {
@@ -301,11 +305,27 @@ export const POST = async (context) => {
                 );
             }
 
-            const { limits } = await getUserLimits({ user });
+            const [list] = listID
+                ? await db
+                      .select({ author: lists.author, type: lists.type })
+                      .from(lists)
+                      .where(eq(lists.id, listID))
+                : [];
+            if (listID && (!list || list.author !== user.id)) {
+                return new Response(
+                    JSON.stringify({ message: "Unauthorized list" }),
+                    {
+                        status: 403,
+                        headers: { "Content-Type": "application/json" },
+                    },
+                );
+            }
 
-            let autofillEnabled = false;
-            if (limits.autofill) {
-                autofillEnabled = true;
+            const weddingList = list?.type === "wedding";
+            let autofillEnabled = weddingList;
+            if (!weddingList) {
+                const { limits } = await getUserLimits({ user });
+                autofillEnabled = limits.autofill;
             }
 
             let consumedUnits = 0;

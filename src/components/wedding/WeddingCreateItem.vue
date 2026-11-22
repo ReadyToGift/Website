@@ -4,13 +4,16 @@
             :list="list"
             :currency="list.currency"
             :wishlist-owner="true"
+            :wedding-list="true"
             @newItem="handleNewItem"
         />
     </div>
+    <GlobalDialogs />
 </template>
 
 <script setup>
 import ModifyItem from "@/components/dialogs/ModifyItem.vue";
+import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
 defineProps({
     list: {

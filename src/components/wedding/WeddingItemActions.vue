@@ -24,6 +24,7 @@
             :list="list"
             variant="outlined"
             :wishlist-owner="wishlistOwner"
+            :wedding-list="true"
             @editItem="reload"
         />
         <DeleteItem

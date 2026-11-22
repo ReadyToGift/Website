@@ -132,6 +132,10 @@ const props = defineProps({
         required: true,
         type: String,
     },
+    listID: {
+        default: null,
+        type: String,
+    },
     url: {
         required: true,
         type: String,
@@ -154,6 +158,7 @@ const autofill = async () => {
                 credentials: "include",
                 payload: JSON.stringify({
                     itemID: props.itemID,
+                    listID: props.listID,
                     url: props.url,
                     currency: props.currency,
                 }),
