@@ -292,11 +292,15 @@ const createList = (data) => {
         query.quickCreateURL = quickCreateURL.value;
     }
     const urlSearchParams = new URLSearchParams(query).toString();
+    const listPath =
+        data.list.type === "wedding" && data.list.shortUrl
+            ? `/wedding/${data.list.shortUrl}`
+            : `/list/${data.list.id}`;
     if (urlSearchParams.length) {
-        router.push(`/list/${data.list.id}?` + urlSearchParams);
+        router.push(`${listPath}?${urlSearchParams}`);
         return;
     }
-    router.push(`/list/${data.list.id}`);
+    router.push(listPath);
 };
 
 const getLists = async () => {

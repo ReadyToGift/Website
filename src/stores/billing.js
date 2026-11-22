@@ -136,6 +136,25 @@ export const getProProduct = async () => {
     }
 };
 
+export const getWeddingProduct = async () => {
+    const [weddingProduct, weddingProductError] = await handleFetch(
+        "/api/billing/wedding",
+    );
+
+    if (weddingProductError) {
+        console.error("Failed to fetch Wedding product:", weddingProductError);
+        return;
+    }
+
+    if (weddingProduct.success) {
+        return weddingProduct.product;
+    } else {
+        throw new Error(
+            weddingProduct.error || "Failed to fetch Wedding pricing",
+        );
+    }
+};
+
 export const refreshBilling = async () => {
     billing.setKey("billingLoaded", false);
     return getBillingDetails();

@@ -23,7 +23,8 @@
                 <v-card-text class="d-flex flex-column ga-4">
                     <ListFields
                         v-model:list="editedList"
-                        :previousValues="previousValues"
+                        :is-existing="Boolean(list.id)"
+                        :previous-values="previousValues"
                     />
                     <v-alert
                         v-if="alert"
@@ -222,6 +223,7 @@ export default {
                     shortUrl: this.list.shortUrl,
                     title: this.list.title,
                     spoilSurprises: this.list.spoilSurprises,
+                    type: this.list.type || "standard",
                 };
                 this.previousValues = { ...this.editedList };
                 this.listId = this.list.id;
@@ -240,7 +242,19 @@ export default {
             this.alert = false;
             this.loading = true;
 
-            if (this.editedList.private) {
+            if (
+                this.editedList.type === "wedding" &&
+                !this.editedList.shortUrl
+            ) {
+                this.alert = {
+                    text: "A short URL is required for wedding wishlists.",
+                    title: "Error",
+                };
+                this.loading = false;
+                return;
+            }
+
+            if (this.editedList.private && this.editedList.type !== "wedding") {
                 this.editedList.shortUrl = null;
 
                 const resp = await this.createDialog({

@@ -671,6 +671,15 @@ export default {
                     user: this.user,
                 });
                 if (listId !== this.$route.params.listId) return;
+                if (
+                    listData?.list?.type === "wedding" &&
+                    listData.list.shortUrl
+                ) {
+                    window.location.replace(
+                        `/wedding/${listData.list.shortUrl}${window.location.search}`,
+                    );
+                    return;
+                }
                 if (listData?.list) {
                     const continueAnyway = await this.createAvoidSpoilersDialog(
                         listData.list,

@@ -1,0 +1,24 @@
+---
+import { and, count, eq, isNull } from "drizzle-orm";
+import { db } from "@/db";
+import Layout from "@/layouts/Layout.astro";
+import { lists as listsTable } from "@/schema";
+
+const shortUrl = Astro.params.shortUrl;
+const [list] = await db
+    .select()
+    .from(listsTable)
+    .where(
+        and(eq(listsTable.shortUrl, shortUrl), eq(listsTable.type, "wedding")),
+    );
+
+if (!list) {
+    return Astro.rewrite("/404");
+}
+---
+
+<Layout>
+    <pre>
+        {JSON.stringify(list)}
+    </pre>
+</Layout>

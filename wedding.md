@@ -1,0 +1,7 @@
+- [ ] Disable community items
+- [ ] Add included autofill
+- [ ] Disable moving in/out
+- [ ] Add publishing checkout
+  - [ ] Track what has been paid for etc
+- [ ] Add maximum section count
+- [ ] Handle limits for items

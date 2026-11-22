@@ -6,4 +6,5 @@ export const auth = createAuth({
     betterAuthSecret: process.env.BETTER_AUTH_SECRET,
     polarAccessToken: process.env.POLAR_ACCESS_TOKEN,
     polarProProductId: process.env.POLAR_PRO_PRODUCT_ID,
+    polarWeddingProductId: process.env.POLAR_WEDDING_PRODUCT_ID,
 });

@@ -60,6 +60,7 @@ export const GET = async (context) => {
                 shortUrl: lists.shortUrl,
                 private: lists.private,
                 spoilSurprises: lists.spoilSurprises,
+                type: lists.type,
                 createdAt: lists.createdAt,
                 updatedAt: lists.updatedAt,
                 itemCount: count(items.id),
@@ -193,6 +194,7 @@ export const POST = async (context) => {
             shortUrl = null,
             spoilSurprises = false,
             title,
+            type = "standard",
         } = await context.request.json();
 
         const cleanTitle = sanitizeText(title, MAX_TEXT_LENGTHS.title);
@@ -207,6 +209,16 @@ export const POST = async (context) => {
         if (!cleanTitle) {
             return new Response(
                 JSON.stringify({ message: "Title is required" }),
+                {
+                    status: 400,
+                    headers: { "Content-Type": "application/json" },
+                },
+            );
+        }
+
+        if (!["standard", "wedding"].includes(type)) {
+            return new Response(
+                JSON.stringify({ message: "Invalid list type" }),
                 {
                     status: 400,
                     headers: { "Content-Type": "application/json" },
@@ -271,6 +283,7 @@ export const POST = async (context) => {
                 shortUrl: cleanShortUrl,
                 spoilSurprises: spoilSurprises === true,
                 title: cleanTitle,
+                type,
             })
             .returning();
 

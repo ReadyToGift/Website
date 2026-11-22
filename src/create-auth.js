@@ -22,6 +22,7 @@ export const createAuth = ({
     betterAuthSecret,
     polarAccessToken,
     polarProProductId,
+    polarWeddingProductId,
 }) => {
     if (!betterAuthSecret) throw new Error("Missing BETTER_AUTH_SECRET");
 
@@ -87,6 +88,10 @@ export const createAuth = ({
                             {
                                 productId: polarProProductId,
                                 slug: "pro",
+                            },
+                            {
+                                productId: polarWeddingProductId,
+                                slug: "wedding",
                             },
                         ],
                         successUrl: "/dash/settings/billing?status=success",

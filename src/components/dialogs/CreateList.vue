@@ -1,6 +1,18 @@
 <template>
     <v-dialog
-        :max-width="$vuetify.display.mobile ? '100%' : '90%'"
+        :max-width="
+            listTypeSelected
+                ? newList.type === 'wedding'
+                    ? $vuetify.display.mobile
+                        ? '100%'
+                        : '500px'
+                    : $vuetify.display.mobile
+                      ? '100%'
+                      : '90%'
+                : $vuetify.display.mobile
+                  ? '100%'
+                  : '400px'
+        "
         :fullscreen="$vuetify.display.mobile ? true : false"
         v-model="dialogOpen"
     >
@@ -31,7 +43,39 @@
         </template>
 
         <template v-slot:default="{ isActive }">
-            <v-card title="New List">
+            <v-card v-if="!listTypeSelected" title="Choose List Type">
+                <v-card-text class="d-flex flex-column ga-4">
+                    <v-btn
+                        :prepend-icon="mdiFormatListBulleted"
+                        variant="outlined"
+                        size="large"
+                        @click="selectListType('standard')"
+                    >
+                        Standard List
+                    </v-btn>
+                    <v-btn
+                        :prepend-icon="mdiRing"
+                        variant="outlined"
+                        size="large"
+                        @click="selectListType('wedding')"
+                    >
+                        Wedding Wishlist{{
+                            weddingPrice ? ` (${weddingPrice})` : ""
+                        }}
+                    </v-btn>
+                </v-card-text>
+                <v-card-actions>
+                    <v-btn text="Cancel" @click="isActive.value = false" />
+                </v-card-actions>
+            </v-card>
+            <v-card
+                v-else
+                :title="
+                    newList.type === 'wedding'
+                        ? 'New Wedding Wishlist'
+                        : 'New List'
+                "
+            >
                 <v-card-text>
                     <ListFields v-model:list="newList" />
                     <v-alert
@@ -151,7 +195,7 @@
 </template>
 
 <script>
-import { mdiAlert, mdiPlus } from "@mdi/js";
+import { mdiAlert, mdiFormatListBulleted, mdiPlus, mdiRing } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import {
     VAlert,
@@ -165,11 +209,13 @@ import ListFields from "@/components/dialogs/fields/ListFields.vue";
 import {
     allLimits as allLimitsStore,
     billing as billingStore,
+    getWeddingProduct,
     privateListLimitReached as privateListLimitReachedStore,
     publicListLimitReached as publicListLimitReachedStore,
 } from "@/stores/billing";
 import { config as configStore } from "@/stores/config";
 import { userLists as userListsStore } from "@/stores/userLists";
+import { formatMinorCurrency } from "@/stores/currency";
 import { handleFetch } from "@/utils/handleFetch";
 
 export default {
@@ -208,6 +254,8 @@ export default {
             dialogOpen: false,
             listId: null,
             loading: false,
+            listTypeSelected: false,
+            weddingPrice: null,
             mdiAlert,
             mdiPlus,
             newList: {
@@ -217,6 +265,7 @@ export default {
                 shortUrl: null,
                 title: "",
                 spoilSurprises: false,
+                type: "standard",
             },
             publicListLimitReached: useStore(publicListLimitReachedStore),
             privateListLimitReached: useStore(privateListLimitReachedStore),
@@ -225,14 +274,19 @@ export default {
             allLimits: useStore(allLimitsStore),
         };
     },
+    mounted() {
+        if (this.config.enableBilling) this.loadWeddingPrice();
+    },
     watch: {
         dialogOpen(open) {
             if (open === true) {
                 this.listId = this.list.id;
                 this.newList.private = this.private;
+                this.listTypeSelected = false;
             } else {
                 this.alert = false;
                 this.loading = false;
+                this.listTypeSelected = false;
                 this.newList = {
                     currency: "USD",
                     description: "",
@@ -240,11 +294,30 @@ export default {
                     shortUrl: null,
                     spoilSurprises: false,
                     title: "",
+                    type: "standard",
                 };
             }
         },
     },
     methods: {
+        async loadWeddingPrice() {
+            try {
+                const product = await getWeddingProduct();
+                const price = product?.price;
+
+                if (price?.price_amount != null && price.price_currency) {
+                    const formattedPrice = formatMinorCurrency(
+                        price.price_amount,
+                        price.price_currency,
+                    );
+                    this.weddingPrice = price.recurring_interval
+                        ? `${formattedPrice}/${price.recurring_interval}`
+                        : formattedPrice;
+                }
+            } catch (error) {
+                console.error("Failed to load wedding list pricing:", error);
+            }
+        },
         async createList() {
             this.alert = false;
             this.loading = true;
@@ -255,6 +328,19 @@ export default {
                 };
                 this.loading = false;
                 return;
+            }
+
+            if (this.newList.type === "wedding") {
+                this.newList.private = true;
+                this.newList.spoilSurprises = false;
+                if (!this.newList.shortUrl) {
+                    this.alert = {
+                        text: "A short URL is required for wedding wishlists.",
+                        title: "Error",
+                    };
+                    this.loading = false;
+                    return;
+                }
             }
 
             const [createListData, createListError] = await handleFetch(
@@ -284,14 +370,21 @@ export default {
             });
 
             this.newList = {
+                currency: "USD",
                 description: "",
+                private: false,
                 shortUrl: "",
                 spoilSurprises: false,
                 title: "",
+                type: "standard",
             };
 
             this.dialogOpen = false;
             this.loading = false;
+        },
+        selectListType(type) {
+            this.newList.type = type;
+            this.listTypeSelected = true;
         },
     },
 };

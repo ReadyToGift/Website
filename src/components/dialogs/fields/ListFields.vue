@@ -18,6 +18,7 @@
         </template>
     </v-text-field>
     <v-textarea
+        v-if="list.type !== 'wedding'"
         label="Description"
         v-model="list.description"
         maxlength="4000"
@@ -59,19 +60,25 @@
         </template>
     </v-select>
     <v-text-field
-        label="Short URL"
+        :label="list.type === 'wedding' ? 'Wedding URL' : 'Short URL'"
         v-model.trim="list.shortUrl"
         maxlength="32"
         counter
-        persistent-hint
         @input="shortUrlChanged"
+        :prefix="list.type === 'wedding' ? `${origin}/wedding/` : undefined"
+        :placeholder="list.type === 'wedding' ? 'your-wedding-url' : undefined"
+        :persistent-placeholder="list.type === 'wedding'"
         :hint="
-            list.shortUrl
-                ? `Your short URL will be: ${origin}/${list.shortUrl}`
-                : `Set a memorable short URL for your list`
+            list.type === 'wedding'
+                ? undefined
+                : list.shortUrl
+                  ? `Your short URL will be: ${origin}/${list.type === 'wedding' ? 'wedding/' : ''}${list.shortUrl}`
+                  : 'Set a memorable short URL for your list'
         "
+        :persistent-hint="list.type !== 'wedding'"
         hide-details="auto"
-        :disabled="list.private"
+        :disabled="list.private && list.type !== 'wedding'"
+        :required="list.type === 'wedding'"
     >
         <template #details>
             <RevertPrompt
@@ -84,8 +91,11 @@
             />
         </template>
     </v-text-field>
-    <v-label class="mt-4 mb-0">List Privacy</v-label>
+    <v-label v-if="list.type !== 'wedding'" class="mt-4 mb-0">
+        List Privacy
+    </v-label>
     <v-switch
+        v-if="list.type !== 'wedding'"
         label="Private List"
         v-model="list.private"
         hint="When enabled, only you will be able to view and access this list."
@@ -94,6 +104,7 @@
         color="primary"
     />
     <v-switch
+        v-if="list.type !== 'wedding'"
         label="Spoil surprises"
         v-model="list.spoilSurprises"
         hint="When enabled, you will see what items have been fulfilled and by who."
@@ -104,7 +115,7 @@
 </template>
 
 <script setup>
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import {
     VLabel,
     VSelect,
@@ -126,8 +137,22 @@ const props = defineProps({
     },
 });
 
+watch(
+    () => list.value?.type,
+    (type) => {
+        if (type === "wedding") {
+            list.value.private = true;
+            list.value.spoilSurprises = false;
+        }
+    },
+    { immediate: true },
+);
+
 const shortUrlChanged = () => {
-    if (list.value.shortUrl === "") return (list.value.shortUrl = null);
+    if (list.value.shortUrl === "") {
+        list.value.shortUrl = null;
+        return;
+    }
     list.value.shortUrl = list.value.shortUrl
         .toLowerCase()
         .replace(/[^a-z0-9-_]/g, "");

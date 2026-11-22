@@ -7,6 +7,7 @@ import {
     POLAR_ACCESS_TOKEN,
     POLAR_AUTOFILL_METER_ID,
     POLAR_PRO_PRODUCT_ID,
+    POLAR_WEDDING_PRODUCT_ID,
 } from "astro:env/server";
 import { createPolar } from "@polar-sh/sdk/2026-10";
 import { getCache, setCache } from "@/server/cache";
@@ -213,6 +214,34 @@ export const getProProduct = async () => {
 
         await setCache(
             `polarProduct:${POLAR_PRO_PRODUCT_ID}`,
+            productResp,
+            15 * 60 * 1000,
+        );
+        return productResp;
+    }
+
+    return product;
+};
+
+export const getWeddingProduct = async () => {
+    if (!POLAR_WEDDING_PRODUCT_ID) {
+        throw new Error("Wedding product ID is not configured");
+    }
+
+    const product = await getCache(`polarProduct:${POLAR_WEDDING_PRODUCT_ID}`);
+
+    if (!product) {
+        const productResp = await polar.products
+            .get(POLAR_WEDDING_PRODUCT_ID)
+            .catch((error) => {
+                console.log(error);
+                throw new Error("Error getting wedding product", {
+                    cause: error,
+                });
+            });
+
+        await setCache(
+            `polarProduct:${POLAR_WEDDING_PRODUCT_ID}`,
             productResp,
             15 * 60 * 1000,
         );

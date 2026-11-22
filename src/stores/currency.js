@@ -25,7 +25,15 @@ export const formatter = (code) => {
     });
 };
 
+export const formatMinorCurrency = (amount, code) =>
+    new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: code,
+        minimumFractionDigits: 0,
+    }).format(amount / 100);
+
 export default {
+    formatMinorCurrency,
     getCurrency,
     formatter,
 };

@@ -143,6 +143,11 @@ export default defineConfig({
                 access: "secret",
                 optional: true,
             }),
+            POLAR_WEDDING_PRODUCT_ID: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
 
             AUTOFILL_USE_LOCAL_FETCH: envField.boolean({
                 context: "server",

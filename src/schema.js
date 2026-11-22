@@ -32,7 +32,13 @@ export const lists = sqliteTable("lists", {
     type: text("type", {
         enum: ["standard", "wedding"],
     }).default("standard"),
-    images: text("images"),
+    primaryFont: text("primaryFont"),
+    secondaryFont: text("secondaryFont"),
+    accentColor: text("accentColor"),
+    weddingDate: text("weddingDate"),
+    registryTitle: text("registryTitle"),
+    weddingSections: text("weddingSections", { mode: "json" }),
+    weddingConfigVersion: integer("weddingConfigVersion").default(1),
 });
 
 export const items = sqliteTable("items", {

@@ -88,6 +88,7 @@
         "PLUNK_SENDING_EMAIL": "noreply@readyto.gift",
         "POLAR_AUTOFILL_METER_ID": "cf76d151-432f-4527-8549-982f39101a72",
         "POLAR_PRO_PRODUCT_ID": "44d4f00e-df0e-43f4-ae41-0ab4e76069e8",
+        "POLAR_WEDDING_PRODUCT_ID": "c4bf7d2e-efc8-4243-81be-702971de6922",
         "SENTRY_DSN": "https://b33f8cb6df1a14b0a815ad2820a8f323@sentry.jackbailey.dev/2",
         "SENTRY_ORG": "sentry",
         "SENTRY_PROJECT": "readytogift",

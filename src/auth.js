@@ -3,6 +3,7 @@ import {
     ENABLE_BILLING,
     POLAR_ACCESS_TOKEN,
     POLAR_PRO_PRODUCT_ID,
+    POLAR_WEDDING_PRODUCT_ID,
 } from "astro:env/server";
 import { createAuth } from "@/create-auth";
 
@@ -23,4 +24,5 @@ export const auth = createAuth({
     betterAuthSecret: BETTER_AUTH_SECRET,
     polarAccessToken: POLAR_ACCESS_TOKEN,
     polarProProductId: POLAR_PRO_PRODUCT_ID,
+    polarWeddingProductId: POLAR_WEDDING_PRODUCT_ID,
 });

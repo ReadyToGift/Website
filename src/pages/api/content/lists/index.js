@@ -67,6 +67,7 @@ export const GET = async (context) => {
                 shortUrl: lists.shortUrl,
                 private: lists.private,
                 spoilSurprises: lists.spoilSurprises,
+                type: lists.type,
                 createdAt: lists.createdAt,
                 updatedAt: lists.updatedAt,
                 itemCount,

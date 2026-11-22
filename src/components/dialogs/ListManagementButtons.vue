@@ -153,7 +153,11 @@ let quickcreateDialogOpen = ref(false);
 let listSaveLoading = ref(false);
 
 const copyListURL = async () => {
-    const listURL = `${window.location.origin}/${props.list.shortUrl ? props.list.shortUrl : "list/" + props.list.id}`;
+    const listPath =
+        props.list.type === "wedding" && props.list.shortUrl
+            ? `wedding/${props.list.shortUrl}`
+            : props.list.shortUrl || `list/${props.list.id}`;
+    const listURL = `${window.location.origin}/${listPath}`;
     if (navigator.share) {
         try {
             await navigator.share({

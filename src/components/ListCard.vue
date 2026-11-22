@@ -1,13 +1,28 @@
 <template>
     <v-card
         :to="
-            props.header || props.type === 'selectable'
+            props.header ||
+            props.type === 'selectable' ||
+            props.list.type === 'wedding'
                 ? undefined
-                : `/list/${props.list.id}${quickCreateURL && ownList ? `?quickCreateURL=${props.quickCreateURL}` : ''}`
+                : listPath
+        "
+        :href="
+            !props.header &&
+            props.type !== 'selectable' &&
+            props.list.type === 'wedding'
+                ? listPath
+                : undefined
         "
         :title="props.list.title"
         variant="tonal"
-        :color="props.selected ? 'primary' : 'default'"
+        :color="
+            props.selected
+                ? 'primary'
+                : props.list.type === 'wedding'
+                  ? 'white'
+                  : 'default'
+        "
         :class="['list-card', 'mb-4', props.type]"
     >
         <template v-slot:title>
@@ -81,6 +96,16 @@
                         rounded
                     >
                         {{ list.authorName }}
+                    </v-chip>
+                    <v-chip
+                        v-if="list.type === 'wedding'"
+                        :prepend-icon="mdiRing"
+                        color="white"
+                        class="text-black"
+                        variant="flat"
+                        rounded
+                    >
+                        Wedding
                     </v-chip>
                     <v-chip
                         :prepend-icon="mdiFileDocumentMultiple"
@@ -205,9 +230,11 @@ import {
     mdiFileDocumentMultiple,
     mdiInvoiceList,
     mdiLock,
+    mdiRing,
     mdiUpdate,
 } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
+import { computed } from "vue";
 import {
     VAlert,
     VCard,
@@ -230,6 +257,20 @@ import EditList from "./dialogs/EditList.vue";
 const prefs = useStore($prefs);
 const user = useStore(userStore);
 const limits = useStore(limitsStore);
+
+const listPath = computed(() => {
+    const path =
+        props.list.type === "wedding" && props.list.shortUrl
+            ? `/wedding/${props.list.shortUrl}`
+            : `/list/${props.list.id}`;
+
+    return (
+        path +
+        (props.quickCreateURL && props.ownList
+            ? `?quickCreateURL=${props.quickCreateURL}`
+            : "")
+    );
+});
 
 import VueMarkdown from "vue-markdown-render";
 
