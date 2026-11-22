@@ -1,0 +1,72 @@
+---
+import AstroNav from "@/components/AstroNav.astro";
+import Layout from "./Layout.astro";
+
+const { title } = Astro.props;
+---
+
+<Layout title={title}>
+    <AstroNav>
+        <slot name="pageActions" />
+    </AstroNav>
+    <main class="astro-main">
+        <slot />
+    </main>
+</Layout>
+
+<style>
+:global(:root) {
+    --outer-padding: 1rem;
+    --breakout-width: 1rem;
+}
+
+:global(main.astro-main) {
+    align-content: start;
+    display: grid;
+    flex-grow: 1;
+    grid-template-columns:
+        [full-width-start] minmax(var(--outer-padding), 1fr)
+        [breakout-start] minmax(var(--breakout-width), 1fr)
+        [content-start] min(
+            100% -
+            calc(
+                var(--outer-padding) +
+                var(--breakout-width) +
+                var(--breakout-width) +
+                var(--outer-padding)
+            ),
+            100rem
+        )
+        [content-end] minmax(var(--breakout-width), 1fr)
+        [breakout-end] minmax(var(--outer-padding), 1fr)
+        [full-width-end];
+    width: 100%;
+    box-sizing: border-box;
+}
+
+:global(main.astro-main > *) {
+    grid-column: content-start / content-end;
+}
+
+:global(main.astro-main .full-width) {
+    display: grid;
+    grid-column: full-width-start / full-width-end;
+    grid-template-columns: inherit;
+    width: 100%;
+}
+
+:global(main.astro-main .breakout) {
+    display: grid;
+    grid-column: breakout;
+    grid-template-columns:
+        [breakout-start] minmax(var(--breakout-width), 1fr)
+        [content-start] min(
+            100% -
+            calc(var(--breakout-width) + var(--breakout-width)),
+            100rem
+        )
+        [content-end] minmax(var(--breakout-width), 1fr)
+        [breakout-end];
+    width: 100%;
+}
+</style>

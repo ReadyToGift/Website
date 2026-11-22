@@ -1,8 +1,13 @@
 ---
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { requireAuth } from "@/auth";
+import ItemCard from "@/components/wedding/ItemCard.astro";
+import WeddingCreateItem from "@/components/wedding/WeddingCreateItem.vue";
+import WeddingHeaderActions from "@/components/wedding/WeddingHeaderActions.vue";
+import WeddingSection from "@/components/wedding/WeddingSection.astro";
 import { db } from "@/db";
-import Layout from "@/layouts/Layout.astro";
-import { lists as listsTable } from "@/schema";
+import AstroLayout from "@/layouts/AstroLayout.astro";
+import { fulfillments, items, lists as listsTable } from "@/schema";
 
 const shortUrl = Astro.params.shortUrl;
 const [list] = await db
@@ -15,10 +20,93 @@ const [list] = await db
 if (!list) {
     return Astro.rewrite("/404");
 }
+
+const { user } = await requireAuth(Astro);
+
+if (list.private && user?.id !== list.author) {
+    return Astro.rewrite("/404");
+}
+
+const weddingSections = list.weddingSections ?? [];
+const weddingItems = await db
+    .select()
+    .from(items)
+    .where(and(eq(items.list, list.id), isNull(items.communityList)));
+const weddingItemIDs = weddingItems.map((item) => item.id);
+const itemFulfillments = weddingItemIDs.length
+    ? await db
+          .select()
+          .from(fulfillments)
+          .where(inArray(fulfillments.item, weddingItemIDs))
+    : [];
+const itemsWithFulfillments = weddingItems
+    .sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
+    .map((item) => ({
+        ...item,
+        fulfillment:
+            itemFulfillments.find(
+                (fulfillment) => fulfillment.item === item.id,
+            ) ?? null,
+    }));
+const canManage = user?.id === list.author;
+const editableList = {
+    currency: list.currency,
+    description: list.description,
+    id: list.id,
+    private: list.private,
+    shortUrl: list.shortUrl,
+    spoilSurprises: list.spoilSurprises,
+    title: list.title,
+    type: list.type,
+};
 ---
 
-<Layout>
-    <pre>
-        {JSON.stringify(list)}
-    </pre>
-</Layout>
+<AstroLayout title={list.title}>
+    <div class="header">
+        <h1>{list.title}</h1>
+        <div class="subheader">
+            {list.weddingDate && (
+                <span class="weddingDate">{list.weddingDate}</span>
+            )}
+            {list.weddingDate && list.registryTitle && <span>&bull;</span>}
+            {list.registryTitle && (
+                <span class="registryTitle">{list.registryTitle}</span>
+            )}
+        </div>
+    </div>
+    <div class="sections">
+        {weddingSections.map((section) => <WeddingSection section={section} />)}
+    </div>
+    {itemsWithFulfillments.length > 0 && (
+        <div class="wedding-items">
+            {itemsWithFulfillments.map((item) => (
+                <ItemCard item={item} list={list} wishlistOwner={canManage} />
+            ))}
+        </div>
+    )}
+    {canManage && (
+        <WeddingHeaderActions
+            slot="pageActions"
+            list={editableList}
+            client:only="vue"
+        />
+    )}
+    {canManage && <WeddingCreateItem list={editableList} client:only="vue" />}
+</AstroLayout>
+
+<style>
+:global(html),
+:global(body) {
+    background: #f9f9ff;
+    color: #191c20;
+    color-scheme: light;
+}
+
+.wedding-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 2rem auto;
+    width: 100%;
+}
+</style>

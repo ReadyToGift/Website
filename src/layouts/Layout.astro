@@ -1,9 +1,13 @@
+---
+const { title } = Astro.props;
+---
+
 <!doctype html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Readyto.gift</title>
+        <title>{title ?? "Readyto.gift"}</title>
         <meta name="apple-mobile-web-app-title" content="Readyto.gift">
         <meta name="theme-color" content="#405F91">
         <link rel="manifest" href="/site.webmanifest">

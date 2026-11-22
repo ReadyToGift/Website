@@ -1,7 +1,7 @@
 <template>
     <v-dialog
         :max-width="$vuetify.display.mobile ? '100%' : '500px'"
-        :fullscreen="$vuetify.display.mobile ? true : false"
+        :fullscreen="$vuetify.display.mobile"
         v-model="dialogOpen"
         key="delete-list-dialog"
     >
@@ -12,7 +12,7 @@
                 title="Delete List"
                 color="error"
                 variant="outlined"
-                v-if="!$vuetify.display.mobile"
+                v-if="!$vuetify.display.mobile && !compact"
             >
                 Delete
             </v-btn>
@@ -87,6 +87,10 @@ export default {
         variant: {
             type: String,
             default: "elevated",
+        },
+        compact: {
+            type: Boolean,
+            default: false,
         },
     },
     data() {

@@ -116,13 +116,6 @@
 
 <script setup>
 import { computed, watch } from "vue";
-import {
-    VLabel,
-    VSelect,
-    VSwitch,
-    VTextarea,
-    VTextField,
-} from "vuetify/components";
 import RevertPrompt from "@/components/RevertPrompt.vue";
 import { currencies } from "@/stores/currency";
 
@@ -131,6 +124,10 @@ const list = defineModel("list");
 const origin = computed(() => window.location.origin);
 
 const props = defineProps({
+    isExisting: {
+        default: false,
+        type: Boolean,
+    },
     previousValues: {
         default: () => ({}),
         type: Object,

@@ -1,0 +1,28 @@
+---
+const hasPageActions = Astro.slots.has("default");
+---
+
+<header>
+    <a href="/"> ReadyToGift </a>
+    {hasPageActions && (
+        <div class="page-actions">
+            <slot />
+        </div>
+    )}
+</header>
+
+<style>
+header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem var(--outer-padding);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+header > .page-actions {
+    margin-left: auto;
+    position: relative;
+}
+</style>

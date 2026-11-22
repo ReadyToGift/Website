@@ -1,0 +1,172 @@
+---
+import WeddingItemActions from "@/components/wedding/WeddingItemActions.vue";
+
+const { item, list, wishlistOwner } = Astro.props;
+const showFulfillment = !wishlistOwner || list.spoilSurprises;
+const websiteUrl =
+    typeof item.url === "string" && /^https?:\/\//i.test(item.url)
+        ? item.url
+        : null;
+const imageUrl = item.image || null;
+const itemForClient = {
+    description: item.description,
+    displayPrice: item.displayPrice,
+    fulfillment: item.fulfillment,
+    id: item.id,
+    image: item.image,
+    imageID: item.imageID,
+    price: item.price,
+    priority: item.priority,
+    title: item.title,
+    url: item.url,
+};
+const listForClient = {
+    currency: list.currency,
+    id: list.id,
+    private: list.private,
+    spoilSurprises: list.spoilSurprises,
+};
+---
+
+<article
+    class:list-item-fulfilled={showFulfillment && Boolean(item.fulfillment)}
+    class="wedding-item-card"
+    data-item-id={item.id}
+>
+    <div class="item-header">
+        <h2>{item.title}</h2>
+        <WeddingItemActions
+            client:only="vue"
+            currency={list.currency || "USD"}
+            item={itemForClient}
+            list={listForClient}
+            showFulfillment={showFulfillment}
+            wishlistOwner={wishlistOwner}
+        />
+    </div>
+
+    <div class="item-content">
+        {item.description && <p>{item.description}</p>}
+        {imageUrl && (
+            <img
+                src={imageUrl}
+                alt=""
+                loading="lazy"
+                width="300"
+                height="200"
+            />
+        )}
+    </div>
+
+    {(showFulfillment ||
+        item.price ||
+        item.priority !== "none" ||
+        websiteUrl) && (
+        <div class="item-footer">
+            <div class="item-chips">
+                {showFulfillment && item.fulfillment?.name && (
+                    <span class="item-chip">
+                        Fulfilled by {item.fulfillment.name}
+                    </span>
+                )}
+                {item.price && item.displayPrice && (
+                    <span class="item-chip">
+                        {item.price} {list.currency}
+                    </span>
+                )}
+                {item.priority && item.priority !== "none" && (
+                    <span class="item-chip">{item.priority}</span>
+                )}
+                {websiteUrl && (
+                    <a
+                        class="item-chip"
+                        href={websiteUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                    >
+                        Website
+                    </a>
+                )}
+            </div>
+        </div>
+    )}
+</article>
+
+<style>
+.wedding-item-card {
+    background: rgb(var(--v-theme-surface, 249 249 255));
+    border: 1px solid rgb(var(--v-theme-outline-variant, 196 198 208));
+    border-radius: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.wedding-item-card.list-item-fulfilled {
+    opacity: 0.5;
+}
+
+.item-header {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr max-content;
+    justify-content: space-between;
+}
+
+h2 {
+    color: rgb(var(--v-theme-primary, 65 95 145));
+    font-size: 1.8rem;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.item-content {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr max-content;
+}
+
+.item-content p {
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+.item-content img {
+    height: 200px;
+    max-width: 300px;
+    object-fit: contain;
+    object-position: center right;
+    width: auto;
+}
+
+.item-footer,
+.item-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.item-chip {
+    background: rgb(var(--v-theme-primary, 65 95 145));
+    border-radius: 999px;
+    color: rgb(var(--v-theme-on-primary, 255 255 255));
+    padding: 0.4rem 0.75rem;
+    text-decoration: none;
+}
+
+@media screen and (max-width: 768px) {
+    .item-header,
+    .item-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .item-content img {
+        height: auto;
+        max-width: 100%;
+        width: 100%;
+    }
+}
+</style>

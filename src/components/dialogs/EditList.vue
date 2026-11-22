@@ -1,7 +1,7 @@
 <template>
     <v-dialog
         :max-width="$vuetify.display.mobile ? '100%' : '90%'"
-        :fullscreen="$vuetify.display.mobile ? true : false"
+        :fullscreen="$vuetify.display.mobile"
         v-model="dialogOpen"
         key="edit-list-dialog"
     >
@@ -11,11 +11,16 @@
                 :prepend-icon="mdiPencil"
                 variant="outlined"
                 color="primary"
-                v-if="!$vuetify.display.mobile"
+                v-if="!$vuetify.display.mobile && !compact"
             >
                 Edit
             </v-btn>
-            <v-btn v-bind="activatorProps" :icon="mdiPencil" v-else />
+            <v-btn
+                v-bind="activatorProps"
+                :icon="mdiPencil"
+                title="Edit List"
+                v-else
+            />
         </template>
 
         <template v-slot:default="{ isActive }">
@@ -192,6 +197,10 @@ export default {
         variant: {
             type: String,
             default: "elevated",
+        },
+        compact: {
+            type: Boolean,
+            default: false,
         },
     },
     data() {
