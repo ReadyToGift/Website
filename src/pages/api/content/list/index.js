@@ -5,7 +5,11 @@ import { db } from "@/db";
 import { fulfillments, items, lists } from "@/schema";
 import { getUserLimits } from "@/server/billing";
 import { bucket } from "@/storage";
-import { MAX_TEXT_LENGTHS, sanitizeText } from "@/utils/validation";
+import {
+    MAX_TEXT_LENGTHS,
+    sanitizeText,
+    validateImageDataUrl,
+} from "@/utils/validation";
 
 export const prerender = false;
 
@@ -25,6 +29,13 @@ const getListUsage = async ({ user }) => {
         publicListCount: userLists.filter((list) => !list.private).length,
         privateListCount: userLists.filter((list) => list.private).length,
     };
+};
+
+const sectionImageUrl = (id) => `/api/content/wedding/image/${id}`;
+const sectionImageId = (url) => {
+    if (typeof url !== "string") return null;
+    const match = url.match(/^\/api\/content\/wedding\/image\/([^/]+)$/);
+    return match?.[1] || null;
 };
 
 export const GET = async (context) => {
@@ -423,6 +434,9 @@ export const PUT = async (context) => {
             "shortUrl",
             "spoilSurprises",
             "title",
+            "registryTitle",
+            "weddingDate",
+            "weddingSections",
         ];
         const changes = Object.fromEntries(
             Object.entries(updateData).filter(([key]) =>
@@ -444,6 +458,108 @@ export const PUT = async (context) => {
                 changes.shortUrl == null || changes.shortUrl === ""
                     ? null
                     : sanitizeText(changes.shortUrl, MAX_TEXT_LENGTHS.shortUrl);
+        if ("registryTitle" in changes)
+            changes.registryTitle = sanitizeText(
+                changes.registryTitle,
+                MAX_TEXT_LENGTHS.title,
+            );
+        if ("weddingDate" in changes)
+            changes.weddingDate = sanitizeText(changes.weddingDate, 32);
+        const newSectionImageIDs = [];
+        if ("weddingSections" in changes) {
+            const sectionTypes = new Set([
+                "text",
+                "image",
+                "image-text",
+                "text-image",
+            ]);
+            changes.weddingSections = Array.isArray(changes.weddingSections)
+                ? await Promise.all(
+                      changes.weddingSections
+                          .slice(0, 50)
+                          .flatMap((section) => {
+                              if (!sectionTypes.has(section?.type)) return [];
+                              return [
+                                  (async () => {
+                                      const hasData = Boolean(
+                                          section.imageData ||
+                                              (typeof section.image ===
+                                                  "string" &&
+                                                  section.image.startsWith(
+                                                      "data:",
+                                                  )),
+                                      );
+                                      const hasUrl = Boolean(section.imageUrl);
+                                      if (hasData && hasUrl) {
+                                          const error = new Error(
+                                              "Section imageData and imageUrl cannot both be provided",
+                                          );
+                                          error.status = 400;
+                                          throw error;
+                                      }
+
+                                      let imageUrl = null;
+                                      if (hasData) {
+                                          const imageData =
+                                              section.imageData ||
+                                              section.image;
+                                          const validation =
+                                              await validateImageDataUrl(
+                                                  imageData,
+                                                  4 * 1024 * 1024,
+                                              );
+                                          if (!validation.ok) {
+                                              const error = new Error(
+                                                  validation.message,
+                                              );
+                                              error.status = 400;
+                                              throw error;
+                                          }
+                                          const id = crypto.randomUUID();
+                                          await bucket.put(
+                                              id,
+                                              validation.bytes,
+                                              {
+                                                  httpMetadata: {
+                                                      contentType:
+                                                          validation.type,
+                                                  },
+                                                  customMetadata: {
+                                                      name: "Wedding section image",
+                                                  },
+                                              },
+                                          );
+                                          newSectionImageIDs.push(id);
+                                          imageUrl = sectionImageUrl(id);
+                                      } else if (
+                                          sectionImageId(section.imageUrl)
+                                      ) {
+                                          imageUrl = section.imageUrl;
+                                      }
+
+                                      return {
+                                          ...(imageUrl ? { imageUrl } : {}),
+                                          id:
+                                              sanitizeText(section.id, 64) ||
+                                              crypto.randomUUID(),
+                                          text:
+                                              sanitizeText(
+                                                  section.text,
+                                                  MAX_TEXT_LENGTHS.description,
+                                              ) || "",
+                                          title:
+                                              sanitizeText(
+                                                  section.title,
+                                                  MAX_TEXT_LENGTHS.title,
+                                              ) || "",
+                                          type: section.type,
+                                      };
+                                  })(),
+                              ];
+                          }),
+                  )
+                : [];
+        }
         if ("title" in changes && !changes.title)
             return new Response(JSON.stringify({ message: "Invalid title" }), {
                 status: 400,
@@ -546,11 +662,33 @@ export const PUT = async (context) => {
             }
         }
 
-        const updatedRows = await db
-            .update(lists)
-            .set(changes)
-            .where(eq(lists.id, listId))
-            .returning();
+        let updatedRows;
+        try {
+            updatedRows = await db
+                .update(lists)
+                .set(changes)
+                .where(eq(lists.id, listId))
+                .returning();
+        } catch (error) {
+            await Promise.all(
+                newSectionImageIDs.map((id) => bucket.delete(id)),
+            );
+            throw error;
+        }
+
+        if ("weddingSections" in changes) {
+            const oldImageIDs = (existingList.weddingSections || [])
+                .map((section) => sectionImageId(section?.imageUrl))
+                .filter(Boolean);
+            const newImageIDs = changes.weddingSections
+                .map((section) => sectionImageId(section.imageUrl))
+                .filter(Boolean);
+            await Promise.all(
+                oldImageIDs
+                    .filter((id) => !newImageIDs.includes(id))
+                    .map((id) => bucket.delete(id)),
+            );
+        }
 
         return new Response(
             JSON.stringify({

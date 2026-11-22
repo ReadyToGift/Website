@@ -232,7 +232,12 @@ export default {
                     shortUrl: this.list.shortUrl,
                     title: this.list.title,
                     spoilSurprises: this.list.spoilSurprises,
+                    registryTitle: this.list.registryTitle || "",
                     type: this.list.type || "standard",
+                    weddingDate: this.list.weddingDate || "",
+                    weddingSections: structuredClone(
+                        this.list.weddingSections || [],
+                    ),
                 };
                 this.previousValues = { ...this.editedList };
                 this.listId = this.list.id;

@@ -43,9 +43,22 @@ const buildCommit =
         }
     })();
 
+const r2ImageHost = process.env.CLOUDFLARE_R2_ENDPOINT
+    ? new URL(process.env.CLOUDFLARE_R2_ENDPOINT).hostname
+    : null;
+const imageHosts = [
+    r2ImageHost,
+    "localhost",
+    "127.0.0.1",
+    new URL(`https://${domain}`).hostname,
+].filter(Boolean);
+
 // https://astro.build/config
 export default defineConfig({
     site: `https://${domain}`,
+    image: {
+        domains: imageHosts,
+    },
     adapter: isCloudflare
         ? cloudflare({
               sessionKVBindingName: "SESSION",

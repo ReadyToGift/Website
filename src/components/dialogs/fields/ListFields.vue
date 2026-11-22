@@ -91,6 +91,19 @@
             />
         </template>
     </v-text-field>
+    <template v-if="list.type === 'wedding' && isExisting">
+        <v-text-field
+            v-model="list.weddingDate"
+            label="Wedding date"
+            hide-details="auto"
+        />
+        <v-text-field
+            v-model.trim="list.registryTitle"
+            label="Registry title"
+            maxlength="128"
+            hide-details="auto"
+        />
+    </template>
     <v-label v-if="list.type !== 'wedding'" class="mt-4 mb-0">
         List Privacy
     </v-label>

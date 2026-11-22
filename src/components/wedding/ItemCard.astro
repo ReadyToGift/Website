@@ -1,4 +1,6 @@
 ---
+import { Image } from "astro:assets";
+
 import WeddingItemActions from "@/components/wedding/WeddingItemActions.vue";
 
 const { item, list, wishlistOwner } = Astro.props;
@@ -8,6 +10,9 @@ const websiteUrl =
         ? item.url
         : null;
 const imageUrl = item.image || null;
+const imageSource = imageUrl?.startsWith("/")
+    ? new URL(imageUrl, Astro.url).toString()
+    : imageUrl;
 const itemForClient = {
     description: item.description,
     displayPrice: item.displayPrice,
@@ -48,13 +53,7 @@ const listForClient = {
     <div class="item-content">
         {item.description && <p>{item.description}</p>}
         {imageUrl && (
-            <img
-                src={imageUrl}
-                alt=""
-                loading="lazy"
-                width="300"
-                height="200"
-            />
+            <Image src={imageSource} alt="" width="300" height="200" />
         )}
     </div>
 
@@ -136,7 +135,7 @@ h2 {
 .item-content img {
     height: 200px;
     max-width: 300px;
-    object-fit: contain;
+    object-fit: cover;
     object-position: center right;
     width: auto;
 }

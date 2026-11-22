@@ -11,7 +11,7 @@ export default async function setup(app) {
     if (import.meta.env.SSR) return;
 
     if (window.location.pathname.startsWith("/wedding/")) {
-        vuetify.theme.global.name.value = "light";
+        vuetify.theme.change("light");
     }
 
     const { umamiUrl, umamiId, umamiDomains } = await loadConfig();

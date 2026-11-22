@@ -5,6 +5,7 @@ import ItemCard from "@/components/wedding/ItemCard.astro";
 import WeddingCreateItem from "@/components/wedding/WeddingCreateItem.vue";
 import WeddingHeaderActions from "@/components/wedding/WeddingHeaderActions.vue";
 import WeddingSection from "@/components/wedding/WeddingSection.astro";
+import WeddingSectionsManager from "@/components/wedding/WeddingSectionsManager.vue";
 import { db } from "@/db";
 import AstroLayout from "@/layouts/AstroLayout.astro";
 import { fulfillments, items, lists as listsTable } from "@/schema";
@@ -23,9 +24,9 @@ if (!list) {
 
 const { user } = await requireAuth(Astro);
 
-if (list.private && user?.id !== list.author) {
-    return Astro.rewrite("/404");
-}
+// if (list.private && user?.id !== list.author) {
+//     return Astro.rewrite("/404");
+// }
 
 const weddingSections = list.weddingSections ?? [];
 const weddingItems = await db
@@ -54,10 +55,13 @@ const editableList = {
     description: list.description,
     id: list.id,
     private: list.private,
+    registryTitle: list.registryTitle,
     shortUrl: list.shortUrl,
     spoilSurprises: list.spoilSurprises,
     title: list.title,
     type: list.type,
+    weddingDate: list.weddingDate,
+    weddingSections: list.weddingSections ?? [],
 };
 ---
 
@@ -74,22 +78,31 @@ const editableList = {
             )}
         </div>
     </div>
-    <div class="sections">
-        {weddingSections.map((section) => <WeddingSection section={section} />)}
-    </div>
-    {itemsWithFulfillments.length > 0 && (
-        <div class="wedding-items">
-            {itemsWithFulfillments.map((item) => (
-                <ItemCard item={item} list={list} wishlistOwner={canManage} />
+    <div class="wedding-content">
+        {canManage && (
+            <WeddingSectionsManager list={editableList} client:only="vue" />
+        )}
+        <div class="sections" data-wedding-sections>
+            {weddingSections.map((section) => (
+                <WeddingSection section={section} />
             ))}
         </div>
-    )}
+        {itemsWithFulfillments.length > 0 && (
+            <div class="wedding-items">
+                {itemsWithFulfillments.map((item) => (
+                    <ItemCard
+                        item={item}
+                        list={list}
+                        wishlistOwner={canManage}
+                    />
+                ))}
+            </div>
+        )}
+    </div>
     {canManage && (
-        <WeddingHeaderActions
-            slot="pageActions"
-            list={editableList}
-            client:only="vue"
-        />
+        <div slot="pageActions">
+            <WeddingHeaderActions list={editableList} client:only="vue" />
+        </div>
     )}
     {canManage && <WeddingCreateItem list={editableList} client:only="vue" />}
 </AstroLayout>
@@ -107,6 +120,12 @@ const editableList = {
     flex-direction: column;
     gap: 1rem;
     margin: 2rem auto;
+    width: 100%;
+}
+
+.wedding-content {
+    display: flex;
+    flex-direction: column;
     width: 100%;
 }
 </style>
