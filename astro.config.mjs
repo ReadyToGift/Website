@@ -22,11 +22,10 @@ const isCloudflare =
     !!process.env.CF_PAGES_COMMIT_SHA;
 
 const domain = process.env.DOMAIN || "readyto.gift";
-const allowedDomains =
-    process.env.ALLOWED_DOMAINS?.split(",") ||
-    (process.env.DOMAIN
-        ? [process.env.DOMAIN]
-        : ["readyto.gift", "*.readyto.gift"]);
+const allowedDomains = (process.env.ALLOWED_DOMAINS || "")
+    .split(",")
+    .map((hostname) => hostname.trim())
+    .filter(Boolean);
 
 const buildCommit =
     process.env.CF_PAGES_COMMIT_SHA ||
@@ -58,12 +57,14 @@ export default defineConfig({
         enabled: false,
     },
 
-    security: {
-        allowedDomains: allowedDomains.map((d) => ({
-            hostname: d,
-            protocol: "https",
-        })),
-    },
+    security: allowedDomains.length
+        ? {
+              allowedDomains: allowedDomains.map((hostname) => ({
+                  hostname,
+                  protocol: "https",
+              })),
+          }
+        : undefined,
 
     env: {
         schema: {
@@ -71,6 +72,16 @@ export default defineConfig({
                 context: "server",
                 access: "secret",
                 default: isCloudflare,
+            }),
+            DOMAIN: envField.string({
+                context: "server",
+                access: "secret",
+                default: domain,
+            }),
+            TRUSTED_PROXY_HEADERS: envField.boolean({
+                context: "server",
+                access: "secret",
+                default: false,
             }),
             UMAMI_URL: envField.string({
                 context: "server",
@@ -88,6 +99,11 @@ export default defineConfig({
                 optional: true,
             }),
             SENTRY_DSN: envField.string({
+                context: "server",
+                access: "secret",
+                optional: true,
+            }),
+            ALLOWED_DOMAINS: envField.string({
                 context: "server",
                 access: "secret",
                 optional: true,

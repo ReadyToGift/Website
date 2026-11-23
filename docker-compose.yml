@@ -3,6 +3,9 @@ services:
         image: ghcr.io/readytogift/website
         build:
             context: .
+            args:
+                DOMAIN: ${DOMAIN:-readyto.gift}
+                ALLOWED_DOMAINS: ${ALLOWED_DOMAINS:-}
         restart: unless-stopped
         env_file:
             - .env

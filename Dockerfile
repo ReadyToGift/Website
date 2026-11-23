@@ -16,9 +16,11 @@ FROM --platform=linux/amd64 base AS build-deps
 RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM --platform=linux/amd64 build-deps AS build
+ARG DOMAIN
+ARG ALLOWED_DOMAINS
 COPY . .
 RUN --mount=type=cache,id=pnpm-node26,target=/pnpm/store \
-	pnpm build \
+	DOMAIN="$DOMAIN" ALLOWED_DOMAINS="$ALLOWED_DOMAINS" pnpm build \
 	&& pnpm deploy --filter . --prod /app/prod
 
 FROM --platform=linux/amd64 gcr.io/distroless/nodejs26-debian13 AS runtime

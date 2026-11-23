@@ -59,13 +59,14 @@ Email variables are only needed when a feature sends email, but production deplo
 
 #### Application settings
 
-| Variable          | Default                | Description                                                                               |
-| ----------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| `DOMAIN`          | `readyto.gift`         | Public domain used when building links and configuring the site.                          |
-| `ALLOWED_DOMAINS` | Based on `DOMAIN`      | Comma-separated hostnames allowed by Astro security settings.                             |
-| `BUILD_COMMIT`    | Detected automatically | Commit identifier shown by the application.                                               |
-| `CLOUDFLARE`      | `false`                | Selects the Cloudflare adapter when set to `true`; set to `false` for Node/Docker builds. |
-| `DATA_DIR`        | `data`                 | Persistent data directory for standalone Node deployments.                                |
+| Variable                | Default                | Description                                                                                            |
+| ----------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------ |
+| `DOMAIN`                | `readyto.gift`         | Public hostname. Used for built links and Better Auth's runtime host allowlist.                        |
+| `ALLOWED_DOMAINS`       | Unset                  | Optional comma-separated hostnames trusted by Astro for forwarded-host validation. Requires a rebuild. |
+| `TRUSTED_PROXY_HEADERS` | `false`                | Trust `X-Forwarded-Host` and `X-Forwarded-Proto` in Better Auth. Only enable behind a trusted proxy.   |
+| `BUILD_COMMIT`          | Detected automatically | Commit identifier shown by the application.                                                            |
+| `CLOUDFLARE`            | `false`                | Selects the Cloudflare adapter when set to `true`; set to `false` for Node/Docker builds.              |
+| `DATA_DIR`              | `data`                 | Persistent data directory for standalone Node deployments.                                             |
 
 #### Billing and free-tier limits
 

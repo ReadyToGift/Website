@@ -18,12 +18,22 @@ import {
 } from "@/utils/validation";
 
 export const createAuth = ({
+    domain,
+    trustedProxyHeaders,
     enableBilling,
     betterAuthSecret,
     polarAccessToken,
     polarProProductId,
 }) => {
     if (!betterAuthSecret) throw new Error("Missing BETTER_AUTH_SECRET");
+
+    const hostname = domain?.trim();
+    const baseURL = hostname
+        ? {
+              allowedHosts: [...new Set([hostname, "localhost:*", "[::1]:*"])],
+              protocol: "auto",
+          }
+        : undefined;
 
     const sanitizeUserData = async (user) => {
         const data = { ...user };
@@ -102,19 +112,15 @@ export const createAuth = ({
     return betterAuth({
         appName: "Readyto.gift",
         secret: betterAuthSecret,
-        advanced: waitUntil && {
-            backgroundTasks: {
-                handler: waitUntil,
-            },
+        advanced: {
+            ...(waitUntil && {
+                backgroundTasks: {
+                    handler: waitUntil,
+                },
+            }),
+            trustedProxyHeaders,
         },
-        baseURL: {
-            allowedHosts: [
-                "https://readyto.gift",
-                "localhost:*",
-                "[::1]:*",
-                "https://*.readyto.gift",
-            ],
-        },
+        baseURL,
         database: drizzleAdapter(db, {
             provider: "sqlite",
             schema,

@@ -2,6 +2,8 @@ import { createAuth } from "./create-auth.js";
 
 // The Better Auth CLI runs outside Astro, so astro:env is unavailable here.
 export const auth = createAuth({
+    domain: process.env.DOMAIN,
+    trustedProxyHeaders: process.env.TRUSTED_PROXY_HEADERS === "true",
     enableBilling: process.env.ENABLE_BILLING === "true",
     betterAuthSecret: process.env.BETTER_AUTH_SECRET,
     polarAccessToken: process.env.POLAR_ACCESS_TOKEN,
