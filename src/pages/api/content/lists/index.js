@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { requireAuth } from "@/auth";
 import { user as users } from "@/auth-schema";
 import { db } from "@/db";
@@ -75,7 +75,7 @@ export const GET = async (context) => {
             .leftJoin(users, eq(users.id, lists.author))
             .leftJoin(
                 items,
-                or(eq(items.list, lists.id), eq(items.communityList, lists.id)),
+                and(eq(items.list, lists.id), isNull(items.communityList)),
             )
             .where(or(authorQuery, savedListsQuery))
             .groupBy(lists.id, users.id, users.name)
