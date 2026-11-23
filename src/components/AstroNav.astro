@@ -2,15 +2,24 @@
 import ReadyToGiftLogo from "@/components/ReadyToGiftLogo.astro";
 
 const hasPageActions = Astro.slots.has("default");
-const { accentColor = "currentColor" } = Astro.props;
+const { accentColor = "currentColor", pageClass } = Astro.props;
 ---
 
-<header>
+<header class:list={pageClass}>
     <div class="nav-content">
         <a class="brand" href="/">
             <ReadyToGiftLogo accentColor={accentColor} />
             <span>Readyto.gift</span>
         </a>
+        {pageClass === "wedding-page" && (
+            <details class="wedding-help">
+                <summary>How to use</summary>
+                <div class="wedding-help-panel">
+                    Browse the registry and choose a gift. Open the shop link to
+                    buy it, then mark the item fulfilled to help avoid duplicates.
+                </div>
+            </details>
+        )}
         {hasPageActions && (
             <div class="page-actions">
                 <slot />
@@ -49,5 +58,39 @@ header {
 .page-actions {
     margin-left: auto;
     position: relative;
+}
+
+.wedding-help {
+    margin-left: auto;
+    position: relative;
+    z-index: 10;
+}
+
+.wedding-help summary {
+    cursor: pointer;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.25rem;
+    list-style: none;
+}
+
+.wedding-help summary::-webkit-details-marker {
+    display: none;
+}
+
+.wedding-help-panel {
+    background: #fff;
+    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.15);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1rem;
+    line-height: 1.4;
+    padding: 1.25rem;
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.75rem);
+    width: min(18rem, calc(100vw - 2rem));
+}
+
+.wedding-help + .page-actions {
+    margin-left: 1.5rem;
 }
 </style>

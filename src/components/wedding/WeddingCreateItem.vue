@@ -1,5 +1,5 @@
 <template>
-    <div class="wedding-create-item-fab">
+    <div class="wedding-create-item-fab" :class="{ inline }">
         <ModifyItem
             :list="list"
             :currency="list.currency"
@@ -16,6 +16,10 @@ import ModifyItem from "@/components/dialogs/ModifyItem.vue";
 import GlobalDialogs from "@/components/GlobalDialogs.vue";
 
 defineProps({
+    inline: {
+        default: false,
+        type: Boolean,
+    },
     list: {
         required: true,
         type: Object,
@@ -33,5 +37,14 @@ const handleNewItem = () => {
     position: fixed;
     right: 1.5rem;
     z-index: 5;
+}
+
+.wedding-create-item-fab.inline {
+    position: static;
+}
+
+.wedding-create-item-fab.inline :deep(.v-fab) {
+    background: transparent;
+    box-shadow: none;
 }
 </style>

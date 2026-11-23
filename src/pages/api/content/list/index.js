@@ -108,10 +108,13 @@ export const GET = async (context) => {
             .from(items)
             .where(and(eq(items.list, listID), isNull(items.communityList)));
 
-        const communityItems = await db
-            .select()
-            .from(items)
-            .where(eq(items.communityList, listID));
+        const communityItems =
+            list.type === "wedding"
+                ? []
+                : await db
+                      .select()
+                      .from(items)
+                      .where(eq(items.communityList, listID));
 
         const contributorIDs = [
             ...new Set(

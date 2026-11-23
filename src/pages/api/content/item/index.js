@@ -146,12 +146,19 @@ export const POST = async (context) => {
                 id: lists.id,
                 author: lists.author,
                 private: lists.private,
+                type: lists.type,
             })
             .from(lists)
             .where(eq(lists.id, listId));
         if (!list) return json({ message: "List not found" }, 404);
 
         const communityItem = Boolean(communityList && contributorId);
+        if (communityItem && list.type === "wedding") {
+            return json(
+                { message: "Wedding lists do not support community items" },
+                400,
+            );
+        }
         if (communityItem && list.private) {
             return json(
                 { message: "Cannot add an item to a private list" },

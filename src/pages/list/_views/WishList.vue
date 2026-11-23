@@ -157,6 +157,7 @@ import {
     userLists as userListsStore,
 } from "@/stores/userLists";
 import { handleFetch } from "@/utils/handleFetch";
+import { DEFAULT_PRICE_GROUPS, groupListItems } from "@/utils/listItems";
 import NotFound from "../../404/_NotFound.vue";
 
 export default {
@@ -200,9 +201,7 @@ export default {
             },
             notFound: false,
             userLists: useStore(userListsStore),
-            priceGroups: [
-                0, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000,
-            ],
+            priceGroups: DEFAULT_PRICE_GROUPS,
             prefs: useStore($prefs),
             previouslyLoggedInUserID: useStore(previouslyLoggedInUserIDStore),
             showFulfilled: import.meta.env.SSR
@@ -218,110 +217,22 @@ export default {
             return (
                 this.wishlistOwner &&
                 this.list.itemCount >= this.limits.itemsPerList &&
-                this.limits.itemsPerList != -1
+                this.limits.itemsPerList !== -1
             );
         },
         itemGroups() {
             if (!this.list) return [];
-            const items = this.list.items || [];
-
-            const groups = this.priceGroups
-                .map((price, index) => {
-                    const lowerBound =
-                        index === 0 ? 0 : this.priceGroups[index - 1];
-                    const upperBound = price;
-
-                    const title =
-                        price === 0
-                            ? "Flexible Gifts"
-                            : this.currencyFormatter(this.list.currency)
-                                  .format(lowerBound)
-                                  .split(".")[0] +
-                              " - " +
-                              this.currencyFormatter(this.list.currency)
-                                  .format(upperBound)
-                                  .split(".")[0];
-
-                    return {
-                        id: price,
-                        items: items
-                            .filter((item) => {
-                                if (
-                                    !this.showFulfilled &&
-                                    !this.wishlistOwner &&
-                                    item.fulfillment
-                                )
-                                    return false; // skip it
-                                if (
-                                    (item.price >= lowerBound &&
-                                        item.price < upperBound &&
-                                        item.price !== 0) ||
-                                    (item.price === 0 && upperBound === 0)
-                                ) {
-                                    return item;
-                                }
-                            })
-                            .sort((a, b) => {
-                                if (!this.wishlistOwner) {
-                                    if (a.fulfillment && !b.fulfillment)
-                                        return 1;
-                                    if (!a.fulfillment && b.fulfillment)
-                                        return -1;
-                                }
-
-                                if (this.sort === "price") {
-                                    return a.price - b.price;
-                                }
-                                return a.title.localeCompare(b.title);
-                            }),
-                        title,
-                    };
-                })
-                .filter((group) => group.items.length);
-
-            const itemsAboveLargestPriceGroup = items.filter((item) => {
-                if (
-                    !this.showFulfilled &&
-                    !this.wishlistOwner &&
-                    item.fulfillment
-                )
-                    return false;
-                if (
-                    item.price >= this.priceGroups[this.priceGroups.length - 1]
-                ) {
-                    return item;
-                }
+            return groupListItems({
+                communityItems: this.communityItems,
+                currency: this.list.currency,
+                includeCommunityItems:
+                    !this.wishlistOwner || this.list.spoilSurprises,
+                items: this.list.items || [],
+                priceGroups: this.priceGroups,
+                showFulfilled: this.showFulfilled,
+                sort: this.sort,
+                wishlistOwner: this.wishlistOwner,
             });
-
-            if (itemsAboveLargestPriceGroup.length) {
-                groups.push({
-                    id: "above",
-                    items: itemsAboveLargestPriceGroup,
-                    title:
-                        this.currencyFormatter(this.list.currency)
-                            .format(
-                                this.priceGroups[this.priceGroups.length - 1],
-                            )
-                            .split(".")[0] + "+",
-                });
-            }
-
-            if (
-                (!this.wishlistOwner || this.list.spoilSurprises) &&
-                this.communityItems.length
-            ) {
-                groups.push({
-                    id: "contributed",
-                    items: [...this.communityItems].sort((a, b) =>
-                        this.sort === "price"
-                            ? a.price - b.price
-                            : a.title.localeCompare(b.title),
-                    ),
-                    title: "Gifts from others",
-                });
-            }
-
-            return groups;
         },
         wishlistOwner() {
             if (this.loadedAsAuthor) return true;

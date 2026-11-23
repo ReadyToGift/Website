@@ -2,14 +2,14 @@
 import AstroNav from "@/components/AstroNav.astro";
 import Layout from "./Layout.astro";
 
-const { accentColor, title } = Astro.props;
+const { accentColor, pageClass, title } = Astro.props;
 ---
 
 <Layout title={title}>
-    <AstroNav accentColor={accentColor}>
+    <AstroNav accentColor={accentColor} pageClass={pageClass}>
         <slot name="pageActions" />
     </AstroNav>
-    <main class="astro-main">
+    <main class:list={["astro-main", pageClass]}>
         <slot />
     </main>
 </Layout>

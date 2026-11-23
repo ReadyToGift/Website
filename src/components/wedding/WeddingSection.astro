@@ -6,9 +6,15 @@ const title = section?.title || "";
 ---
 
 <section
-    class:list-section-image-text={section.type === "image-text"}
-    class:list-section-text-image={section.type === "text-image"}
-    class="wedding-section"
+    class:list={[
+        "wedding-section",
+        {
+            "list-section-image": section.type === "image",
+            "list-section-image-text": section.type === "image-text",
+            "list-section-text-image": section.type === "text-image",
+        },
+    ]}
+    data-wedding-section
 >
     {section.type === "text" && title && <h2>{title}</h2>}
     {section.type === "image" && image && (
@@ -18,7 +24,7 @@ const title = section?.title || "";
             alt={title}
             loading="lazy"
             width="1600"
-            height="533"
+            height="900"
         />
     )}
     {section.type === "text" && text && <p>{text}</p>}
@@ -46,8 +52,8 @@ const title = section?.title || "";
 .wedding-section {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    margin: 5rem 0;
+    gap: 1.25rem;
+    margin: 0;
 }
 
 .wedding-section h2,
@@ -57,30 +63,37 @@ const title = section?.title || "";
 }
 
 .wedding-section h2 {
-    text-decoration: underline;
-    text-decoration-thickness: 0.1rem;
-    text-underline-offset: 1rem;
-    color: #191c20;
-    text-decoration-color: var(--wedding-accent-light, #6e94b0);
-    margin-bottom: 2rem;
+    color: #151515;
+    font-size: clamp(2.4rem, 3.7vw, 3.25rem);
+    line-height: 1.15;
+    margin-bottom: 1.25rem;
+    position: relative;
+}
 
-    font-size: 2rem;
+.wedding-section h2::after {
+    background: var(--wedding-accent-light, #a9c9dc);
+    bottom: -0.9rem;
+    content: "";
+    height: 1px;
+    left: 0;
+    position: absolute;
+    width: 3.4rem;
 }
 
 .wedding-section p {
-    font-size: 1.25rem;
+    font-size: clamp(1.25rem, 2.1vw, 1.85rem);
+    line-height: 1.15;
+    max-width: 73rem;
 }
 
 .wedding-section img {
     display: block;
-    border-radius: 1rem;
-    max-height: 32rem;
     max-width: 100%;
     object-fit: cover;
 }
 
 .wedding-section > .section-image {
-    aspect-ratio: 3 / 1;
+    aspect-ratio: 16 / 9;
     height: auto;
     width: 100%;
 }
@@ -88,12 +101,12 @@ const title = section?.title || "";
 .section-content {
     display: grid;
     align-items: center;
-    gap: 5rem;
+    gap: clamp(2rem, 4vw, 4rem);
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .section-content > .section-image {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 2;
     height: auto;
     width: 100%;
 }
@@ -118,6 +131,7 @@ const title = section?.title || "";
 
 @media (max-width: 768px) {
     .section-content {
+        gap: 2rem;
         grid-template-columns: 1fr;
     }
 
@@ -131,6 +145,10 @@ const title = section?.title || "";
         grid-column: auto;
         grid-row: auto;
         order: -1;
+    }
+
+    .wedding-section p {
+        line-height: 1.3;
     }
 }
 </style>

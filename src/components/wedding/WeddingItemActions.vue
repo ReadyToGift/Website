@@ -88,4 +88,29 @@ const reload = () => window.location.reload();
     gap: 0.5rem;
     justify-content: flex-end;
 }
+
+.wedding-item-actions :deep(.v-btn) {
+    background: var(--wedding-button, #9bcbed);
+    border: 0;
+    border-radius: 0.3rem;
+    color: #101820;
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-size: 1.2rem;
+    min-height: 3.25rem;
+    text-transform: none;
+}
+
+.wedding-item-actions :deep(.v-btn:first-child) {
+    min-width: 10rem;
+}
+
+@media (max-width: 768px) {
+    .wedding-item-actions {
+        justify-content: stretch;
+    }
+
+    .wedding-item-actions :deep(.v-btn) {
+        flex: 1 1 auto;
+    }
+}
 </style>

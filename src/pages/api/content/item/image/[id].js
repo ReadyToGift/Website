@@ -1,10 +1,9 @@
-import { bucket, localImageBaseUrl } from "@/storage";
+import { bucket } from "@/storage";
 
 export const prerender = false;
 
 export const GET = async ({ params }) => {
-    if (!localImageBaseUrl || !params.id)
-        return new Response(null, { status: 404 });
+    if (!params.id) return new Response(null, { status: 404 });
 
     const file = await bucket.get(params.id);
     if (!file) return new Response(null, { status: 404 });

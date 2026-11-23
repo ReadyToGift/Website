@@ -5,11 +5,13 @@ import { requireAuth } from "@/auth";
 import ItemCard from "@/components/wedding/ItemCard.astro";
 import WeddingCreateItem from "@/components/wedding/WeddingCreateItem.vue";
 import WeddingHeaderActions from "@/components/wedding/WeddingHeaderActions.vue";
+import WeddingItemsViewToggle from "@/components/wedding/WeddingItemsViewToggle.vue";
 import WeddingSection from "@/components/wedding/WeddingSection.astro";
 import WeddingSectionsManager from "@/components/wedding/WeddingSectionsManager.vue";
 import { db } from "@/db";
 import AstroLayout from "@/layouts/AstroLayout.astro";
 import { fulfillments, items, lists as listsTable } from "@/schema";
+import { groupListItems, WEDDING_PRICE_GROUPS } from "@/utils/listItems";
 import {
     normalizeWeddingAccent,
     weddingAccentTheme,
@@ -28,6 +30,7 @@ if (!list) {
 }
 
 const { user } = await requireAuth(Astro);
+const canManage = user?.id === list.author;
 
 // TODO: Re-enable private list check
 // if (list.private && user?.id !== list.author) {
@@ -35,6 +38,22 @@ const { user } = await requireAuth(Astro);
 // }
 
 const weddingSections = list.weddingSections ?? [];
+const weddingDate = /^\d{4}-\d{2}-\d{2}$/.test(list.weddingDate ?? "")
+    ? `${list.weddingDate.slice(8, 10)}.${list.weddingDate.slice(5, 7)}.${list.weddingDate.slice(0, 4)}`
+    : list.weddingDate;
+const heroSections = [];
+for (const section of weddingSections) {
+    if (
+        heroSections.length === 3 ||
+        section.type !== "image" ||
+        !(section.imageUrl || section.imageData || section.image)
+    ) {
+        break;
+    }
+    heroSections.push(section);
+}
+if (heroSections.length !== 3) heroSections.length = 0;
+const storySections = weddingSections.slice(heroSections.length);
 const weddingItems = await db
     .select()
     .from(items)
@@ -55,7 +74,15 @@ const itemsWithFulfillments = weddingItems
                 (fulfillment) => fulfillment.item === item.id,
             ) ?? null,
     }));
-const canManage = user?.id === list.author;
+const itemGroups = groupListItems({
+    currency: list.currency,
+    flexibleTitle: "Other gifts",
+    includeCommunityItems: false,
+    items: itemsWithFulfillments,
+    priceGroups: WEDDING_PRICE_GROUPS,
+    rangeSeparator: "–",
+    wishlistOwner: canManage,
+});
 const accentColor = normalizeWeddingAccent(list.accentColor);
 const accentTheme = weddingAccentTheme(accentColor);
 const editableList = {
@@ -74,91 +101,102 @@ const editableList = {
 };
 ---
 
-<AstroLayout title={list.title} accentColor={accentColor}>
+<AstroLayout
+    title={list.title}
+    accentColor={accentColor}
+    pageClass="wedding-page"
+>
     <div
         class={`wedding-theme wedding-theme--${accentTheme}`}
         style={`--wedding-accent: ${accentColor};`}
     >
-        <div class="header">
+        <div class="wedding-heading">
             <h1>{list.title}</h1>
             <div class="subheader">
-                {list.weddingDate && (
-                    <span class="weddingDate">{list.weddingDate}</span>
-                )}
-                {list.weddingDate && list.registryTitle && (
-                    <span> &bull; </span>
-                )}
+                {weddingDate && <span class="weddingDate">{weddingDate}</span>}
+                {weddingDate && list.registryTitle && <span> &bull; </span>}
                 {list.registryTitle && (
                     <span class="registryTitle">{list.registryTitle}</span>
                 )}
             </div>
         </div>
-        <div class="wedding-content">
-            {canManage && (
+        {canManage && (
+            <div class="wedding-editor">
                 <WeddingSectionsManager list={editableList} client:only="vue" />
-            )}
-            <div class="sections" data-wedding-sections>
-                {weddingSections.map((section) => (
-                    <WeddingSection section={section} />
+            </div>
+        )}
+        {heroSections.length > 0 && (
+            <div class="wedding-gallery" data-wedding-section>
+                {heroSections.map((section) => (
+                    <img
+                        src={
+                            section.imageUrl ||
+                            section.imageData ||
+                            section.image
+                        }
+                        alt={section.title || ""}
+                        width="800"
+                        height="550"
+                    />
                 ))}
             </div>
-            {itemsWithFulfillments.length > 0 ? (
-                    <div class="wedding-items-header">
-                        <h2>The registry</h2>
-                        <div class="items-controls"></div>
-                    </div>
-                    <div class="wedding-items">
-                        {itemsWithFulfillments.map((item) => (
-                            <ItemCard
-                                item={item}
-                                list={list}
-                                wishlistOwner={canManage}
-                            />
-                        ))}
-                    </div>
+        )}
+        {storySections.map((section) => <WeddingSection section={section} />)}
+        <div class="wedding-registry" id="registry">
+            <div class="wedding-items-header">
+                <h2>The registry</h2>
+                <div class="items-controls">
+                    {canManage && (
+                        <WeddingCreateItem
+                            inline
+                            list={editableList}
+                            client:only="vue"
+                        />
+                    )}
+                    {itemsWithFulfillments.length > 0 && (
+                        <WeddingItemsViewToggle client:load />
+                    )}
+                </div>
+            </div>
+            {itemGroups.length > 0 ? (
+                <div class="registry-groups">
+                    {itemGroups.map((group) => (
+                        <section class="registry-group">
+                            <h3 class="registry-group-title">{group.title}</h3>
+                            <div
+                                class="wedding-items"
+                                data-wedding-items
+                                data-view="line"
+                            >
+                                {group.items.map((item) => (
+                                    <ItemCard
+                                        item={item}
+                                        list={list}
+                                        wishlistOwner={canManage}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    ))}
+                </div>
             ) : (
-                <p>No items yet</p>
+                <p class="empty-registry">No items yet</p>
             )}
         </div>
+        <p class="wedding-thanks">Thank you</p>
+        <footer class="wedding-footer">
+            <div class="wedding-footer-inner">
+                <a href="/">Readyto.gift</a>
+                <nav aria-label="Legal">
+                    <a href="/legal/privacy">Privacy</a>
+                    <a href="/legal/terms">Terms</a>
+                </nav>
+            </div>
+        </footer>
     </div>
     {canManage && (
         <div slot="pageActions">
             <WeddingHeaderActions list={editableList} client:only="vue" />
         </div>
     )}
-    {canManage && <WeddingCreateItem list={editableList} client:only="vue" />}
 </AstroLayout>
-
-<style>
-:global(html),
-:global(body) {
-    background: #f8f7f0;
-    color: #191c20;
-    color-scheme: light;
-}
-
-.header {
-    text-align: center;
-    h1 {
-        color: var(--wedding-accent);
-        font-size: 3rem;
-    }
-    .subheader {
-        font-size: 1.5rem;
-    }
-}
-
-.wedding-items {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin: 2rem auto;
-    width: 100%;
-}
-
-.wedding-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-</style>

@@ -2,17 +2,30 @@
 import { Image } from "astro:assets";
 
 import WeddingItemActions from "@/components/wedding/WeddingItemActions.vue";
+import {
+    getItemImageUrl,
+    getWebsiteHostname,
+    getWebsiteUrl,
+} from "@/utils/listItems";
 
 const { item, list, wishlistOwner } = Astro.props;
 const showFulfillment = !wishlistOwner || list.spoilSurprises;
-const websiteUrl =
-    typeof item.url === "string" && /^https?:\/\//i.test(item.url)
-        ? item.url
-        : null;
-const imageUrl = item.image || null;
+const websiteUrl = getWebsiteUrl(item.url);
+const imageUrl = getItemImageUrl(item);
 const imageSource = imageUrl?.startsWith("/")
     ? new URL(imageUrl, Astro.url).toString()
     : imageUrl;
+const merchant = getWebsiteHostname(item.url) || null;
+const priceHasDecimals = Number(item.price) % 1 !== 0;
+const formattedPrice =
+    item.price != null && item.displayPrice
+        ? new Intl.NumberFormat("en-GB", {
+              currency: list.currency || "GBP",
+              maximumFractionDigits: priceHasDecimals ? 2 : 0,
+              minimumFractionDigits: priceHasDecimals ? 2 : 0,
+              style: "currency",
+          }).format(item.price)
+        : null;
 const itemForClient = {
     description: item.description,
     displayPrice: item.displayPrice,
@@ -36,144 +49,167 @@ const listForClient = {
 
 <article
     class:list-item-fulfilled={showFulfillment && Boolean(item.fulfillment)}
+    class:list-item-no-image={!imageUrl}
     class="wedding-item-card"
     data-item-id={item.id}
 >
-    <div class="item-header">
-        <h2>{item.title}</h2>
-        <WeddingItemActions
-            client:only="vue"
-            currency={list.currency || "USD"}
-            item={itemForClient}
-            list={listForClient}
-            showFulfillment={showFulfillment}
-            wishlistOwner={wishlistOwner}
-        />
-    </div>
-
-    <div class="item-content">
-        {item.description && <p>{item.description}</p>}
-        {imageUrl && (
-            <Image src={imageSource} alt="" width="300" height="200" />
-        )}
-    </div>
-
-    {(showFulfillment ||
-        item.price ||
-        item.priority !== "none" ||
-        websiteUrl) && (
-        <div class="item-footer">
-            <div class="item-chips">
+    {imageUrl && (
+        <div class="item-image">
+            <Image
+                src={imageSource}
+                alt={item.title}
+                width="500"
+                height="500"
+            />
+        </div>
+    )}
+    <div class="item-details">
+        <div class="item-copy">
+            {merchant && <p class="item-merchant">{merchant}</p>}
+            <h3>{item.title}</h3>
+            {item.description && (
+                <p class="item-description">{item.description}</p>
+            )}
+        </div>
+        <div class="item-bottom">
+            <div class="item-meta">
+                {formattedPrice && (
+                    <span class="item-price">{formattedPrice}</span>
+                )}
                 {showFulfillment && item.fulfillment?.name && (
-                    <span class="item-chip">
+                    <span class="item-status">
                         Fulfilled by {item.fulfillment.name}
                     </span>
                 )}
-                {item.price && item.displayPrice && (
-                    <span class="item-chip">
-                        {item.price} {list.currency}
-                    </span>
-                )}
                 {item.priority && item.priority !== "none" && (
-                    <span class="item-chip">{item.priority}</span>
-                )}
-                {websiteUrl && (
-                    <a
-                        class="item-chip"
-                        href={websiteUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        Website
-                    </a>
+                    <span class="item-status">{item.priority}</span>
                 )}
             </div>
+            <WeddingItemActions
+                client:only="vue"
+                currency={list.currency || "USD"}
+                item={itemForClient}
+                list={listForClient}
+                showFulfillment={showFulfillment}
+                wishlistOwner={wishlistOwner}
+            />
         </div>
-    )}
+    </div>
 </article>
 
 <style>
 .wedding-item-card {
-    background: var(
-        --wedding-surface,
-        rgb(var(--v-theme-surface, 249 249 255))
-    );
-    border: 1px solid
-        var(--wedding-border, rgb(var(--v-theme-outline-variant, 196 198 208)));
-    border-radius: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    display: grid;
+    grid-template-columns: minmax(13rem, 16.5rem) minmax(0, 1fr);
+    min-height: 17rem;
+    overflow: hidden;
 }
 
 .wedding-item-card.list-item-fulfilled {
-    opacity: 0.5;
+    filter: saturate(0.45);
 }
 
-.item-header {
-    align-items: center;
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr max-content;
+.wedding-item-card.list-item-no-image {
+    grid-template-columns: 1fr;
+}
+
+.item-image {
+    background: #f2f2f0;
+    min-height: 17rem;
+}
+
+.item-image img {
+    display: block;
+    height: 100%;
+    object-fit: contain;
+    width: 100%;
+}
+
+.item-details {
+    background: var(--wedding-card, var(--wedding-surface));
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
     justify-content: space-between;
+    padding: clamp(1.25rem, 2.3vw, 2rem);
 }
 
-h2 {
-    color: rgb(var(--v-theme-primary, 65 95 145));
-    font-size: 1.8rem;
-    margin: 0;
+.item-copy h3 {
+    font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+    font-weight: 400;
+    line-height: 1.15;
+    margin: 0.65rem 0 0;
     overflow-wrap: anywhere;
 }
 
-.item-content {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: 1fr max-content;
-}
-
-.item-content p {
+.item-merchant,
+.item-description {
     margin: 0;
     white-space: pre-wrap;
 }
 
-.item-content img {
-    height: 200px;
-    max-width: 300px;
-    object-fit: cover;
-    object-position: center right;
-    width: auto;
+.item-merchant {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.2rem;
 }
 
-.item-footer,
-.item-chips {
+.item-description {
+    margin-top: 1rem;
+}
+
+.item-bottom {
+    align-items: flex-end;
     display: flex;
-    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: space-between;
+}
+
+.item-meta {
+    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
 }
 
-.item-chip {
-    background: var(--wedding-accent, rgb(var(--v-theme-primary, 65 95 145)));
-    border-radius: 999px;
-    color: var(
-        --wedding-on-accent,
-        rgb(var(--v-theme-on-primary, 255 255 255))
-    );
-    padding: 0.4rem 0.75rem;
-    text-decoration: none;
+.item-price {
+    font-family: "Segoe Print", "Bradley Hand", "Apple Chancery", cursive;
+    font-size: clamp(2rem, 3.5vw, 2.8rem);
+    line-height: 1;
+}
+
+.item-status {
+    color: rgb(25 28 32 / 0.7);
+    font-size: 0.875rem;
+    text-transform: capitalize;
+}
+
+:global(.wedding-items[data-view="grid"]) .wedding-item-card {
+    grid-template-columns: 1fr;
+}
+
+:global(.wedding-items[data-view="grid"]) .item-image {
+    height: 16rem;
+    min-height: 0;
+}
+
+:global(.wedding-items[data-view="grid"]) .item-bottom {
+    align-items: stretch;
+    flex-direction: column;
 }
 
 @media screen and (max-width: 768px) {
-    .item-header,
-    .item-content {
-        display: flex;
-        flex-direction: column;
+    .wedding-item-card {
+        grid-template-columns: 1fr;
     }
 
-    .item-content img {
-        height: auto;
-        max-width: 100%;
-        width: 100%;
+    .item-image {
+        height: 15rem;
+        min-height: 0;
+    }
+
+    .item-bottom {
+        align-items: stretch;
+        flex-direction: column;
     }
 }
 </style>

@@ -168,7 +168,9 @@ const imageFor = (section) =>
     section.imageUrl || section.imageData || section.image || "";
 
 const startEditing = () => {
-    document.querySelector("[data-wedding-sections]")?.replaceChildren();
+    document
+        .querySelectorAll(".wedding-theme > [data-wedding-section]")
+        .forEach((section) => section.remove());
     draftSections.value = cloneSections(sections.value).map((section) => {
         if (section.image && !section.imageUrl && !section.imageData) {
             if (section.image.startsWith("data:image/")) {
@@ -213,13 +215,29 @@ const typeChanged = (section) => {
     }
 };
 
-const openCropper = (section, file) => {
-    const selectedFile = Array.isArray(file) ? file[0] : file;
+const openCropper = (section, files) => {
+    const selectedFile = files?.[0];
+    if (fileInputs.value[section.id]) fileInputs.value[section.id].value = "";
     if (!selectedFile || selectedFile.size > 4 * 1024 * 1024) return;
-    if (file?.length) fileInputs.value[section.id].value = "";
     cropSection.value = section;
-    cropAspect.value = section.type === "image" ? 3 : 4 / 3;
-    cropMaxWidth.value = section.type === "image" ? 1600 : 800;
+    const galleryIndex = draftSections.value.findIndex(
+        (entry) => entry.id === section.id,
+    );
+    const isGalleryImage =
+        galleryIndex >= 0 &&
+        galleryIndex < 3 &&
+        draftSections.value.slice(0, 3).length === 3 &&
+        draftSections.value.slice(0, 3).every((entry) => entry.type === "image");
+    cropAspect.value = isGalleryImage
+        ? [1.45, 2 / 3, 1.3][galleryIndex]
+        : section.type === "image"
+          ? 16 / 9
+          : 4 / 3;
+    cropMaxWidth.value = isGalleryImage
+        ? [1000, 600, 1000][galleryIndex]
+        : section.type === "image"
+          ? 1600
+          : 800;
     cropperSource.value = URL.createObjectURL(selectedFile);
     cropDialog.value = true;
 };
@@ -359,6 +377,13 @@ const save = () => {
     grid-template-columns: 1fr;
     padding-left: 0;
     padding-right: 0;
+}
+.preview-image .image-placeholder {
+    aspect-ratio: 16 / 9;
+    min-height: 0;
+}
+.preview-image .image-placeholder img {
+    max-height: none;
 }
 .image-placeholder {
     align-items: center;

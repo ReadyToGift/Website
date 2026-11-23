@@ -63,5 +63,278 @@ $wedding-accents: (
     .wedding-surface-raised {
         background: var(--wedding-surface-raised);
     }
+}
 
+html:has(.wedding-theme),
+body:has(.wedding-theme) {
+    background: #f8f7f0;
+    color: #151515;
+    color-scheme: light;
+}
+
+main.astro-main.wedding-page {
+    padding: 0;
+}
+
+main.astro-main.wedding-page > .wedding-theme {
+    grid-column: full-width-start / full-width-end;
+}
+
+header.wedding-page {
+    background: #f8f7f0;
+    padding-block: 1.25rem;
+}
+
+header.wedding-page .nav-content {
+    grid-column: content;
+}
+
+header.wedding-page .brand {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.35rem;
+    font-weight: 400;
+}
+
+.wedding-theme {
+    --wedding-paper: #f8f7f0;
+    --wedding-card: color-mix(in srgb, var(--wedding-accent) 11%, white);
+    --wedding-button: color-mix(in srgb, var(--wedding-accent) 20%, #a8d8f4);
+    background: var(--wedding-paper);
+    display: grid;
+    font-family: Georgia, "Times New Roman", serif;
+    grid-template-columns: var(--page-grid-columns);
+    min-width: 0;
+}
+
+.wedding-theme h1,
+.wedding-theme h2,
+.wedding-theme h3 {
+    font-family: Georgia, "Times New Roman", serif !important;
+    font-weight: 400;
+}
+
+.wedding-theme .v-btn__content {
+    font-family: Georgia, "Times New Roman", serif !important;
+}
+
+.wedding-heading {
+    grid-column: content;
+    padding: 2.1rem 1rem 2.7rem;
+    text-align: center;
+}
+
+.wedding-heading h1 {
+    color: var(--wedding-accent);
+    font-size: clamp(3rem, 5vw, 4.25rem);
+    line-height: 1.12;
+    margin: 0 0 0.9rem;
+}
+
+.wedding-heading .subheader {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    justify-content: center;
+    font-family: "Segoe Print", "Bradley Hand", "Apple Chancery", cursive;
+    font-size: clamp(1.35rem, 2.25vw, 2rem);
+    line-height: 1.2;
+}
+
+.wedding-editor {
+    grid-column: content;
+    margin-bottom: 2rem;
+    min-width: 0;
+}
+
+.wedding-gallery {
+    display: grid;
+    gap: 0.9rem;
+    grid-column: full-width;
+    grid-template-columns: 2.15fr 0.99fr 1.93fr;
+    height: clamp(18rem, 28.75vw, 29rem);
+    overflow: hidden;
+    width: 100%;
+}
+
+.wedding-gallery img {
+    display: block;
+    height: 100%;
+    min-width: 0;
+    object-fit: cover;
+    width: 100%;
+}
+
+.wedding-theme > .wedding-section {
+    grid-column: content;
+    margin-top: 6rem;
+    min-width: 0;
+}
+
+.wedding-theme > .wedding-section + .wedding-section {
+    margin-top: 7.5rem;
+}
+
+.wedding-theme > .wedding-section.list-section-image {
+    grid-column: breakout;
+}
+
+.wedding-registry {
+    grid-column: content;
+    margin-top: 7rem;
+    min-width: 0;
+}
+
+.wedding-items-header {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+}
+
+.wedding-items-header h2 {
+    font-size: clamp(2.5rem, 4vw, 3.25rem);
+    line-height: 1.2;
+    margin: 0;
+}
+
+.wedding-items-header::after {
+    background: var(--wedding-accent-light);
+    bottom: -1.35rem;
+    content: "";
+    height: 1px;
+    left: 0;
+    position: absolute;
+    width: 3.4rem;
+}
+
+.items-controls {
+    align-items: center;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.registry-groups {
+    margin-top: 5rem;
+}
+
+.registry-group-title {
+    border-bottom: 1px solid var(--wedding-accent-light);
+    font-size: clamp(2rem, 3vw, 2.6rem);
+    line-height: 1.2;
+    margin: 0;
+    padding: 0 0 0.5rem 0.5rem;
+}
+
+.wedding-items {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    margin: 1.5rem 0 3.5rem;
+}
+
+.wedding-items[data-view="grid"] {
+    align-items: start;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+}
+
+.empty-registry {
+    font-size: 1.25rem;
+    margin: 5rem 0;
+    text-align: center;
+}
+
+.wedding-thanks {
+    color: var(--wedding-accent);
+    font-family: "Segoe Print", "Bradley Hand", "Apple Chancery", cursive;
+    font-size: clamp(2.7rem, 5vw, 4rem);
+    grid-column: content;
+    line-height: 1.2;
+    margin: 6.5rem 0 5.5rem;
+    text-align: center;
+}
+
+.wedding-footer {
+    background: var(--wedding-accent);
+    color: white;
+    display: grid;
+    grid-column: full-width;
+    grid-template-columns: var(--page-grid-columns);
+    padding-block: 0.75rem;
+}
+
+.wedding-footer-inner {
+    align-items: center;
+    display: flex;
+    grid-column: content;
+    justify-content: space-between;
+}
+
+.wedding-footer a {
+    color: inherit;
+    font-size: 1.1rem;
+    text-decoration: none;
+}
+
+.wedding-footer a:hover,
+.wedding-footer a:focus-visible {
+    text-decoration: underline;
+}
+
+.wedding-footer nav {
+    display: flex;
+    gap: clamp(1.5rem, 6vw, 6rem);
+}
+
+@media (max-width: 768px) {
+    .wedding-heading {
+        padding-block: 2.25rem 2.5rem;
+    }
+
+    .wedding-gallery {
+        grid-auto-columns: 76vw;
+        grid-auto-flow: column;
+        grid-template-columns: none;
+        height: 17rem;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+    }
+
+    .wedding-gallery img {
+        scroll-snap-align: start;
+    }
+
+    .wedding-theme > .wedding-section {
+        margin-top: 4rem;
+    }
+
+    .wedding-theme > .wedding-section + .wedding-section {
+        margin-top: 5rem;
+    }
+
+    .wedding-registry {
+        margin-top: 5rem;
+    }
+
+    .wedding-footer-inner {
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .wedding-items-header {
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .items-controls {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .wedding-footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }

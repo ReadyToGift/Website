@@ -195,7 +195,11 @@ import { config as configStore } from "@/stores/config";
 import { formatter as currencyFormatter } from "@/stores/currency";
 import { $prefs } from "@/stores/prefs";
 import { convertPriority } from "@/utils";
-import validation from "@/utils/validation";
+import {
+    getItemImageUrl,
+    getWebsiteHostname,
+    getWebsiteUrl,
+} from "@/utils/listItems";
 import ModifyItem from "./dialogs/ModifyItem.vue";
 
 export default {
@@ -244,38 +248,13 @@ export default {
     },
     computed: {
         imageURL() {
-            const { imageBaseUrl } = this.config;
-            if (this.item.imageID && imageBaseUrl) {
-                return `${imageBaseUrl}/${this.item.imageID}`;
-            } else if (this.item.image) {
-                return this.item.image;
-            } else {
-                return null;
-            }
+            return getItemImageUrl(this.item, this.config.imageBaseUrl);
         },
         websiteUrl() {
-            if (typeof this.item.url !== "string") return null;
-            const candidate = this.item.url.match(validation.urlRegex)?.[0];
-            if (!candidate) return null;
-
-            try {
-                const url = new URL(
-                    candidate.startsWith("www.")
-                        ? `https://${candidate}`
-                        : candidate,
-                );
-                return ["http:", "https:"].includes(url.protocol)
-                    ? url.href
-                    : null;
-            } catch {
-                return null;
-            }
+            return getWebsiteUrl(this.item.url);
         },
         websiteHostname() {
-            if (!this.websiteUrl) return "";
-            return new URL(this.websiteUrl).hostname
-                .replace(/^www\./, "")
-                .toLowerCase();
+            return getWebsiteHostname(this.item.url);
         },
     },
 };
