@@ -22,10 +22,15 @@ const isCloudflare =
     !!process.env.CF_PAGES_COMMIT_SHA;
 
 const domain = process.env.DOMAIN || "readyto.gift";
-const allowedDomains = (process.env.ALLOWED_DOMAINS || "")
-    .split(",")
-    .map((hostname) => hostname.trim())
-    .filter(Boolean);
+let allowedDomains;
+if (domain === "readyto.gift") {
+    allowedDomains = ["readyto.gift", "*.readyto.gift"];
+} else {
+    allowedDomains = (process.env.ALLOWED_DOMAINS || "")
+        .split(",")
+        .map((hostname) => hostname.trim())
+        .filter(Boolean);
+}
 
 const buildCommit =
     process.env.CF_PAGES_COMMIT_SHA ||
