@@ -1,14 +1,12 @@
-import { BUILD_COMMIT } from "astro:env/server";
+import { BUILD_COMMIT, BUILD_DATE } from "astro:env/client";
 
-export const prerender = true;
+export const prerender = false;
 
 export const GET = async () => {
-    const buildDate = new Date().toISOString();
-
     return new Response(
         JSON.stringify({
             commit: BUILD_COMMIT,
-            buildDate,
+            buildDate: BUILD_DATE,
         }),
         {
             status: 200,

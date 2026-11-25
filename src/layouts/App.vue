@@ -60,7 +60,7 @@
 
 <script setup>
 import { useStore } from "@nanostores/vue";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useTheme } from "vuetify";
 import {
@@ -82,6 +82,7 @@ import { appInstalled, deferredPrompt } from "@/stores/pwa";
 import {
     showUpdatePrompt as showUpdatePromptStore,
     startVersionCheck,
+    stopVersionCheck,
 } from "@/stores/version";
 
 const loading = ref(true);
@@ -132,12 +133,14 @@ window.addEventListener("appinstalled", () => {
 });
 
 onMounted(async () => {
+    startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
     await initAuth({ router });
     await initBilling();
 
     loading.value = false;
-    startVersionCheck(1000 * 60 * 5); // Check every 5 minutes
 });
+
+onUnmounted(stopVersionCheck);
 </script>
 
 <style scoped>

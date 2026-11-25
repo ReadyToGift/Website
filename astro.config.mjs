@@ -46,6 +46,7 @@ const buildCommit =
             return "unknown";
         }
     })();
+const buildDate = new Date().toISOString();
 
 // https://astro.build/config
 export default defineConfig({
@@ -201,9 +202,14 @@ export default defineConfig({
                 default: 3,
             }),
             BUILD_COMMIT: envField.string({
-                context: "server",
+                context: "client",
                 access: "public",
                 default: buildCommit,
+            }),
+            BUILD_DATE: envField.string({
+                context: "client",
+                access: "public",
+                default: buildDate,
             }),
 
             CLOUDFLARE_R2_ENDPOINT: envField.string({
