@@ -28,19 +28,25 @@ const storageKey = "wedding-items-view";
 const mode = ref("line");
 
 const applyMode = (value) => {
+    document.documentElement.dataset.weddingItemsView = value;
     document.querySelectorAll("[data-wedding-items]").forEach((element) => {
         element.setAttribute("data-view", value);
     });
 };
 
 onMounted(() => {
-    const savedMode = window.localStorage.getItem(storageKey);
+    let savedMode;
+    try {
+        savedMode = window.localStorage.getItem(storageKey);
+    } catch {}
     if (savedMode === "grid" || savedMode === "line") mode.value = savedMode;
     applyMode(mode.value);
 });
 
 watch(mode, (value) => {
-    window.localStorage.setItem(storageKey, value);
+    try {
+        window.localStorage.setItem(storageKey, value);
+    } catch {}
     applyMode(value);
 });
 </script>

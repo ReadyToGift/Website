@@ -10,6 +10,7 @@ import {
     sanitizeText,
     validateImageDataUrl,
 } from "@/utils/validation";
+import { normalizeFocus } from "@/utils/weddingFocus";
 import { normalizeWeddingAccent } from "@/utils/weddingTheme";
 
 export const prerender = false;
@@ -38,6 +39,15 @@ const sectionImageId = (url) => {
     const match = url.match(/^\/api\/content\/wedding\/image\/([^/]+)$/);
     return match?.[1] || null;
 };
+const weddingSectionImageIDs = (sections) =>
+    (Array.isArray(sections) ? sections : [])
+        .flatMap((section) => [
+            sectionImageId(section?.imageUrl),
+            ...(Array.isArray(section?.images)
+                ? section.images.map((image) => sectionImageId(image?.imageUrl))
+                : []),
+        ])
+        .filter(Boolean);
 
 export const GET = async (context) => {
     try {
@@ -340,7 +350,11 @@ export const DELETE = async (context) => {
         }
 
         const listRows = await db
-            .select({ id: lists.id, author: lists.author })
+            .select({
+                id: lists.id,
+                author: lists.author,
+                weddingSections: lists.weddingSections,
+            })
             .from(lists)
             .where(eq(lists.id, listId));
 
@@ -366,19 +380,19 @@ export const DELETE = async (context) => {
         await db.delete(lists).where(eq(lists.id, listId)).run();
 
         await Promise.all(
-            imageRows
-                .map((row) => row.imageID)
-                .filter(Boolean)
-                .map(async (imageID) => {
-                    try {
-                        await bucket.delete(imageID);
-                    } catch (error) {
-                        console.error(
-                            `Failed to delete R2 image ${imageID}`,
-                            error,
-                        );
-                    }
-                }),
+            [
+                ...imageRows.map((row) => row.imageID).filter(Boolean),
+                ...weddingSectionImageIDs(listRows[0].weddingSections),
+            ].map(async (imageID) => {
+                try {
+                    await bucket.delete(imageID);
+                } catch (error) {
+                    console.error(
+                        `Failed to delete R2 image ${imageID}`,
+                        error,
+                    );
+                }
+            }),
         );
 
         return new Response(
@@ -485,95 +499,129 @@ export const PUT = async (context) => {
             const sectionTypes = new Set([
                 "text",
                 "image",
+                "gallery",
                 "image-text",
                 "text-image",
             ]);
-            changes.weddingSections = Array.isArray(changes.weddingSections)
-                ? await Promise.all(
-                      changes.weddingSections
-                          .slice(0, 50)
-                          .flatMap((section) => {
-                              if (!sectionTypes.has(section?.type)) return [];
-                              return [
-                                  (async () => {
-                                      const hasData = Boolean(
-                                          section.imageData ||
-                                              (typeof section.image ===
-                                                  "string" &&
-                                                  section.image.startsWith(
-                                                      "data:",
-                                                  )),
-                                      );
-                                      const hasUrl = Boolean(section.imageUrl);
-                                      if (hasData && hasUrl) {
-                                          const error = new Error(
-                                              "Section imageData and imageUrl cannot both be provided",
-                                          );
-                                          error.status = 400;
-                                          throw error;
-                                      }
+            const saveSectionImage = async (entry) => {
+                const imageData =
+                    entry?.imageData ||
+                    (typeof entry?.image === "string" &&
+                    entry.image.startsWith("data:")
+                        ? entry.image
+                        : null);
+                if (imageData && entry?.imageUrl) {
+                    const error = new Error(
+                        "Section imageData and imageUrl cannot both be provided",
+                    );
+                    error.status = 400;
+                    throw error;
+                }
+                if (!imageData) {
+                    return sectionImageId(entry?.imageUrl)
+                        ? entry.imageUrl
+                        : null;
+                }
 
-                                      let imageUrl = null;
-                                      if (hasData) {
-                                          const imageData =
-                                              section.imageData ||
-                                              section.image;
-                                          const validation =
-                                              await validateImageDataUrl(
-                                                  imageData,
-                                                  4 * 1024 * 1024,
-                                              );
-                                          if (!validation.ok) {
-                                              const error = new Error(
-                                                  validation.message,
-                                              );
-                                              error.status = 400;
-                                              throw error;
-                                          }
-                                          const id = crypto.randomUUID();
-                                          await bucket.put(
-                                              id,
-                                              validation.bytes,
-                                              {
-                                                  httpMetadata: {
-                                                      contentType:
-                                                          validation.type,
-                                                  },
-                                                  customMetadata: {
-                                                      name: "Wedding section image",
-                                                  },
-                                              },
-                                          );
-                                          newSectionImageIDs.push(id);
-                                          imageUrl = sectionImageUrl(id);
-                                      } else if (
-                                          sectionImageId(section.imageUrl)
-                                      ) {
-                                          imageUrl = section.imageUrl;
-                                      }
+                const validation = await validateImageDataUrl(
+                    imageData,
+                    4 * 1024 * 1024,
+                );
+                if (!validation.ok) {
+                    const error = new Error(validation.message);
+                    error.status = 400;
+                    throw error;
+                }
+                const id = crypto.randomUUID();
+                await bucket.put(id, validation.bytes, {
+                    httpMetadata: { contentType: validation.type },
+                    customMetadata: { name: "Wedding section image" },
+                });
+                newSectionImageIDs.push(id);
+                return sectionImageUrl(id);
+            };
 
-                                      return {
-                                          ...(imageUrl ? { imageUrl } : {}),
-                                          id:
-                                              sanitizeText(section.id, 64) ||
-                                              crypto.randomUUID(),
-                                          text:
-                                              sanitizeText(
-                                                  section.text,
-                                                  MAX_TEXT_LENGTHS.description,
-                                              ) || "",
-                                          title:
-                                              sanitizeText(
-                                                  section.title,
-                                                  MAX_TEXT_LENGTHS.title,
-                                              ) || "",
-                                          type: section.type,
-                                      };
-                                  })(),
-                              ];
-                          }),
-                  )
-                : [];
+            const normalizedSections = [];
+            try {
+                for (const section of Array.isArray(changes.weddingSections)
+                    ? changes.weddingSections.slice(0, 50)
+                    : []) {
+                    if (!sectionTypes.has(section?.type)) continue;
+                    const id =
+                        sanitizeText(section.id, 64) || crypto.randomUUID();
+                    if (section.type === "gallery") {
+                        if (
+                            !Array.isArray(section.images) ||
+                            section.images.length < 2 ||
+                            section.images.length > 6
+                        ) {
+                            const error = new Error(
+                                "A gallery must have between 2 and 6 photos",
+                            );
+                            error.status = 400;
+                            throw error;
+                        }
+                        const images = [];
+                        for (const entry of section.images) {
+                            const imageUrl = await saveSectionImage(entry);
+                            if (!imageUrl) {
+                                const error = new Error(
+                                    "Invalid gallery photo",
+                                );
+                                error.status = 400;
+                                throw error;
+                            }
+                            images.push({
+                                imageUrl,
+                                ...(Number.isInteger(entry.width) &&
+                                Number.isInteger(entry.height) &&
+                                entry.width > 0 &&
+                                entry.height > 0 &&
+                                entry.width <= 10000 &&
+                                entry.height <= 10000
+                                    ? {
+                                          width: entry.width,
+                                          height: entry.height,
+                                      }
+                                    : {}),
+                                focusX: normalizeFocus(entry.focusX),
+                                focusY: normalizeFocus(entry.focusY),
+                            });
+                        }
+                        normalizedSections.push({
+                            id,
+                            images,
+                            type: "gallery",
+                        });
+                        continue;
+                    }
+
+                    const imageUrl = await saveSectionImage(section);
+                    normalizedSections.push({
+                        ...(imageUrl ? { imageUrl } : {}),
+                        focusX: normalizeFocus(section.focusX),
+                        focusY: normalizeFocus(section.focusY),
+                        id,
+                        text:
+                            sanitizeText(
+                                section.text,
+                                MAX_TEXT_LENGTHS.description,
+                            ) || "",
+                        title:
+                            sanitizeText(
+                                section.title,
+                                MAX_TEXT_LENGTHS.title,
+                            ) || "",
+                        type: section.type,
+                    });
+                }
+            } catch (error) {
+                await Promise.all(
+                    newSectionImageIDs.map((id) => bucket.delete(id)),
+                );
+                throw error;
+            }
+            changes.weddingSections = normalizedSections;
         }
         if ("title" in changes && !changes.title)
             return new Response(JSON.stringify({ message: "Invalid title" }), {
@@ -692,12 +740,10 @@ export const PUT = async (context) => {
         }
 
         if ("weddingSections" in changes) {
-            const oldImageIDs = (existingList.weddingSections || [])
-                .map((section) => sectionImageId(section?.imageUrl))
-                .filter(Boolean);
-            const newImageIDs = changes.weddingSections
-                .map((section) => sectionImageId(section.imageUrl))
-                .filter(Boolean);
+            const oldImageIDs = weddingSectionImageIDs(
+                existingList.weddingSections,
+            );
+            const newImageIDs = weddingSectionImageIDs(changes.weddingSections);
             await Promise.all(
                 oldImageIDs
                     .filter((id) => !newImageIDs.includes(id))
@@ -718,9 +764,14 @@ export const PUT = async (context) => {
     } catch (error) {
         console.error("Error updating list", error);
         return new Response(
-            JSON.stringify({ message: "Internal server error" }),
+            JSON.stringify({
+                message:
+                    error.status === 400
+                        ? error.message
+                        : "Internal server error",
+            }),
             {
-                status: 500,
+                status: error.status === 400 ? 400 : 500,
                 headers: { "Content-Type": "application/json" },
             },
         );

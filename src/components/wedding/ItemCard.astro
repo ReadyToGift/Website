@@ -2,15 +2,10 @@
 import { Image } from "astro:assets";
 
 import WeddingItemActions from "@/components/wedding/WeddingItemActions.vue";
-import {
-    getItemImageUrl,
-    getWebsiteHostname,
-    getWebsiteUrl,
-} from "@/utils/listItems";
+import { getItemImageUrl, getWebsiteHostname } from "@/utils/listItems";
 
 const { item, list, wishlistOwner } = Astro.props;
 const showFulfillment = !wishlistOwner || list.spoilSurprises;
-const websiteUrl = getWebsiteUrl(item.url);
 const imageUrl = getItemImageUrl(item);
 const imageSource = imageUrl?.startsWith("/")
     ? new URL(imageUrl, Astro.url).toString()
@@ -85,14 +80,16 @@ const listForClient = {
                     <span class="item-status">{item.priority}</span>
                 )}
             </div>
-            <WeddingItemActions
-                client:only="vue"
-                currency={list.currency || "USD"}
-                item={itemForClient}
-                list={listForClient}
-                showFulfillment={showFulfillment}
-                wishlistOwner={wishlistOwner}
-            />
+            <div class="item-actions-slot">
+                <WeddingItemActions
+                    client:only="vue"
+                    currency={list.currency || "USD"}
+                    item={itemForClient}
+                    list={listForClient}
+                    showFulfillment={showFulfillment}
+                    wishlistOwner={wishlistOwner}
+                />
+            </div>
         </div>
     </div>
 </article>
@@ -171,6 +168,11 @@ const listForClient = {
     gap: 0.5rem;
 }
 
+.item-actions-slot {
+    min-height: 3.25rem;
+    min-width: 10rem;
+}
+
 .item-price {
     font-family: "Segoe Print", "Bradley Hand", "Apple Chancery", cursive;
     font-size: clamp(2rem, 3.5vw, 2.8rem);
@@ -183,16 +185,20 @@ const listForClient = {
     text-transform: capitalize;
 }
 
-:global(.wedding-items[data-view="grid"]) .wedding-item-card {
+:global(.wedding-items[data-view="grid"]) .wedding-item-card,
+:global(html[data-wedding-items-view="grid"] .wedding-items)
+    .wedding-item-card {
     grid-template-columns: 1fr;
 }
 
-:global(.wedding-items[data-view="grid"]) .item-image {
+:global(.wedding-items[data-view="grid"]) .item-image,
+:global(html[data-wedding-items-view="grid"] .wedding-items) .item-image {
     height: 16rem;
     min-height: 0;
 }
 
-:global(.wedding-items[data-view="grid"]) .item-bottom {
+:global(.wedding-items[data-view="grid"]) .item-bottom,
+:global(html[data-wedding-items-view="grid"] .wedding-items) .item-bottom {
     align-items: stretch;
     flex-direction: column;
 }

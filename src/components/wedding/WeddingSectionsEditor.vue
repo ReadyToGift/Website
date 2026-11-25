@@ -22,7 +22,11 @@
             <div class="editor-actions">
                 <template v-if="editing">
                     <v-btn variant="text" @click="discard">Discard</v-btn>
-                    <v-btn color="primary" :loading="saving" @click="save">
+                    <v-btn
+                        color="primary"
+                        :loading="saving || processingImages"
+                        @click="save"
+                    >
                         Save sections
                     </v-btn>
                 </template>
@@ -39,9 +43,12 @@
         </div>
 
         <template v-if="editing">
-            <v-alert type="info" variant="tonal">
-                Choose a layout, then fill in the placeholders with your
-                content.
+            <v-alert
+                v-if="uploadError || saveError"
+                type="error"
+                variant="tonal"
+            >
+                {{ uploadError || saveError }}
             </v-alert>
 
             <v-card
@@ -51,13 +58,29 @@
             >
                 <v-card-title class="d-flex align-center justify-space-between">
                     Section {{ index + 1 }}
-                    <v-btn
-                        :icon="mdiDelete"
-                        aria-label="Remove section"
-                        color="error"
-                        variant="text"
-                        @click="removeSection(index)"
-                    />
+                    <div class="section-order-actions">
+                        <v-btn
+                            :icon="mdiArrowUp"
+                            :disabled="index === 0"
+                            :aria-label="`Move section ${index + 1} up`"
+                            variant="text"
+                            @click="moveSection(index, -1)"
+                        />
+                        <v-btn
+                            :icon="mdiArrowDown"
+                            :disabled="index === draftSections.length - 1"
+                            :aria-label="`Move section ${index + 1} down`"
+                            variant="text"
+                            @click="moveSection(index, 1)"
+                        />
+                        <v-btn
+                            :icon="mdiDelete"
+                            aria-label="Remove section"
+                            color="error"
+                            variant="text"
+                            @click="removeSection(index)"
+                        />
+                    </div>
                 </v-card-title>
                 <v-card-text class="section-editor-card">
                     <div
@@ -65,7 +88,10 @@
                         :class="`preview-${section.type}`"
                     >
                         <div
-                            v-if="section.type !== 'image'"
+                            v-if="
+                                section.type !== 'image' &&
+                                section.type !== 'gallery'
+                            "
                             class="preview-copy"
                         >
                             <v-text-field
@@ -88,29 +114,134 @@
                             />
                         </div>
                         <button
-                            v-if="section.type !== 'text'"
+                            v-if="
+                                section.type !== 'text' &&
+                                section.type !== 'gallery'
+                            "
                             class="image-placeholder"
+                            :class="{ 'has-image': imageFor(section) }"
                             type="button"
-                            aria-label="Change section image"
-                            @click="openFilePicker(section)"
+                            :aria-label="
+                                imageFor(section)
+                                    ? 'Drag to reposition image, or click to change it. Use arrow keys for fine adjustments.'
+                                    : 'Add section image'
+                            "
+                            @click="handleImageClick(section)"
+                            @pointerdown="startDrag($event, section)"
+                            @pointermove="moveDrag"
+                            @pointerup="stopDrag"
+                            @pointercancel="stopDrag"
+                            @lostpointercapture="stopDrag"
+                            @keydown="nudgeFocus($event, section)"
                         >
                             <img
                                 v-if="imageFor(section)"
                                 :src="imageFor(section)"
+                                :style="{
+                                    objectPosition: focusPosition(section),
+                                }"
                                 alt=""
+                                draggable="false"
                             >
                             <span v-else>Image placeholder</span>
                         </button>
+                        <div
+                            v-if="section.type === 'gallery'"
+                            class="gallery-editor"
+                        >
+                            <div
+                                v-if="section.images?.length"
+                                class="gallery-preview"
+                            >
+                                <div
+                                    v-for="(photo, photoIndex) in section.images"
+                                    :key="
+                                        photo.id || photo.imageUrl || photoIndex
+                                    "
+                                    class="gallery-photo"
+                                >
+                                    <img
+                                        :src="imageFor(photo)"
+                                        :width="photo.width"
+                                        :height="photo.height"
+                                        :style="{
+                                            aspectRatio:
+                                                photo.width && photo.height
+                                                    ? `${photo.width} / ${photo.height}`
+                                                    : undefined,
+                                            objectPosition:
+                                                focusPosition(photo),
+                                        }"
+                                        alt=""
+                                        draggable="false"
+                                    >
+                                    <button
+                                        type="button"
+                                        class="gallery-drag-target"
+                                        :aria-label="`Photo ${photoIndex + 1}. Drag to reposition. Use arrow keys for fine adjustments.`"
+                                        @pointerdown="startDrag($event, photo)"
+                                        @pointermove="moveDrag"
+                                        @pointerup="stopDrag"
+                                        @pointercancel="stopDrag"
+                                        @lostpointercapture="stopDrag"
+                                        @keydown="nudgeFocus($event, photo)"
+                                    />
+                                    <button
+                                        type="button"
+                                        class="gallery-remove"
+                                        :disabled="processingImages"
+                                        :aria-label="`Remove photo ${photoIndex + 1}`"
+                                        @click="
+                                            removeGalleryImage(
+                                                section,
+                                                photoIndex,
+                                            )
+                                        "
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            </div>
+                            <p v-if="section.images?.length" class="focus-hint">
+                                Drag photos to reposition them. Arrow keys also
+                                work.
+                            </p>
+                            <button
+                                v-if="
+                                    (section.images?.length || 0) <
+                                    maxGalleryImages
+                                "
+                                type="button"
+                                class="gallery-add"
+                                :disabled="processingImages"
+                                @click="openFilePicker(section)"
+                            >
+                                Add photos ({{ section.images?.length || 0 }}/{{
+                                    maxGalleryImages
+                                }})
+                            </button>
+                        </div>
                     </div>
+                    <p
+                        v-if="
+                            section.type !== 'gallery' &&
+                            section.type !== 'text' &&
+                            imageFor(section)
+                        "
+                        class="focus-hint"
+                    >
+                        Drag the image to reposition it. Click to replace it.
+                    </p>
                     <input
                         v-for="fileSection in [section]"
                         :key="`${fileSection.id}-file`"
                         :ref="(element) => setFileInput(fileSection, element)"
                         class="hidden-file-input"
                         type="file"
-                        accept="image/*"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        :multiple="section.type === 'gallery'"
                         @change="
-                            (event) => openCropper(section, event.target.files)
+                            (event) => handleFiles(section, event.target.files)
                         "
                     >
                     <v-select
@@ -135,12 +266,27 @@
 </template>
 
 <script setup>
-import { mdiDelete, mdiPencil, mdiPlus } from "@mdi/js";
+import {
+    mdiArrowDown,
+    mdiArrowUp,
+    mdiDelete,
+    mdiPencil,
+    mdiPlus,
+} from "@mdi/js";
 import { ref } from "vue";
 import { Cropper } from "vue-advanced-cropper";
 import "vue-advanced-cropper/dist/style.css";
+import {
+    focusAfterDrag,
+    focusPosition,
+    normalizeFocus,
+} from "@/utils/weddingFocus";
 
 defineProps({
+    saveError: {
+        default: "",
+        type: String,
+    },
     saving: {
         default: false,
         type: Boolean,
@@ -157,9 +303,15 @@ const cropSection = ref(null);
 const cropAspect = ref(1);
 const cropMaxWidth = ref(800);
 const fileInputs = ref({});
+const uploadError = ref("");
+const processingImages = ref(false);
+let activeDrag = null;
+let suppressFileClickUntil = 0;
+const maxGalleryImages = 6;
 const sectionTypes = [
     { title: "Text", value: "text" },
     { title: "Image", value: "image" },
+    { title: "Photo gallery", value: "gallery" },
     { title: "Image and text", value: "image-text" },
     { title: "Text and image", value: "text-image" },
 ];
@@ -170,7 +322,9 @@ const imageFor = (section) =>
 const startEditing = () => {
     document
         .querySelectorAll(".wedding-theme > [data-wedding-section]")
-        .forEach((section) => section.remove());
+        .forEach((section) => {
+            section.remove();
+        });
     draftSections.value = cloneSections(sections.value).map((section) => {
         if (section.image && !section.imageUrl && !section.imageData) {
             if (section.image.startsWith("data:image/")) {
@@ -179,6 +333,15 @@ const startEditing = () => {
                 section.imageUrl = section.image;
             }
             delete section.image;
+        }
+        section.focusX = normalizeFocus(section.focusX);
+        section.focusY = normalizeFocus(section.focusY);
+        if (Array.isArray(section.images)) {
+            section.images = section.images.map((photo) => ({
+                ...photo,
+                focusX: normalizeFocus(photo.focusX),
+                focusY: normalizeFocus(photo.focusY),
+            }));
         }
         return section;
     });
@@ -200,6 +363,13 @@ const addSection = () => {
 
 const removeSection = (index) => draftSections.value.splice(index, 1);
 
+const moveSection = (index, direction) => {
+    const target = index + direction;
+    if (target < 0 || target >= draftSections.value.length) return;
+    const [section] = draftSections.value.splice(index, 1);
+    draftSections.value.splice(target, 0, section);
+};
+
 const setFileInput = (section, element) => {
     if (element) fileInputs.value[section.id] = element;
 };
@@ -208,10 +378,211 @@ const openFilePicker = (section) => {
     fileInputs.value[section.id]?.click();
 };
 
+const handleImageClick = (section) => {
+    if (performance.now() < suppressFileClickUntil) return;
+    openFilePicker(section);
+};
+
+const startDrag = (event, image) => {
+    if (event.button !== 0 && event.pointerType !== "touch") return;
+    if (event.target instanceof Element) {
+        const button = event.target.closest("button");
+        if (button && button !== event.currentTarget) return;
+    }
+
+    const element = event.currentTarget;
+    const photo =
+        element.querySelector("img") ||
+        element.parentElement?.querySelector("img");
+    if (!photo?.naturalWidth || !photo?.naturalHeight) return;
+
+    const frame = photo.getBoundingClientRect();
+    const scale = Math.max(
+        frame.width / photo.naturalWidth,
+        frame.height / photo.naturalHeight,
+    );
+    activeDrag = {
+        element,
+        image,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        focusX: normalizeFocus(image.focusX),
+        focusY: normalizeFocus(image.focusY),
+        overflowX: Math.max(0, photo.naturalWidth * scale - frame.width),
+        overflowY: Math.max(0, photo.naturalHeight * scale - frame.height),
+        moved: false,
+    };
+    element.setPointerCapture(event.pointerId);
+};
+
+const moveDrag = (event) => {
+    if (
+        !activeDrag ||
+        activeDrag.pointerId !== event.pointerId ||
+        activeDrag.element !== event.currentTarget
+    )
+        return;
+    const deltaX = event.clientX - activeDrag.startX;
+    const deltaY = event.clientY - activeDrag.startY;
+    if (Math.abs(deltaX) + Math.abs(deltaY) > 3) activeDrag.moved = true;
+    if (!activeDrag.moved) return;
+
+    activeDrag.image.focusX = focusAfterDrag(
+        activeDrag.focusX,
+        deltaX,
+        activeDrag.overflowX,
+    );
+    activeDrag.image.focusY = focusAfterDrag(
+        activeDrag.focusY,
+        deltaY,
+        activeDrag.overflowY,
+    );
+};
+
+const stopDrag = (event) => {
+    if (
+        !activeDrag ||
+        activeDrag.pointerId !== event.pointerId ||
+        activeDrag.element !== event.currentTarget
+    )
+        return;
+    if (activeDrag.moved && event.currentTarget.matches(".image-placeholder"))
+        suppressFileClickUntil = performance.now() + 350;
+    if (event.currentTarget.hasPointerCapture(event.pointerId))
+        event.currentTarget.releasePointerCapture(event.pointerId);
+    activeDrag = null;
+};
+
+const nudgeFocus = (event, image) => {
+    if (event.target !== event.currentTarget) return;
+    const step = event.shiftKey ? 10 : 5;
+    const directions = {
+        ArrowLeft: [-step, 0],
+        ArrowRight: [step, 0],
+        ArrowUp: [0, -step],
+        ArrowDown: [0, step],
+    };
+    const direction = directions[event.key];
+    if (!direction) return;
+    event.preventDefault();
+    image.focusX = normalizeFocus(normalizeFocus(image.focusX) + direction[0]);
+    image.focusY = normalizeFocus(normalizeFocus(image.focusY) + direction[1]);
+};
+
 const typeChanged = (section) => {
+    if (section.type === "gallery") {
+        const existingImage = imageFor(section);
+        section.images = Array.isArray(section.images) ? section.images : [];
+        if (existingImage) {
+            section.images.unshift(
+                section.imageData
+                    ? {
+                          imageData: section.imageData,
+                          focusX: section.focusX,
+                          focusY: section.focusY,
+                      }
+                    : {
+                          imageUrl: existingImage,
+                          focusX: section.focusX,
+                          focusY: section.focusY,
+                      },
+            );
+        }
+        delete section.imageData;
+        delete section.imageUrl;
+        delete section.image;
+        section.title = "";
+        section.text = "";
+        return;
+    }
+    if (Array.isArray(section.images)) {
+        const firstPhoto = section.images[0];
+        if (section.type !== "text" && firstPhoto) {
+            if (firstPhoto.imageData) section.imageData = firstPhoto.imageData;
+            if (firstPhoto.imageUrl) section.imageUrl = firstPhoto.imageUrl;
+            section.focusX = normalizeFocus(firstPhoto.focusX);
+            section.focusY = normalizeFocus(firstPhoto.focusY);
+        }
+        delete section.images;
+    }
     if (section.type === "image") {
         section.title = "";
         section.text = "";
+    }
+};
+
+const removeGalleryImage = (section, index) => {
+    section.images.splice(index, 1);
+};
+
+const prepareGalleryImage = async (file) => {
+    const bitmap = await createImageBitmap(file);
+    try {
+        const scale = Math.min(1, 1400 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        context.fillStyle = "#fff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        return {
+            id: crypto.randomUUID(),
+            imageData: canvas.toDataURL("image/jpeg", 0.82),
+            width: canvas.width,
+            height: canvas.height,
+            focusX: 50,
+            focusY: 50,
+        };
+    } finally {
+        bitmap.close();
+    }
+};
+
+const handleFiles = async (section, fileList) => {
+    const files = Array.from(fileList || []);
+    if (fileInputs.value[section.id]) fileInputs.value[section.id].value = "";
+    if (!files.length || processingImages.value) return;
+    uploadError.value = "";
+    if (section.type !== "gallery") {
+        openCropper(section, files);
+        return;
+    }
+
+    section.images = Array.isArray(section.images) ? section.images : [];
+    if (files.length + section.images.length > maxGalleryImages) {
+        uploadError.value = `A gallery can have up to ${maxGalleryImages} photos.`;
+        return;
+    }
+    if (
+        files.some(
+            (file) =>
+                ![
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp",
+                    "image/gif",
+                ].includes(file.type) || file.size > 20 * 1024 * 1024,
+        )
+    ) {
+        uploadError.value =
+            "Choose JPEG, PNG, WebP, or GIF images under 20 MB each.";
+        return;
+    }
+
+    processingImages.value = true;
+    try {
+        const preparedImages = [];
+        for (const file of files) {
+            preparedImages.push(await prepareGalleryImage(file));
+        }
+        section.images.push(...preparedImages);
+    } catch {
+        uploadError.value =
+            "One of the photos could not be processed. Try another image.";
+    } finally {
+        processingImages.value = false;
     }
 };
 
@@ -227,7 +598,9 @@ const openCropper = (section, files) => {
         galleryIndex >= 0 &&
         galleryIndex < 3 &&
         draftSections.value.slice(0, 3).length === 3 &&
-        draftSections.value.slice(0, 3).every((entry) => entry.type === "image");
+        draftSections.value
+            .slice(0, 3)
+            .every((entry) => entry.type === "image");
     cropAspect.value = isGalleryImage
         ? [1.45, 2 / 3, 1.3][galleryIndex]
         : section.type === "image"
@@ -274,14 +647,26 @@ const saveCrop = () => {
             height,
         );
     section.imageData = canvas.toDataURL("image/jpeg", 0.9);
+    section.focusX = 50;
+    section.focusY = 50;
     delete section.imageUrl;
     delete section.image;
     cancelCrop();
 };
 
 const save = () => {
+    uploadError.value = "";
+    if (
+        draftSections.value.some(
+            (section) =>
+                section.type === "gallery" && (section.images?.length || 0) < 2,
+        )
+    ) {
+        uploadError.value =
+            "Add at least two photos to each gallery before saving.";
+        return;
+    }
     emit("save", draftSections.value);
-    editing.value = false;
 };
 </script>
 
@@ -308,6 +693,10 @@ const save = () => {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+}
+.section-order-actions {
+    display: flex;
+    align-items: center;
 }
 .section-cropper {
     height: min(60vh, 30rem);
@@ -385,6 +774,83 @@ const save = () => {
 .preview-image .image-placeholder img {
     max-height: none;
 }
+.preview-gallery {
+    grid-template-columns: 1fr;
+}
+.gallery-editor {
+    min-width: 0;
+}
+.gallery-preview {
+    align-items: stretch;
+    display: flex;
+    gap: 0.5rem;
+    height: clamp(12rem, 28vw, 24rem);
+    justify-content: center;
+    max-height: 24rem;
+}
+.gallery-photo {
+    flex: 0 1 auto;
+    height: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+    user-select: none;
+}
+.gallery-drag-target {
+    background: transparent;
+    border: 0;
+    cursor: grab;
+    inset: 0;
+    position: absolute;
+    touch-action: none;
+    width: 100%;
+}
+.gallery-drag-target:active {
+    cursor: grabbing;
+}
+.gallery-drag-target:focus-visible {
+    outline: 2px solid rgb(var(--v-theme-primary));
+    outline-offset: -2px;
+}
+.gallery-preview .gallery-photo img {
+    border-radius: 0;
+    height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    width: auto;
+}
+.gallery-remove {
+    background: rgb(255 255 255 / 0.9);
+    border: 0;
+    border-radius: 50%;
+    color: #111;
+    cursor: pointer;
+    font-size: 1.4rem;
+    height: 2rem;
+    line-height: 1;
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    width: 2rem;
+    z-index: 1;
+}
+.gallery-add {
+    background: transparent;
+    border: 1px dashed currentColor;
+    border-radius: 0.5rem;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    margin-top: 0.75rem;
+    min-height: 3rem;
+    width: 100%;
+}
+.gallery-add:focus-visible,
+.gallery-remove:focus-visible {
+    outline: 2px solid rgb(var(--v-theme-primary));
+    outline-offset: 2px;
+}
 .image-placeholder {
     align-items: center;
     background: rgb(var(--v-theme-surface));
@@ -400,6 +866,19 @@ const save = () => {
     overflow: hidden;
     padding: 0;
     width: 100%;
+}
+.image-placeholder.has-image {
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.image-placeholder.has-image:active {
+    cursor: grabbing;
+}
+.focus-hint {
+    color: rgb(var(--v-theme-on-surface) / 0.7);
+    font-size: 0.875rem;
+    margin: 0.5rem 0 0;
 }
 .image-placeholder:focus-visible {
     outline: 2px solid rgb(var(--v-theme-primary));
@@ -432,6 +911,16 @@ const save = () => {
     object-fit: cover;
 }
 @media (max-width: 768px) {
+    .gallery-preview {
+        height: 17rem;
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .gallery-photo {
+        flex: 0 0 auto;
+        max-width: 76vw;
+    }
     .editor-header {
         align-items: flex-start;
         flex-direction: column;

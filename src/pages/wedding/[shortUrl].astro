@@ -12,6 +12,7 @@ import { db } from "@/db";
 import AstroLayout from "@/layouts/AstroLayout.astro";
 import { fulfillments, items, lists as listsTable } from "@/schema";
 import { groupListItems, WEDDING_PRICE_GROUPS } from "@/utils/listItems";
+import { focusPosition } from "@/utils/weddingFocus";
 import {
     normalizeWeddingAccent,
     weddingAccentTheme,
@@ -106,6 +107,13 @@ const editableList = {
     accentColor={accentColor}
     pageClass="wedding-page"
 >
+    <script is:inline>
+    try {
+        if (localStorage.getItem("wedding-items-view") === "grid") {
+            document.documentElement.dataset.weddingItemsView = "grid";
+        }
+    } catch {}
+    </script>
     <div
         class={`wedding-theme wedding-theme--${accentTheme}`}
         style={`--wedding-accent: ${accentColor};`}
@@ -127,7 +135,7 @@ const editableList = {
         )}
         {heroSections.length > 0 && (
             <div class="wedding-gallery" data-wedding-section>
-                {heroSections.map((section) => (
+                {heroSections.map((section, index) => (
                     <img
                         src={
                             section.imageUrl ||
@@ -135,8 +143,9 @@ const editableList = {
                             section.image
                         }
                         alt={section.title || ""}
-                        width="800"
-                        height="550"
+                        style={`object-position: ${focusPosition(section)}; aspect-ratio: ${[1450, 667, 1300][index]} / 1000;`}
+                        width={[1450, 667, 1300][index]}
+                        height="1000"
                     />
                 ))}
             </div>
@@ -147,14 +156,18 @@ const editableList = {
                 <h2>The registry</h2>
                 <div class="items-controls">
                     {canManage && (
-                        <WeddingCreateItem
-                            inline
-                            list={editableList}
-                            client:only="vue"
-                        />
+                        <div class="create-item-slot">
+                            <WeddingCreateItem
+                                inline
+                                list={editableList}
+                                client:only="vue"
+                            />
+                        </div>
                     )}
                     {itemsWithFulfillments.length > 0 && (
-                        <WeddingItemsViewToggle client:load />
+                        <div class="view-toggle-slot">
+                            <WeddingItemsViewToggle client:load />
+                        </div>
                     )}
                 </div>
             </div>

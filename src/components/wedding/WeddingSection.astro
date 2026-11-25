@@ -1,8 +1,20 @@
 ---
+import { focusPosition } from "@/utils/weddingFocus";
+
 const { section } = Astro.props;
 const image = section?.imageUrl || section?.imageData || section?.image || null;
 const text = section?.text || "";
 const title = section?.title || "";
+const galleryImages = Array.isArray(section?.images)
+    ? section.images
+          .map((entry) => ({
+              src: entry?.imageUrl || entry?.imageData || "",
+              position: focusPosition(entry),
+              width: entry?.width,
+              height: entry?.height,
+          }))
+          .filter((entry) => entry.src)
+    : [];
 ---
 
 <section
@@ -10,6 +22,7 @@ const title = section?.title || "";
         "wedding-section",
         {
             "list-section-image": section.type === "image",
+            "list-section-gallery": section.type === "gallery",
             "list-section-image-text": section.type === "image-text",
             "list-section-text-image": section.type === "text-image",
         },
@@ -22,10 +35,25 @@ const title = section?.title || "";
             class="section-image"
             src={image}
             alt={title}
+            style={`object-position: ${focusPosition(section)};`}
             loading="lazy"
             width="1600"
             height="900"
         />
+    )}
+    {section.type === "gallery" && galleryImages.length > 0 && (
+        <div class="wedding-gallery">
+            {galleryImages.map(({ src, position, width, height }) => (
+                <img
+                    src={src}
+                    alt=""
+                    style={`object-position: ${position};${width && height ? ` aspect-ratio: ${width} / ${height};` : ""}`}
+                    loading="lazy"
+                    width={width}
+                    height={height}
+                />
+            ))}
+        </div>
     )}
     {section.type === "text" && text && <p>{text}</p>}
     {(section.type === "image-text" || section.type === "text-image") && (
@@ -35,6 +63,7 @@ const title = section?.title || "";
                     class="section-image"
                     src={image}
                     alt={title}
+                    style={`object-position: ${focusPosition(section)};`}
                     loading="lazy"
                     width="800"
                     height="600"
@@ -89,12 +118,16 @@ const title = section?.title || "";
 .wedding-section img {
     display: block;
     max-width: 100%;
+}
+
+.wedding-section .section-image {
     object-fit: cover;
 }
 
 .wedding-section > .section-image {
     aspect-ratio: 16 / 9;
     height: auto;
+    max-height: 40rem;
     width: 100%;
 }
 
