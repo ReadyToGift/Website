@@ -30,7 +30,7 @@ const description =
 const canonicalUrl = new URL(Astro.url.pathname, Astro.url.origin).href;
 console.log({ listData });
 const image = listData.list.author
-    ? new URL(`/api/avatar/${listData.list.author}`, Astro.url.origin).href
+    ? new URL(`/api/avatar/${listData.list.author}.png`, Astro.url.origin).href
     : null;
 ---
 

@@ -1,18 +1,28 @@
-import { toPng } from "@dicebear/converter";
+import { Resvg } from "@cf-wasm/resvg";
 import { Avatar, Style } from "@dicebear/core";
 import definition from "@dicebear/styles/moods.json" with { type: "json" };
 
 const style = new Style(definition);
 
-export const getAvatar = ({ name, type = "png" }) => {
+export const getAvatarSvg = ({ name }) => {
     const avatar = new Avatar(style, {
         seed: name,
     });
+    return avatar.toString();
+};
 
-    switch (type) {
-        case "svg":
-            return avatar.toDataUri();
-        default:
-            return toPng(avatar).toDataUri();
+export const renderAvatarPng = async (svg) => {
+    const renderer = await Resvg.async(svg, {
+        fitTo: { mode: "width", value: 256 },
+    });
+    try {
+        const image = renderer.render();
+        try {
+            return image.asPng();
+        } finally {
+            image.free();
+        }
+    } finally {
+        renderer.free();
     }
 };
