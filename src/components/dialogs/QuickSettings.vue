@@ -13,9 +13,6 @@
             </v-list>
             <v-divider v-if="user" />
             <v-list>
-                <v-list-item :prepend-icon="mdiCog">
-                    Quick Settings
-                </v-list-item>
                 <v-list-item>
                     <v-list>
                         <v-list-item title="Dark Mode">
@@ -85,7 +82,7 @@
 </template>
 
 <script setup>
-import { mdiCog, mdiInformation } from "@mdi/js";
+import { mdiInformation } from "@mdi/js";
 import { useStore } from "@nanostores/vue";
 import { ref } from "vue";
 import { user as authUser } from "@/stores/auth";
