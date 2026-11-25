@@ -28,6 +28,10 @@ const description =
     listData.list.description?.trim() ||
     `View ${listData.list.title} by ${listData.list.authorName} on Readyto.gift.`;
 const canonicalUrl = new URL(Astro.url.pathname, Astro.url.origin).href;
+console.log({ listData });
+const image = listData.list.author
+    ? new URL(`/api/avatar/${listData.list.author}`, Astro.url.origin).href
+    : null;
 ---
 
 <Layout
