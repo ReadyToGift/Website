@@ -211,7 +211,7 @@ export default {
             mdiAlert,
             mdiPlus,
             newList: {
-                currency: "USD",
+                currency: "GBP",
                 description: "",
                 private: this.private,
                 shortUrl: null,
@@ -234,7 +234,7 @@ export default {
                 this.alert = false;
                 this.loading = false;
                 this.newList = {
-                    currency: "USD",
+                    currency: "GBP",
                     description: "",
                     private: false,
                     shortUrl: null,

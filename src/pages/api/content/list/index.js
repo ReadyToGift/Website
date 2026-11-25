@@ -187,7 +187,7 @@ export const POST = async (context) => {
         if (unauthorizedResponse) return unauthorizedResponse;
 
         const {
-            currency = "USD",
+            currency = "GBP",
             description = null,
             private: isPrivate = false,
             shortUrl = null,

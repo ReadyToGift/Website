@@ -7,8 +7,8 @@ export const getCurrency = (code) => {
 
     if (!currency) {
         return {
-            code: "USD",
-            symbol: "$",
+            code: "GBP",
+            symbol: "£",
         };
     }
 
