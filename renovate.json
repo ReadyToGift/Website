@@ -18,34 +18,6 @@
             "minimumReleaseAge": "7 days"
         },
         {
-            "matchPackageNames": ["node-appwrite"],
-            "groupName": "Migration tooling"
-        },
-        {
-            "matchPackageNames": ["astro", "@astrojs/*"],
-            "groupName": "astro"
-        },
-        {
-            "matchPackageNames": ["better-auth", "@better-auth/*"],
-            "groupName": "better-auth"
-        },
-        {
-            "matchPackageNames": ["@dicebear/*"],
-            "groupName": "dicebear"
-        },
-        {
-            "matchPackageNames": ["nanostores", "@nanostores/*"],
-            "groupName": "nanostores"
-        },
-        {
-            "matchPackageNames": ["@polar-sh/*"],
-            "groupName": "polar"
-        },
-        {
-            "matchPackageNames": ["@sentry/*"],
-            "groupName": "sentry"
-        },
-        {
             "matchUpdateTypes": ["pin", "pinDigest"],
             "groupName": "Pin dependencies",
             "groupSlug": "pin-dependencies"
