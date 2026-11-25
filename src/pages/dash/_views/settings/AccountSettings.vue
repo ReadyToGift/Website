@@ -159,15 +159,6 @@ const selectProfilePicture = (event) => {
         });
         return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-        createDialog({
-            text: "Profile pictures must be smaller than 2MB.",
-            title: "Profile Picture Too Large",
-            type: "error",
-        });
-        return;
-    }
-
     closeCrop();
     profilePictureSource.value = URL.createObjectURL(file);
     cropDialog.value = true;
