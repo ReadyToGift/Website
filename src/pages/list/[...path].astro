@@ -1,10 +1,52 @@
 ---
+import { CLOUDFLARE_R2_ENDPOINT } from "astro:env/server";
 import App from "@/layouts/App.vue";
 import Layout from "@/layouts/Layout.astro";
+import { GET as getList } from "@/pages/api/content/list/index.js";
+import { localImageBaseUrl } from "@/storage";
+
+const imageBaseUrl = localImageBaseUrl ?? CLOUDFLARE_R2_ENDPOINT ?? null;
 
 export const prerender = false;
+
+const listId = Astro.params.path;
+if (!listId) {
+    return new Response("Not Found", { status: 404 });
+}
+
+// Call on behalf of user
+const response = await getList({
+    url: new URL(
+        `/api/content/list?listId=${encodeURIComponent(listId)}`,
+        Astro.url,
+    ),
+    locals: Astro.locals,
+});
+if (!response.ok) {
+    return new Response("Not Found", { status: 404 });
+}
+
+const listData = await response.json();
+const title = `${listData.list.title} - Readyto.gift`;
+const description =
+    listData.list.description?.trim() ||
+    `View ${listData.list.title} by ${listData.list.authorName} on Readyto.gift.`;
+const imageUrl = listData.list.items
+    .map((item) =>
+        item.imageID ? `${imageBaseUrl}/${item.imageID}` : item.image,
+    )
+    .find((image) => typeof image === "string" && /^https?:\/\//i.test(image));
+
+const image =
+    imageUrl || new URL("/web-app-manifest-512x512.png", Astro.url).href;
+const canonicalUrl = new URL(Astro.url.pathname, Astro.url.origin).href;
 ---
 
-<Layout>
+<Layout
+    title={title}
+    description={description}
+    image={image}
+    url={canonicalUrl}
+>
     <App client:only="vue" />
 </Layout>

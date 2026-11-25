@@ -707,12 +707,6 @@ export default {
     },
     async created() {
         if (import.meta.env.SSR) return;
-        const preloaded = window.__PRELOADED_LIST__;
-        if (preloaded) {
-            window.__PRELOADED_LIST__ = null;
-            await this.setList({ listData: preloaded });
-            this.quickCreateURL = this.quickCreateURLParam;
-        }
     },
     async mounted() {
         const route = this.$route;
