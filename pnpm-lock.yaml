@@ -214,13 +214,13 @@ importers:
         version: 1.1.0(@vue/devtools-api@7.7.10)(nanostores@1.5.5)(vue@3.5.45)
       '@polar-sh/better-auth':
         specifier: ^2.1.4
-        version: 2.1.4(@polar-sh/sdk@1.0.2)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)
+        version: 2.1.5(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))(@polar-sh/sdk@1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1)))(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)
       '@polar-sh/checkout':
         specifier: 0.6.0
         version: 0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)
       '@polar-sh/sdk':
-        specifier: 1.0.2
-        version: 1.0.2
+        specifier: 1.3.1
+        version: 1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))
       '@sentry/astro':
         specifier: ^10.78.0
         version: 10.78.0(@opentelemetry/core@2.12.0(@opentelemetry/api@1.9.1))(astro@7.4.7(@types/node@26.6.6)(esbuild@0.28.2)(sass@1.107.1)(tsx@4.23.15)(yaml@2.9.1))(rollup@4.67.5)(supports-color@10.2.2)
@@ -1710,15 +1710,15 @@ packages:
     resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
     engines: {node: '>=20.0.0'}
 
-  '@polar-sh/adapter-utils@1.1.0':
-    resolution: {integrity: sha512-v2bh7wggBx7Sp4E9qFWDI3IN4vojSq0q2isl/ek2mi86JoNzjfgn+xJkYGgwGoc+e45P0egJTmiueEWTLGgPxw==}
+  '@polar-sh/adapter-utils@1.1.1':
+    resolution: {integrity: sha512-2HOSxfC1+qr3GMl32ctBDccSV3Xd/vwAhZDZ2bINxFjtj2A1bTS/yar49+CQe4DqKsJidIvr2yEnWL+uZ//fOA==}
     engines: {node: '>=24'}
 
-  '@polar-sh/better-auth@2.1.4':
-    resolution: {integrity: sha512-nf1V3axJX/J0VXPjppuODKQZy3GSBclGQvatYcIYQmx5aSULjEsmn3aq/+JNKasTr2Nvpf+f7pRALKZcMcWEZQ==}
+  '@polar-sh/better-auth@2.1.5':
+    resolution: {integrity: sha512-aq05FBNPOeADHT+4e7yKXNiMKNCgCo37HcZ3xUBLxKhTzOVOZw+2DuiDgTesUcACEdVBsbwOPdrccSqHRgN4qA==}
     engines: {node: '>=24'}
     peerDependencies:
-      '@polar-sh/sdk': ^1.0.2
+      '@polar-sh/sdk': ^1.3.1
       better-auth: ^1.7.0
       zod: ^3.25.0 || ^4.0.0
 
@@ -1729,9 +1729,32 @@ packages:
       '@stripe/stripe-js': ^7.1.0 || ^8.11.0
       react: ^18 || ^19
 
-  '@polar-sh/sdk@1.0.2':
-    resolution: {integrity: sha512-c3jdqYloVfcejKsAqYfYcW4bG7KkXj5bXkgdsdx4GHlJPzHFV5tysfeZGf9V7dJReLBirAluchsuHWiAIBco8w==}
-    engines: {node: '>=22'}
+  '@polar-sh/sdk@1.3.1':
+    resolution: {integrity: sha512-IastDu0xUWcHjKQezEzP6PRY/ilLABgHeVU8xoOM8g+ufvQvr4GLNz/HzcLfpUkslvwZUg9eoii0Qze59pO9SA==}
+    engines: {node: '>=24'}
+    peerDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/otlp-transformer': ^0.223.0
+      '@opentelemetry/resources': ^2.12.0
+      '@opentelemetry/sdk-metrics': ^2.12.0
+      '@opentelemetry/sdk-trace': ^2.12.0
+      '@vercel/oidc': ^4.0.5
+      ioredis: ^5.11.0
+    peerDependenciesMeta:
+      '@opentelemetry/api':
+        optional: true
+      '@opentelemetry/otlp-transformer':
+        optional: true
+      '@opentelemetry/resources':
+        optional: true
+      '@opentelemetry/sdk-metrics':
+        optional: true
+      '@opentelemetry/sdk-trace':
+        optional: true
+      '@vercel/oidc':
+        optional: true
+      ioredis:
+        optional: true
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
@@ -6097,21 +6120,36 @@ snapshots:
       tslib: 2.9.1
       tsyringe: 4.10.0
 
-  '@polar-sh/adapter-utils@1.1.0':
+  '@polar-sh/adapter-utils@1.1.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@polar-sh/sdk': 1.0.2
+      '@polar-sh/sdk': 1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))
       zod: 4.6.7
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/otlp-transformer'
+      - '@opentelemetry/resources'
+      - '@opentelemetry/sdk-metrics'
+      - '@opentelemetry/sdk-trace'
+      - '@vercel/oidc'
+      - ioredis
 
-  '@polar-sh/better-auth@2.1.4(@polar-sh/sdk@1.0.2)(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)':
+  '@polar-sh/better-auth@2.1.5(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))(@polar-sh/sdk@1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1)))(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(better-auth@1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45))(react@19.3.1)(zod@4.6.7)':
     dependencies:
-      '@polar-sh/adapter-utils': 1.1.0
+      '@polar-sh/adapter-utils': 1.1.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))
       '@polar-sh/checkout': 0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)
-      '@polar-sh/sdk': 1.0.2
+      '@polar-sh/sdk': 1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))
       better-auth: 1.7.18(@opentelemetry/api@1.9.1)(drizzle-kit@0.31.11)(drizzle-orm@0.45.4(@opentelemetry/api@1.9.1)(better-sqlite3@13.0.3)(kysely@0.29.8))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)(vue@3.5.45)
       zod: 4.6.7
     transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - '@opentelemetry/otlp-transformer'
+      - '@opentelemetry/resources'
+      - '@opentelemetry/sdk-metrics'
+      - '@opentelemetry/sdk-trace'
       - '@stripe/react-stripe-js'
       - '@stripe/stripe-js'
+      - '@vercel/oidc'
+      - ioredis
       - react
 
   '@polar-sh/checkout@0.6.0(@stripe/react-stripe-js@4.0.2(@stripe/stripe-js@7.10.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1))(@stripe/stripe-js@7.10.0)(react@19.3.1)':
@@ -6121,7 +6159,11 @@ snapshots:
       date-fns: 4.4.0
       react: 19.3.1
 
-  '@polar-sh/sdk@1.0.2': {}
+  '@polar-sh/sdk@1.3.1(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.12.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace@2.12.0(@opentelemetry/api@1.9.1))':
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@opentelemetry/resources': 2.12.0(@opentelemetry/api@1.9.1)
+      '@opentelemetry/sdk-trace': 2.12.0(@opentelemetry/api@1.9.1)
 
   '@polka/url@1.0.0-next.29': {}
 
